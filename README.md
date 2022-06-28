@@ -33,6 +33,6 @@ and a lot of useful features, including
 *  ./update Normally if it asks for auto updater SET to yes.
 * When installation completes Copy cathook files (RTShook Renamed) Delete a Normal cathook first and Paste to catbot-setup files and ./update
 
-when have say need put Username and Password type your username of github user and Password here : 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
+when have say need put Username and Password type your username of github user and Password here : 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
 
 Rules : Dont share my Fork cathook if wont Contact me because have a Private Fork

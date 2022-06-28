@@ -1,3 +1,4 @@
+
 /*
  * HAimbot.cpp
  *
@@ -57,10 +58,8 @@ static settings::Float sticky_autoshoot{ "aimbot.projectile.sticky-autoshoot", "
 static settings::Boolean aimbot_debug{ "aimbot.debug", "0" };
 
 static settings::Boolean auto_spin_up{ "aimbot.auto.spin-up", "0" };
-static settings::Float spinup_time{ "aimbot.spinup-time", "7000" };
 static settings::Boolean minigun_tapfire{ "aimbot.auto.tapfire", "false" };
-static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "false" };
-static settings::Float unzoom_time{ "aimbot.unzoom.time", "7000" };
+static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "0" };
 static settings::Boolean auto_unzoom{ "aimbot.auto.unzoom", "0" };
 
 static settings::Boolean backtrackAimbot{ "aimbot.backtrack", "0" };
@@ -113,7 +112,7 @@ void spectatorUpdate()
             slow_aim = *specslow;
             fov      = *specfov;
         }
-        break;	
+        break;
     }
         // Disable if being spectated
     case 2:
@@ -129,6 +128,7 @@ void spectatorUpdate()
 }
 
 bool playerTeamCheck(CachedEntity *entity)
+
 {
     return (int) teammates == 2 || (entity->m_bEnemy() && !teammates) || (!entity->m_bEnemy() && teammates) || (CE_GOOD(LOCAL_W) && LOCAL_W->m_iClassID() == CL_CLASS(CTFCrossbow) && entity->m_iHealth() < entity->m_iMaxHealth());
 }
@@ -179,9 +179,6 @@ std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
     // Shrink very little (we still have to shrink a bit else we will wiff due to rotation)
     case 3:
         shrink_size = 10;
-        break;
-    case 4:
-        shrink_size = 11;
         break;
     default:
         shrink_size = 6;
@@ -321,43 +318,6 @@ bool CarryingHeatmaker()
     return CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 752;
 }
 
-// Am I holding The Machina ?
-bool CarryingMachina()
-{
-    return CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 526;
-}
-
-static bool allowNoScope(CachedEntity *target)
-{
-    if (target)
-    {
-        if (CarryingMachina())
-            return false;
-
-        float target_health = target->m_iHealth();
-
-        if (IsPlayerCritBoosted(LOCAL_E) && target_health <= 150.0f)
-            return true;
-
-        if (IsPlayerMiniCritBoosted(LOCAL_E))
-        {
-            if (!CarryingHeatmaker() && target_health <= 68.0f)
-                return true;
-
-            if (CarryingHeatmaker() && target_health <= 54.0f)
-                return true;
-        }
-
-        if (!CarryingHeatmaker() && target_health <= 50.0f)
-            return true;
-
-        if (CarryingHeatmaker() && target_health <= 40.0f)
-            return true;
-    }
-
-    return false;
-}
-
 void doAutoZoom(bool target_found)
 {
     bool isIdle = target_found ? false : hacks::shared::followbot::isIdle();
@@ -370,7 +330,7 @@ void doAutoZoom(bool target_found)
     {
         if (target_found)
             zoomTime.update();
-        if (isIdle || !zoomTime.check(*spinup_time))
+        if (isIdle || !zoomTime.check(3000))
         {
             current_user_cmd->buttons |= IN_ATTACK2;
         }
@@ -384,10 +344,13 @@ void doAutoZoom(bool target_found)
         if (not g_pLocalPlayer->bZoomed)
             current_user_cmd->buttons |= IN_ATTACK2;
     }
+    else if (!target_found)
+    {
         // Auto-Unzoom
-    if (auto_unzoom)
-        if (g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed && zoomTime.check(*unzoom_time))
-        current_user_cmd->buttons |= IN_ATTACK2;
+        if (auto_unzoom)
+            if (g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed && zoomTime.check(3000))
+                current_user_cmd->buttons |= IN_ATTACK2;
+    }
 }
 
 // Current Entity
@@ -405,10 +368,9 @@ AimbotCalculatedData_s calculated_data_array[2048]{};
 // The main "loop" of the aimbot.
 static void CreateMove()
 {
-    enable   = *normal_enable;
-    slow_aim = *normal_slow_aim;
-    fov      = *normal_fov;
-
+    enable          = *normal_enable;
+    slow_aim        = *normal_slow_aim;
+    fov             = *normal_fov;
     aimed_this_tick = false;
 
     bool aimkey_status = UpdateAimkey();
@@ -420,9 +382,6 @@ static void CreateMove()
         target_last = nullptr;
         return;
     }
-
-    doAutoZoom(false);
-
     else if (!LOCAL_E->m_bAlivePlayer())
     {
         target_last = nullptr;
@@ -430,6 +389,7 @@ static void CreateMove()
     }
     else if (!aimkey_status)
     {
+
         target_last = nullptr;
         return;
     }
@@ -481,7 +441,6 @@ static void CreateMove()
                 target_last = nullptr;
                 return;
             }
-        }
             if (proj_speed)
                 cur_proj_speed = *proj_speed;
             if (proj_gravity)
@@ -544,7 +503,7 @@ bool projectileSpecialCases(CachedEntity *target_entity, int weapon_case)
             else
                 release = true;
         }
-       return release;
+        return release;
         break;
     }
     case CL_CLASS(CTFPipebombLauncher):
@@ -566,7 +525,7 @@ bool projectileSpecialCases(CachedEntity *target_entity, int weapon_case)
             Aim(target_entity);
             return false;
         }
-	break;
+        break;
     }
     default:
         return true;
@@ -580,7 +539,7 @@ bool hitscanSpecialCases(CachedEntity *target_entity, int weapon_case)
     {
     case CL_CLASS(CTFMinigun):
     {
-       if (!minigun_tapfire)
+        if (!minigun_tapfire)
             DoAutoshoot(target_entity);
         else
         {
@@ -602,14 +561,13 @@ bool hitscanSpecialCases(CachedEntity *target_entity, int weapon_case)
         return false;
     }
 }
-
 bool smallBoxChecker(CachedEntity *target_entity)
 {
     if (CE_BAD(target_entity) || !g_IEntityList->GetClientEntity(target_entity->m_IDX))
         return false;
+
     return true;
 }
-
 // Just hold m1 if we were aiming at something before and are in rapidfire
 static void CreateMoveWarp()
 {
@@ -661,6 +619,7 @@ bool ShouldAim()
     // Using a forbidden weapon?
     else if (g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFKnife) || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 237 || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 265)
         return false;
+
     // Carrying A building?
     else if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bCarryingObject))
         return false;
@@ -680,12 +639,10 @@ bool ShouldAim()
         return false;
     else if (LOCAL_W->m_iClassID() == CL_CLASS(CTFMinigun) && CE_INT(LOCAL_E, netvar.m_iAmmo + 4) == 0)
         return false;
-
 #if ENABLE_VISUALS
     if (assistance_only && !MouseMoving())
         return false;
 #endif
-
     switch (GetWeaponMode())
     {
     case weapon_hitscan:
@@ -701,6 +658,7 @@ bool ShouldAim()
     default:
         return false;
     };
+
     return true;
 }
 
@@ -712,11 +670,15 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
 
     if (target_lock && target_last && aimkey_state)
     {
+
         if (shouldBacktrack(target_last))
         {
             auto good_ticks_tmp = hacks::tf2::backtrack::getGoodTicks(target_last);
             if (good_ticks_tmp)
             {
+                auto good_ticks = *good_ticks_tmp;
+                if (backtrackLastTickOnly)
+                {
                     good_ticks.clear();
                     good_ticks.push_back(good_ticks_tmp->back());
                 }
@@ -788,35 +750,35 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
             if (IsTargetStateGood(ent) && smallBoxChecker(ent) && Aim(ent))
                 isTargetGood = true;
         }
-        if (isTargetGood)// Melee mode straight up won't swing if the target is too far away. No need to prioritize based on distance. Just use whatever the user chooses.
+        if (isTargetGood) // Melee mode straight up won't swing if the target is too far away. No need to prioritize based on distance. Just use whatever the user chooses.
         {
                 switch ((int) priority_mode)
                 {
                 case 0: // Smart Priority
-		{
+                {
                     scr = GetScoreForEntity(ent);
                     break;
-		}
+                }
                 case 1: // Fov Priority
-		{
+                {
                     scr = 360.0f - calculated_data_array[ent->m_IDX].fov;
                     break;
-		}
+                }
                 case 3: // Health Priority (Lowest)
-		{
+                {
                     scr = 450.0f - ent->m_iHealth();
                     break;
-		}
+                }
                 case 4: // Distance Priority (Furthest Away)
-		{
+                {
                     scr = calculated_data_array[i].aim_position.DistTo(g_pLocalPlayer->v_Eye);
                     break;
-		}
+                }
                 case 5: // Health Priority (Highest)
-		{
+                {
                     scr = ent->m_iHealth() * 4;
                     break;
-		}
+                }
                 default:
                     break;
                 }
@@ -870,9 +832,11 @@ bool IsTargetStateGood(CachedEntity *entity)
         else if (IsPlayerInvulnerable(entity))
             return false;
         // Distance
+
         float targeting_range = EffectiveTargetingRange();
         if (entity->m_flDistance()-40 > targeting_range && tickcount > hacks::shared::aimbot::last_target_ignore_timer) // m_flDistance includes the collision box. You have to subtract it (Should be the same for every model)
             return false;
+
         // Rage only check
         if (rageonly)
         {
@@ -881,6 +845,7 @@ bool IsTargetStateGood(CachedEntity *entity)
                 return false;
             }
         }
+	// Cat only check
         if (catonly)
         {
             if (playerlist::AccessData(entity).state != playerlist::k_EState::CAT)
@@ -894,10 +859,13 @@ bool IsTargetStateGood(CachedEntity *entity)
         // Wait for charge
         if (wait_for_charge && g_pLocalPlayer->holding_sniper_rifle)
         {
+            float cdmg  = CE_FLOAT(LOCAL_W, netvar.flChargedDamage) * 3;
+            float maxhs = 450.0f;
+            if (CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 230 || HasCondition<TFCond_Jarated>(entity))
+            {
                 cdmg  = int(CE_FLOAT(LOCAL_W, netvar.flChargedDamage) * 1.35f);
                 maxhs = 203.0f;
             }
-
             bool maxCharge = cdmg >= maxhs;
 
             // Darwins damage correction, Darwins protects against 15% of
@@ -931,7 +899,7 @@ bool IsTargetStateGood(CachedEntity *entity)
             if (!(health <= hsdmg || health <= cdmg || !g_pLocalPlayer->bZoomed || (maxCharge && health > maxhs)))
             {
                 return false;
-	    }
+            }
         }
 
         // Some global checks
@@ -952,15 +920,16 @@ bool IsTargetStateGood(CachedEntity *entity)
                     if (ignore_cloak && !(HasCondition<TFCond_OnFire>(entity)) && !(HasCondition<TFCond_CloakFlicker>(entity)))
                         return false;
                 }
+            }
         }
         // Vaccinator
         if (ignore_vaccinator && IsPlayerResistantToCurrentWeapon(entity))
             return false;
 
-       AimbotCalculatedData_s &cd = calculated_data_array[entity->m_IDX];
+        AimbotCalculatedData_s &cd = calculated_data_array[entity->m_IDX];
         cd.hitbox                  = BestHitbox(entity);
         return true;
-	break;
+        break;
     }
     // Check for buildings
     case (ENTITY_BUILDING):
@@ -1000,12 +969,14 @@ bool IsTargetStateGood(CachedEntity *entity)
         }
 
         // Grab the prediction var
+
         // Vis and fov check
         return true;
     }
-    // NPCs (Skeletons, Merasmus, etc)
     case (ENTITY_NPC):
     {
+        // NPCs (Skeletons, Merasmus, etc)
+
         // Sapper aimbot? no.
         if (g_pLocalPlayer->holding_sapper)
             return false;
@@ -1021,10 +992,11 @@ bool IsTargetStateGood(CachedEntity *entity)
         // Distance
         float targeting_range = EffectiveTargetingRange();
 
-       if (entity->m_flDistance()-40 > targeting_range && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
+        if (entity->m_flDistance()-40 > targeting_range && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
             return false;
 
         // Grab the prediction var
+
         return true;
         break;
     }
@@ -1063,13 +1035,13 @@ bool IsTargetStateGood(CachedEntity *entity)
             return false;
 
         // Grab the prediction var
-        AimbotCalculatedData_s &cd = calculated_data_array[entity->m_IDX];
 
         // Vis and fov check
 
         return true;
     }
-    return true;
+
+    return false;
 }
 
 // A function to aim at a specific entitiy
@@ -1099,7 +1071,6 @@ bool Aim(CachedEntity *entity)
     // Slow aim
     if (slow_aim)
         DoSlowAim(angles);
-
 
 #if ENABLE_VISUALS
     if (entity->m_Type() == ENTITY_PLAYER)
@@ -1187,7 +1158,8 @@ void DoAutoshoot(CachedEntity *target_entity)
     }
 
     // Ambassador check
-    else if (IsAmbassador(g_pLocalPlayer->weapon()))
+
+   else if (IsAmbassador(g_pLocalPlayer->weapon()))
     {
         // Check if ambasador can headshot
         if (!AmbassadorCanHeadshot() && wait_for_charge)
@@ -1196,7 +1168,7 @@ void DoAutoshoot(CachedEntity *target_entity)
 
     // Autoshoot breaks with Slow aimbot, so use a workaround to detect when it
     // can
-    if (slow_aim && !slow_can_shoot)
+    else if (slow_aim && !slow_can_shoot)
         attack = false;
 
     // Dont autoshoot without anything in clip
@@ -1262,7 +1234,7 @@ Vector PredictEntity(CachedEntity *entity)
                     GetHitbox(entity, cd.hitbox, result);
             }
         }
-	break;
+        break;
     }
         // Buildings
     case ENTITY_BUILDING:
@@ -1276,22 +1248,24 @@ Vector PredictEntity(CachedEntity *entity)
             result = tmp_result.second;
         }
         else
-	{
+        {
             result = GetBuildingPosition(entity);
-	}
-	break;
+        }
+        break;
     }
-       // NPCs (Skeletons, merasmus, etc)
+        // NPCs (Skeletons, merasmus, etc)
     case ENTITY_NPC:
     {
         result = entity->hitboxes.GetHitbox(std::max(0, entity->hitboxes.GetNumHitboxes() / 2 - 1))->center;
-	break;
+        break;
     }
+
         // Other
     default:
     {
         result = entity->m_vecOrigin();
-	break;
+        break;
+    }
     }
     cd.predict_tick = tickcount;
     cd.fov          = GetFov(g_pLocalPlayer->v_OrigViewangles, g_pLocalPlayer->v_Eye, result);
@@ -1299,7 +1273,6 @@ Vector PredictEntity(CachedEntity *entity)
     // Return the found vector
     return result;
 }
-
 int notVisibleHitbox(CachedEntity *target, int preferred)
 {
     if (target->hitboxes.VisibilityCheck(preferred))
@@ -1310,6 +1283,7 @@ int notVisibleHitbox(CachedEntity *target, int preferred)
 }
 int autoHitbox(CachedEntity *target)
 {
+
     int preferred     = 3;
     int target_health = target->m_iHealth(); // This was used way too many times. Due to how pointers work (defrencing)+the compiler already dealing with tons of AIDS global variables it likely derefrenced it every time it was called.
     int ci            = LOCAL_W->m_iClassID();
@@ -1354,8 +1328,10 @@ int autoHitbox(CachedEntity *target)
             preferred = hitbox_t::spine_1;
             return preferred;
         }
-       return hitbox_t::head;
+
+        return hitbox_t::head;
     }
+
     // Hunstman
     else if (ci == CL_CLASS(CTFCompoundBow))
     {
@@ -1367,12 +1343,15 @@ int autoHitbox(CachedEntity *target)
         else
             return hitbox_t::head;
     }
+
     // Ambassador
     else if (IsAmbassador(g_pLocalPlayer->weapon()))
     {
+
         // 18 health is a good number to use as thats the usual minimum
         // damage it can do with a bodyshot, but damage could
         // potentially be higher
+
         if (target_health <= 18 || IsPlayerCritBoosted(g_pLocalPlayer->entity) || target->m_flDistance() > 1200)
             return hitbox_t::spine_1;
         else if (AmbassadorCanHeadshot())
@@ -1437,14 +1416,11 @@ int ClosestHitbox(CachedEntity *target)
     return closest;
 }
 
-static float slow_change_dist_p = 0;
-static float slow_change_dist_y = 0;
-
 // A helper function to find a user angle that isnt directly on the target
 // angle, effectively slowing the aiming process
 void DoSlowAim(Vector &input_angle)
 {
-     auto viewangles   = current_user_cmd->viewangles;
+    auto viewangles   = current_user_cmd->viewangles;
     Vector slow_delta = { 0, 0, 0 };
 
     // Don't bother if we're already on target
@@ -1467,9 +1443,6 @@ void DoSlowAim(Vector &input_angle)
     slow_can_shoot = false;
     if (std::abs(slow_delta.y) < 0.17 && std::abs(slow_delta.x) < 0.17)
         slow_can_shoot = true;
-
-    // Clamp as we changed angles
-    fClampAngle(input_angle);
 }
 
 // A function that determins whether aimkey allows aiming

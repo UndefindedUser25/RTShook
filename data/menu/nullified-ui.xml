@@ -1,0 +1,24 @@
+<ElementGroup>
+    <Window x="100" y="300" name="Main Menu" width="content" height="content">
+        <TabContainer width="600" height="450">
+            <Include path="nullifiedcat/weapons.xml"/>
+            <Include path="nullifiedcat/visuals.xml"/>
+            <Include path="nullifiedcat/antiaim.xml"/>
+            <Include path="nullifiedcat/warp.xml"/>
+            <Include path="nullifiedcat/chat.xml"/>
+            <Include path="nullifiedcat/config.xml"/>
+            <Include path="nullifiedcat/hackinfo.xml"/>
+        </TabContainer>
+    </Window>
+    <Window x="100" y="300" name="Useful Boats" width="content" height="content">
+        <TabContainer width="600" height="450">
+            <Include path="nullifiedcat/navbot.xml"/>
+	    <Include path="nullifiedcat/catbot.xml"/>
+	    <Include path="nullifiedcat/collective.xml"/>
+            <Include path="nullifiedcat/misc.xml"/>
+            <Include path="nullifiedcat/autoheal.xml"/>
+	    <Include path="nullifiedcat/followbot.xml"/>
+	    <Include path="nullifiedcat/idenfity.xml"/>
+        </TabContainer>
+    </Window>
+</ElementGroup>

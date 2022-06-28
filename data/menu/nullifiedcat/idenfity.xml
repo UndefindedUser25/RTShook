@@ -1,0 +1,14 @@
+<Tab name="Idenfity" padding="5 5 5 5">
+    <Box padding="12 6 6 6" width="content" height="content" name="Idenfity stuff">
+        <List width="200">
+            <AutoVariable width="fill" target="chat.identify" label="Identify" tooltip="Idenfity Cathook user [Only as Premium accounts. Because cl_drawline got nuked]"/>
+            <AutoVariable width="fill" target="chat.identify.answer" label="Counter Identify" tooltip="Idenfity Cathook user on Counter"/>
+	    <AutoVariable width="fill" target="nullnexus.enabled" label="Identify as Nullnexus" tooltip="Idenfity at form nullnexus user."/>
+	    <AutoVariable width="fill" target="nullnexus.proxy.enabled" label="Nullnexus Proxy"/>
+	    <AutoVariable width="fill" target="nullnexus.user.anon" label="Nullnexus anon"/>
+	    <AutoVariable width="fill" target="nullnexus.host" label="Nullnexus Host" tooltip="Set Network Nullnexus Hosting for idenfity"/>
+	    <AutoVariable width="fill" target="nullnexus.port" label="Nullnexus Port"/>
+	    <AutoVariable width="fill" target="nullnexus.user.colour" label="Nullnexus user color"/>
+        </List>
+    </Box>
+</Tab>

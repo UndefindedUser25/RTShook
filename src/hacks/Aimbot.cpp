@@ -48,7 +48,6 @@ static settings::Boolean extrapolate{ "aimbot.extrapolate", "0" };
 static settings::Int normal_slow_aim{ "aimbot.slow", "0" };
 static settings::Int miss_chance{ "aimbot.miss-chance", "0" };
 
-static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "false" };
 static settings::Float unzoom_time{ "aimbot.unzoom.time", "7000" };
 static settings::Float spinup_time{ "aimbot.spinup-time", "7000" };
 

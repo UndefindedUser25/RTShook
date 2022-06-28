@@ -48,6 +48,10 @@ static settings::Boolean extrapolate{ "aimbot.extrapolate", "0" };
 static settings::Int normal_slow_aim{ "aimbot.slow", "0" };
 static settings::Int miss_chance{ "aimbot.miss-chance", "0" };
 
+static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "false" };
+static settings::Float unzoom_time{ "aimbot.unzoom.time", "7000" };
+static settings::Float spinup_time{ "aimbot.spinup-time", "7000" };
+
 static settings::Boolean projectile_aimbot{ "aimbot.projectile.enable", "true" };
 static settings::Float proj_gravity{ "aimbot.projectile.gravity", "0" };
 static settings::Float proj_speed{ "aimbot.projectile.speed", "0" };
@@ -318,6 +322,43 @@ bool CarryingHeatmaker()
     return CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 752;
 }
 
+// Am I holding The Machina ?
+bool CarryingMachina()
+{
+    return CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 526;
+}
+
+static bool allowNoScope(CachedEntity *target)
+{
+    if (target)
+    {
+        if (CarryingMachina())
+            return false;
+
+        float target_health = target->m_iHealth();
+
+        if (IsPlayerCritBoosted(LOCAL_E) && target_health <= 150.0f)
+            return true;
+
+        if (IsPlayerMiniCritBoosted(LOCAL_E))
+        {
+            if (!CarryingHeatmaker() && target_health <= 68.0f)
+                return true;
+
+            if (CarryingHeatmaker() && target_health <= 54.0f)
+                return true;
+        }
+
+        if (!CarryingHeatmaker() && target_health <= 50.0f)
+            return true;
+
+        if (CarryingHeatmaker() && target_health <= 40.0f)
+            return true;
+    }
+
+    return false;
+}
+
 void doAutoZoom(bool target_found)
 {
     bool isIdle = target_found ? false : hacks::shared::followbot::isIdle();
@@ -330,7 +371,7 @@ void doAutoZoom(bool target_found)
     {
         if (target_found)
             zoomTime.update();
-        if (isIdle || !zoomTime.check(3000))
+        if (isIdle || !zoomTime.check(*spinup_time))
         {
             current_user_cmd->buttons |= IN_ATTACK2;
         }
@@ -347,9 +388,9 @@ void doAutoZoom(bool target_found)
     else if (!target_found)
     {
         // Auto-Unzoom
-        if (auto_unzoom)
-            if (g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed && zoomTime.check(3000))
-                current_user_cmd->buttons |= IN_ATTACK2;
+    if (auto_unzoom)
+        if (g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed && zoomTime.check(*unzoom_time))
+        current_user_cmd->buttons |= IN_ATTACK2;
     }
 }
 

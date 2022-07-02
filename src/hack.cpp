@@ -310,7 +310,7 @@ free(logname);*/
     InitRandom();
     sharedobj::LoadLauncher();
 
-    // remove epic source lock
+    // remove epic source lock (needed for non-preload tf2 always crash anytime.)
     std::remove("/tmp/source_engine_2925226592.lock");
 
     sharedobj::LoadEarlyObjects();

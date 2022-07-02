@@ -1435,6 +1435,8 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
             return active_slot;
         else if (nearest.second <= 550)
             return primary;
+	else if (nearest.second <= 200)
+	    return melee;
         else
             return secondary;
     }

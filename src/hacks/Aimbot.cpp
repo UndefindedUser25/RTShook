@@ -61,6 +61,7 @@ static settings::Boolean auto_spin_up{ "aimbot.auto.spin-up", "0" };
 static settings::Float spinup_time{ "aimbot.spinup-time", "7000" };
 static settings::Boolean minigun_tapfire{ "aimbot.auto.tapfire", "false" };
 static settings::Boolean p_fix{ "aimbot.minigun-p-fix", "false" };
+static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "false" };
 static settings::Float unzoom_time{ "aimbot.unzoom.time", "7000" };
 static settings::Boolean auto_unzoom{ "aimbot.auto.unzoom", "0" };
 
@@ -372,7 +373,7 @@ void doAutoZoom(bool target_found)
         return;
     }
 
-    if (auto_zoom && !allowNoScope(target) && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle))
+    if (auto_zoom && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle))
     {
         if (target_found)
             zoomTime.update();
@@ -474,7 +475,7 @@ static void CreateMove()
     doAutoZoom(true);
 
     // If zoomed only is on, check if zoomed
-    if (zoomed_only && g_pLocalPlayer->holding_sniper_rifle && !allowNoScope(target_entity))
+    if (zoomed_only && g_pLocalPlayer->holding_sniper_rifle)
     {
         if (!g_pLocalPlayer->bZoomed && !(current_user_cmd->buttons & IN_ATTACK))
             return;
@@ -1254,7 +1255,7 @@ void DoAutoshoot(CachedEntity *target_entity)
         {
             if (g_pLocalPlayer->holding_sniper_rifle)
             {
-                if (zoomed_only && !CanHeadshot() && !allowNoScope(target_entity))
+                if (zoomed_only && !CanHeadshot())
                     attack = false;
             }
         }

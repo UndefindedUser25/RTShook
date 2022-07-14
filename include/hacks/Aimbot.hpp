@@ -38,6 +38,7 @@ void Reset();
 
 // Stuff to make storing functions easy
 void doAutoZoom(bool target_found);
+std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox);
 bool isAiming();
 CachedEntity *CurrentTarget();
 bool ShouldAim();
@@ -50,4 +51,5 @@ int ClosestHitbox(CachedEntity *target);
 void DoSlowAim(Vector &inputAngle);
 bool UpdateAimkey();
 float EffectiveTargetingRange();
+   
 } // namespace hacks::shared::aimbot

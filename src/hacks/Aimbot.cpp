@@ -31,6 +31,7 @@ static settings::Boolean autoshoot_disguised{ "aimbot.autoshoot-disguised", "1" 
 static settings::Int multipoint{ "aimbot.multipoint", "0" };
 static settings::Int hitbox_mode{ "aimbot.hitbox-mode", "0" };
 static settings::Float normal_fov{ "aimbot.fov", "0" };
+static settings::Int vischeck_hitboxes{ "aimbot.vischeck-hitboxes", "0" };
 static settings::Int priority_mode{ "aimbot.priority-mode", "0" };
 static settings::Boolean wait_for_charge{ "aimbot.wait-for-charge", "0" };
 
@@ -145,7 +146,7 @@ static std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
             hitpoints.push_back(hb->center);
     }
 
-    if (!multipoint)
+   if (!*multipoint)
         return hitpoints;
 
     // Multipoint
@@ -198,6 +199,149 @@ static std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
     positions.reserve(sizeof(Vector) * 20);
     positions.insert(positions.end(), corners, &corners[8]);
     positions.insert(positions.end(), line_positions, &line_positions[12]);
+
+    for (int i = 0; i < 20; ++i)
+    {
+        trace_t trace;
+        if (IsEntityVectorVisible(ent, positions[i], true, MASK_SHOT_HULL, &trace))
+        {
+            if (trace.hitbox == hitbox)
+                hitpoints.push_back(positions[i]);
+        }
+    }
+    if (*vischeck_hitboxes)
+    {
+        if (*vischeck_hitboxes == 1 && playerlist::AccessData(ent).state != playerlist::k_EState::RAGE)
+        {
+            return hitpoints;
+        }
+        int i = 0;
+        while (hitpoints.empty() && i <= 17) // Prevents returning empty at all costs. Loops through every hitbox
+        {
+            if (hitbox == i)
+                i++;
+            hitpoints = getHitpointsVischeck(ent, i);
+            i++;
+        }
+    }
+
+    return hitpoints;
+}
+std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox)
+{
+    std::vector<Vector> hitpoints;
+    auto hb = ent->hitboxes.GetHitbox(hitbox);
+    if (!*multipoint)
+    {
+        hitpoints.push_back(hb->center);
+        return hitpoints;
+    }
+    auto bboxmin = hb->bbox->bbmin;
+    auto bboxmax = hb->bbox->bbmax;
+
+    auto transform = ent->hitboxes.GetBones()[hb->bbox->bone];
+    QAngle rotation;
+    Vector origin;
+
+    MatrixAngles(transform, rotation, origin);
+
+    Vector corners[8];
+    GenerateBoxVertices(origin, rotation, bboxmin, bboxmax, corners);
+
+    float shrink_size = 1;
+
+    if (!isHitboxMedium(hitbox)) // hitbox should be chosen based on size.
+        shrink_size = 3;
+    else
+        shrink_size = 6;
+
+    // Shrink positions by moving towards opposing corner
+    for (int i = 0; i < 8; i++)
+        corners[i] += (corners[7 - i] - corners[i]) / shrink_size;
+
+    // Generate middle points on line segments
+    // Define cleans up code
+
+    const Vector line_positions[12] = { GET_MIDDLE(0, 1), GET_MIDDLE(0, 2), GET_MIDDLE(1, 3), GET_MIDDLE(2, 3), GET_MIDDLE(7, 6), GET_MIDDLE(7, 5), GET_MIDDLE(6, 4), GET_MIDDLE(5, 4), GET_MIDDLE(0, 4), GET_MIDDLE(1, 5), GET_MIDDLE(2, 6), GET_MIDDLE(3, 7) };
+
+    // Create combined vector
+    std::vector<Vector> positions;
+
+    positions.reserve(sizeof(Vector) * 20);
+    positions.insert(positions.end(), corners, &corners[8]);
+    positions.insert(positions.end(), line_positions, &line_positions[12]);
+
+    for (int i = 0; i < 20; ++i)
+    {
+        trace_t trace;
+        if (IsEntityVectorVisible(ent, positions[i], true, MASK_SHOT_HULL, &trace))
+        {
+            if (trace.hitbox == hitbox)
+                hitpoints.push_back(positions[i]);
+        }
+    }
+    if (*vischeck_hitboxes)
+    {
+        if (*vischeck_hitboxes == 1 && playerlist::AccessData(ent).state != playerlist::k_EState::RAGE)
+        {
+            return hitpoints;
+        }
+        int i = 0;
+        while (hitpoints.empty() && i <= 17) // Prevents returning empty at all costs. Loops through every hitbox
+        {
+            if (hitbox == i)
+                i++;
+            hitpoints = getHitpointsVischeck(ent, i);
+            i++;
+        }
+    }
+
+    return hitpoints;
+}
+std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox)
+{
+    std::vector<Vector> hitpoints;
+    auto hb = ent->hitboxes.GetHitbox(hitbox);
+    if (!*multipoint)
+    {
+        hitpoints.push_back(hb->center);
+        return hitpoints;
+    }
+    auto bboxmin = hb->bbox->bbmin;
+    auto bboxmax = hb->bbox->bbmax;
+
+    auto transform = ent->hitboxes.GetBones()[hb->bbox->bone];
+    QAngle rotation;
+    Vector origin;
+
+    MatrixAngles(transform, rotation, origin);
+
+    Vector corners[8];
+    GenerateBoxVertices(origin, rotation, bboxmin, bboxmax, corners);
+
+    float shrink_size = 1;
+
+    if (!isHitboxMedium(hitbox)) // hitbox should be chosen based on size.
+        shrink_size = 3;
+    else
+        shrink_size = 6;
+
+    // Shrink positions by moving towards opposing corner
+    for (int i = 0; i < 8; i++)
+        corners[i] += (corners[7 - i] - corners[i]) / shrink_size;
+
+    // Generate middle points on line segments
+    // Define cleans up code
+
+    const Vector line_positions[12] = { GET_MIDDLE(0, 1), GET_MIDDLE(0, 2), GET_MIDDLE(1, 3), GET_MIDDLE(2, 3), GET_MIDDLE(7, 6), GET_MIDDLE(7, 5), GET_MIDDLE(6, 4), GET_MIDDLE(5, 4), GET_MIDDLE(0, 4), GET_MIDDLE(1, 5), GET_MIDDLE(2, 6), GET_MIDDLE(3, 7) };
+
+    // Create combined vector
+    std::vector<Vector> positions;
+
+    positions.reserve(sizeof(Vector) * 20);
+    positions.insert(positions.end(), corners, &corners[8]);
+    positions.insert(positions.end(), line_positions, &line_positions[12]);
+
 
     for (int i = 0; i < 20; ++i)
     {
@@ -995,6 +1139,36 @@ bool IsTargetStateGood(CachedEntity *entity)
         AimbotCalculatedData_s &cd = calculated_data_array[entity->m_IDX];
         cd.hitbox                  = hitbox;
 
+	if (*vischeck_hitboxes && !*multipoint)
+        {
+            if (*vischeck_hitboxes == 1 && playerlist::AccessData(entity).state != playerlist::k_EState::RAGE)
+            {
+                return true;
+            }
+
+            else
+            {
+                int i = 0;
+                trace_t first_tracer;
+                if (IsEntityVectorVisible(entity, entity->hitboxes.GetHitbox(cd.hitbox)->center, true, MASK_SHOT_HULL, &first_tracer))
+                    return true;
+                while (i <= 17) // Prevents returning empty at all costs. Loops through every hitbox
+                {
+                    if (i == cd.hitbox)
+                        i++;
+                    trace_t test_trace;
+                    std::vector<Vector> centered_hitbox = getHitpointsVischeck(entity, i);
+
+                    if (IsEntityVectorVisible(entity, centered_hitbox[0], true, MASK_SHOT_HULL, &test_trace))
+                    {
+                        cd.hitbox = i;
+                        return true;
+                    }
+                    i++;
+                }
+                return false; // It looped through every hitbox and found nothing. It isn't visible.
+            }
+        }
         // Vis check + fov check
         if (!VischeckPredictedEntity(entity))
             return false;
@@ -1161,7 +1335,36 @@ bool IsTargetStateGood(CachedEntity *entity)
         return false;
     }
 }
+	
+float projectileHitboxSize(int projectile_size)
+{
+    float projectile_hitbox_size = 6.3f;
+    switch (projectile_size)
+    {
+    case CL_CLASS(CTFRocketLauncher):
+    case CL_CLASS(CTFRocketLauncher_Mortar):
+    case CL_CLASS(CTFRocketLauncher_AirStrike):
+    case CL_CLASS(CTFRocketLauncher_DirectHit):
+    case CL_CLASS(CTFPipebombLauncher):
+    case CL_CLASS(CTFGrenadeLauncher):
+    case CL_CLASS(CTFCannon):
+        break;
+    case CL_CLASS(CTFFlareGun):
+    case CL_CLASS(CTFFlareGun_Revenge):
+    case CL_CLASS(CTFDRGPomson):
+        projectile_hitbox_size = 3;
+        break;
+    case CL_CLASS(CTFSyringeGun):
+    case CL_CLASS(CTFCompoundBow):
+        projectile_hitbox_size = 1;
+        break;
+    default:
+        break;
+    }
 
+    return projectile_hitbox_size;
+}
+	
 // A function to aim at a specific entitiy
 void Aim(CachedEntity *entity)
 {

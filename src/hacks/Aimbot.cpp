@@ -342,7 +342,6 @@ std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox)
     positions.insert(positions.end(), corners, &corners[8]);
     positions.insert(positions.end(), line_positions, &line_positions[12]);
 
-
     for (int i = 0; i < 20; ++i)
     {
         trace_t trace;

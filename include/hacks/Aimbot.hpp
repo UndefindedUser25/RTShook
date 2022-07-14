@@ -29,31 +29,31 @@ struct AimbotCalculatedData_s
 };
 
 // Functions used to calculate aimbot data, and if already calculated use it
-Vector PredictEntity(CachedEntity *entity, bool vischeck);
-bool VischeckPredictedEntity(CachedEntity *entity);
+Vector PredictEntity(CachedEntity *entity);
 bool BacktrackVisCheck(CachedEntity *entity);
 
 // Functions called by other functions for when certian game calls are run
 void Reset();
 
 // Stuff to make storing functions easy
+bool isAiming();
+CachedEntity *CurrentTarget();
 void doAutoZoom(bool target_found);
+bool ShouldAim();
+CachedEntity *RetrieveBestTarget(bool aimkey_state);
+bool IsTargetStateGood(CachedEntity *entity);
+bool Aim(CachedEntity *entity);
+void DoAutoshoot(CachedEntity *target = nullptr);
+int notVisibleHitbox(CachedEntity *target, int preferred);
 std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox);
 float projectileHitboxSize(int projectile_size);
 int autoHitbox(CachedEntity *target);
 bool hitscanSpecialCases(CachedEntity *target_entity, int weapon_case);
 bool projectileSpecialCases(CachedEntity *target_entity, int weapon_case);
-bool isAiming();
-CachedEntity *CurrentTarget();
-bool ShouldAim();
-CachedEntity *RetrieveBestTarget(bool aimkey_state);
-bool IsTargetStateGood(CachedEntity *entity);
-void Aim(CachedEntity *entity);
-void DoAutoshoot(CachedEntity *target = nullptr);
 int BestHitbox(CachedEntity *target);
+bool isHitboxMedium(int hitbox);
 int ClosestHitbox(CachedEntity *target);
 void DoSlowAim(Vector &inputAngle);
 bool UpdateAimkey();
 float EffectiveTargetingRange();
-   
 } // namespace hacks::shared::aimbot

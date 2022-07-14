@@ -673,6 +673,18 @@ int getWeaponByID(CachedEntity *player, int weaponid)
     return -1;
 }
 
+bool didProjectileHit(Vector start_point, Vector end_point, CachedEntity *entity, int projectile_size)
+{
+
+    trace::filter_default.SetSelf(RAW_ENT(g_pLocalPlayer->entity));
+    Ray_t ray;
+    trace_t trace_obj;
+    trace_t *tracer = &trace_obj;
+    ray.Init(start_point, end_point, Vector(0, -projectile_size, -projectile_size), Vector(0, projectile_size, projectile_size));
+    g_ITrace->TraceRay(ray, MASK_SHOT_HULL, &trace::filter_default, tracer);
+    return (((IClientEntity *) tracer->m_pEnt) == RAW_ENT(entity) || !tracer->DidHit());
+}
+
 // A function to tell if a player is using a specific weapon
 bool HasWeapon(CachedEntity *ent, int wantedId)
 {

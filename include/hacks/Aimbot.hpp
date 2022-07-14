@@ -36,22 +36,20 @@ bool BacktrackVisCheck(CachedEntity *entity);
 void Reset();
 
 // Stuff to make storing functions easy
+void doAutoZoom(bool target_found);
 bool isAiming();
 CachedEntity *CurrentTarget();
-void doAutoZoom(bool target_found);
 bool ShouldAim();
 CachedEntity *RetrieveBestTarget(bool aimkey_state);
 bool IsTargetStateGood(CachedEntity *entity);
 bool Aim(CachedEntity *entity);
 void DoAutoshoot(CachedEntity *target = nullptr);
+bool smallBoxChecker(CachedEntity* target_entity);
 int notVisibleHitbox(CachedEntity *target, int preferred);
-std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox);
-float projectileHitboxSize(int projectile_size);
-int autoHitbox(CachedEntity *target);
-bool hitscanSpecialCases(CachedEntity *target_entity, int weapon_case);
-bool projectileSpecialCases(CachedEntity *target_entity, int weapon_case);
+int autoHitbox(CachedEntity* target);
+bool hitscanSpecialCases(CachedEntity* target_entity, int weapon_case);
+bool projectileSpecialCases(CachedEntity* target_entity, int weapon_case);
 int BestHitbox(CachedEntity *target);
-bool isHitboxMedium(int hitbox);
 int ClosestHitbox(CachedEntity *target);
 void DoSlowAim(Vector &inputAngle);
 bool UpdateAimkey();

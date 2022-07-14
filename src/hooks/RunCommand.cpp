@@ -85,4 +85,4 @@ static InitRoutine minigun_check(
             },
             "cm_runcommand");
     });
-
+ } // namespace hooked_methods

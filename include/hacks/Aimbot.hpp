@@ -39,6 +39,10 @@ void Reset();
 // Stuff to make storing functions easy
 void doAutoZoom(bool target_found);
 std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox);
+float projectileHitboxSize(int projectile_size);
+int autoHitbox(CachedEntity *target);
+bool hitscanSpecialCases(CachedEntity *target_entity, int weapon_case);
+bool projectileSpecialCases(CachedEntity *target_entity, int weapon_case);
 bool isAiming();
 CachedEntity *CurrentTarget();
 bool ShouldAim();

@@ -222,7 +222,9 @@ static int nextCritTick(int loops = 4096)
         *g_PredictionRandomSeed = MD5_PseudoRandom(cmd_number) & 0x7FFFFFFF;
         // Save weapon state to not break anything
         weapon_info info(wep);
-        bool is_crit = re::C_TFWeaponBase::CalcIsAttackCritical(wep);
+        calling_crithelper = true;
+        bool is_crit       = re::C_TFWeaponBase::CalcIsAttackCritical(wep);
+        calling_crithelper = false;
         // Restore state
         info.restore_data(wep);
         // Is a crit

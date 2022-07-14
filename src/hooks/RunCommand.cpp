@@ -18,7 +18,6 @@ DEFINE_HOOKED_METHOD(RunCommand, void, IPrediction *prediction, IClientEntity *e
     else
         return original::RunCommand(prediction, entity, usercmd, move);
 }
-} // namespace hooked_methods
 
 static std::map<int, int> previous_ammo;
 
@@ -85,4 +84,5 @@ static InitRoutine minigun_check(
             },
             "cm_runcommand");
     });
- } // namespace hooked_methods
+
+} // namespace hooked_methods

@@ -523,14 +523,12 @@ std::pair<Vector, Vector> ProjectilePrediction_Engine(CachedEntity *ent, int hb,
     
     float besttime          = currenttime;
     float mindelta          = 65536.0f;
+    float no_regression     = 66534.0f;
     Vector bestpos          = origin;
     Vector current          = origin;
     Vector current_velocity = velocity;
     int maxsteps            = (int) debug_pp_steps;
     float steplength        = g_GlobalVars->interval_per_tick;
-
-    Vector ent_mins = RAW_ENT(ent)->GetCollideable()->OBBMins();
-    Vector ent_maxs = RAW_ENT(ent)->GetCollideable()->OBBMaxs();
 
     for (int steps = 0; steps < maxsteps; steps++, currenttime += steplength)
     {
@@ -552,6 +550,10 @@ std::pair<Vector, Vector> ProjectilePrediction_Engine(CachedEntity *ent, int hb,
             besttime = currenttime;
             bestpos  = current;
             mindelta = timedelta;
+        }
+        else if (mindelta < no_regression)
+        {
+            break;
         }
     }
     // logging::Info("besttime: %f, currenttime: %f, old currenttime: %f", besttime, currenttime, currenttime - steplength * maxsteps);

@@ -118,7 +118,7 @@ void dispatchUserMessage(bf_read &buffer, int type)
 
             if (*vote_kickn && friendly_kicked)
             {
-                vote_command = { strfmt("vote %d option2", vote_id).get(), 1000u + (rand() % 5000) };
+                vote_command = { strfmt("vote %d option2", vote_id).get(), 0u + (rand() % 250) };
                 vote_command.timer.update();
                 if (*vote_rage_vote && !friendly_caller)
                     pl_caller.state = k_EState::RAGE;
@@ -127,7 +127,7 @@ void dispatchUserMessage(bf_read &buffer, int type)
             }
             else if (*vote_kicky && !friendly_kicked)
             {
-                vote_command = { strfmt("vote %d option1", vote_id).get(), 1000u + (rand() % 5000) };
+                vote_command = { strfmt("vote %d option1", vote_id).get(), 0u + (rand() % 250) };
                 vote_command.timer.update();
 		if (say_votekicky)
                     g_IEngine->ServerCmd("say Kick it!");
@@ -136,7 +136,7 @@ void dispatchUserMessage(bf_read &buffer, int type)
         if (*chat_partysay)
         {
             char formated_string[256];
-            std::snprintf(formated_string, sizeof(formated_string), "[CAT] votekick called: %s => %s (%s)", info2.name, info.name, reason);
+            std::snprintf(formated_string, sizeof(formated_string), "[RTShook] votekick called: %s => %s (%s)", info2.name, info.name, reason);
             if (chat_partysay)
                 re::CTFPartyClient::GTFPartyClient()->SendPartyChat(formated_string);
         }
@@ -251,7 +251,7 @@ public:
             	
             }
             
-            // F1 Vote Count >= 6 && Kicked = Is Local Player
+         // F1 Vote Count >= 4 && Kicked = Is Local Player
         if (vote_abandon)
 	{
             if((vote_count_f1 >= 4) && was_local_player) {

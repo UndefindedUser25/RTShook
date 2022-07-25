@@ -27,9 +27,8 @@
 							<Option name="Down" value="3"/>
 							<Option name="Jitter" value="4"/>
 							<Option name="Random" value="5"/>
-							<Option name="Flip 1" value="6"/>
-							<Option name="Filp 2" value="7"/>
-							<Option name="Crazy" value="8"/>
+							<Option name="Flip" value="6"/>
+							<Option name="Crazy" value="7"/>
 						</Select>
 					</LabeledObject>
 					<AutoVariable width="fill" target="antiaim.pitch.static" label="Custom" tooltip="Used when 'Real Pitch' is set to 'Custom'."/>
@@ -65,7 +64,7 @@
 							<Option name="Spin" value="6"/>
 							<Option name="Edge" value="7"/>
 							<Option name="Sideways" value="8"/>
-							<Option name="Heck" value="9"/>
+							<Option name="Crazy" value="9"/>
 							<Option name="Omega" value="10"/>
 							<Option name="Random" value="11"/>
 							<Option name="Random Clamped" value="12"/>

@@ -39,7 +39,9 @@ static settings::Boolean minigun_mode("navbot.minigun-mode", "true");
 static settings::Boolean engie_mode("navbot.engineer-mode", "true");
 static settings::Boolean path_nearest_bluilding("navbot.path.nearest-bluilding", "false");
 static settings::Float distance{ "aimbot.unzoom-prediction.distance", "3000" };
+static settings::Float distance_spinup{ "aimbot.spinup-prediction.distance", "3000" };
 static settings::Boolean auto_zoom_prediction{ "aimbot.auto.zoom-prediction", "false" };
+static settings::Boolean auto_spinup_prediction{ "aimbot.auto.spinup-prediction", "false" };
 
 #if ENABLE_VISUALS
 static settings::Boolean draw_danger("navbot.draw-danger", "false");
@@ -677,9 +679,8 @@ bool stayNearTarget(CachedEntity *ent)
         std::sort(good_areas.begin(), good_areas.end(), [](std::pair<CNavArea *, float> a, std::pair<CNavArea *, float> b) { return a.second < b.second; });
 
     // Try to path to all the good areas, based on distance
-    for (auto &area : good_areas)
-        if (navparser::NavEngine::navTo(area.first->m_center, staynear, true, !navparser::NavEngine::isPathing()))
-            return true;
+    if (std::ranges::any_of(good_areas, [](std::pair<CNavArea *, float> area) { return navparser::NavEngine::navTo(area.first->m_center, staynear, true, !navparser::NavEngine::isPathing()); }))
+        return true;
 
     return false;
 }
@@ -688,6 +689,105 @@ bool stayNearTarget(CachedEntity *ent)
 bool isStayNearTargetValid(CachedEntity *ent)
 {
     return CE_VALID(ent) && g_pPlayerResource->isAlive(ent->m_IDX) && ent->m_IDX != g_pLocalPlayer->entity_idx && g_pLocalPlayer->team != ent->m_iTeam() && player_tools::shouldTarget(ent) && !IsPlayerInvisible(ent) && !IsPlayerInvulnerable(ent);
+}
+	
+// Recursive function to find hiding spot
+std::optional<std::pair<CNavArea *, int>> findClosestHidingSpot(CNavArea *area, Vector vischeck_point, int recursion_count, int index = 0)
+{
+    static std::vector<CNavArea *> already_recursed;
+    if (index == 0)
+        already_recursed.clear();
+    Vector area_origin = area->m_center;
+    area_origin.z += navparser::PLAYER_JUMP_HEIGHT;
+
+    // Increment recursion index
+    index++;
+
+    // If the area works, return it
+    if (!IsVectorVisibleNavigation(area_origin, vischeck_point))
+        return std::pair<CNavArea *, int>{ area, index - 1 };
+
+    // Termination condition not hit yet
+    else if (index != recursion_count)
+    {
+        // Store the nearest area
+        std::optional<std::pair<CNavArea *, int>> best_area = std::nullopt;
+
+        for (auto &connection : area->m_connections)
+        {
+            if (std::find(already_recursed.begin(), already_recursed.end(), connection.area) != already_recursed.end())
+                continue;
+            already_recursed.push_back(connection.area);
+            auto area = findClosestHidingSpot(connection.area, vischeck_point, recursion_count, index);
+            if (area && (!best_area || area->second < best_area->second))
+                best_area = { area->first, area->second };
+        }
+        return best_area;
+    }
+    else
+        return std::nullopt;
+}
+
+// Try to avoid enemy sightlines and reload in peace
+bool runReload()
+{
+    PROF_SECTION(runReload)
+    static Timer reloadrun_cooldown{};
+
+    // Not reloading, do not run
+    if (!(CE_GOOD(LOCAL_E) && !HasCondition<TFCond_HalloweenGhostMode>(LOCAL_E) && CE_GOOD(LOCAL_W) && re::C_BaseCombatWeapon::GetSlot(RAW_ENT(LOCAL_W)) + 1 != melee && !CanShoot()))
+        return false;
+
+    if (!stay_near)
+        return false;
+
+    // Re-calc only every once in a while
+    if (!reloadrun_cooldown.test_and_set(1000))
+        return navparser::NavEngine::current_priority == run_reload;
+
+    // Too high priority, so don't try
+    if (navparser::NavEngine::current_priority > run_reload)
+        return false;
+
+    // Get our area and start recursing the neighbours
+    CNavArea *local_area = navparser::NavEngine::findClosestNavSquare(g_pLocalPlayer->v_Origin);
+    if (!local_area)
+        return false;
+
+    // Get closest enemy to vicheck
+    CachedEntity *closest_visible_enemy = nullptr;
+    float best_distance                 = FLT_MAX;
+    for (auto &ent : entity_cache::valid_ents)
+    {
+        if (!ent->m_bAlivePlayer() || !ent->m_bEnemy())
+            continue;
+        if (ent->m_flDistance() > best_distance)
+            continue;
+        if (!ent->IsVisible())
+            continue;
+        if (!player_tools::shouldTarget(ent))
+            continue;
+
+        best_distance         = ent->m_flDistance();
+        closest_visible_enemy = ent;
+    }
+
+    if (!closest_visible_enemy)
+        return false;
+
+    Vector vischeck_point = closest_visible_enemy->m_vecOrigin();
+    vischeck_point.z += navparser::PLAYER_JUMP_HEIGHT;
+
+    // Get the best non visible area
+    auto best_area = findClosestHidingSpot(local_area, vischeck_point, 5);
+    if (!best_area)
+        return false;
+
+    // If we can, path
+    if (navparser::NavEngine::navTo((*best_area).first->m_center, run_reload, true, false, false))
+        return true;
+    else
+        return false;
 }
 
 // Try to stay near enemies and stalk them (or in case of sniper, try to stay far from them
@@ -906,10 +1006,9 @@ bool tryToSnipe(CachedEntity *ent)
         std::sort(good_areas.begin(), good_areas.end(), [](std::pair<CNavArea *, float> a, std::pair<CNavArea *, float> b) { return a.second > b.second; });
     else
         std::sort(good_areas.begin(), good_areas.end(), [](std::pair<CNavArea *, float> a, std::pair<CNavArea *, float> b) { return a.second < b.second; });
-
-    for (auto &area : good_areas)
-        if (navparser::NavEngine::navTo(area.first->m_center, snipe_sentry))
-            return true;
+	
+    if (std::ranges::any_of(good_areas, [](std::pair<CNavArea *, float> area) { return navparser::NavEngine::navTo(area.first->m_center, snipe_sentry); }))
+        return true;
     return false;
 }
 
@@ -1262,7 +1361,7 @@ bool doRoam()
 {
     static Timer roam_timer;
     // Don't path constantly
-    if (!roam_timer.test_and_set(200))
+    if (!roam_timer.test_and_set(2000))
         return false;
 
     // Defend our objective if possible
@@ -1388,17 +1487,22 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     {
         if (nearest.second <= 200)
             return melee;
-        else
+        if (nearest.second <= 700)
             return primary;
+        else
+            return secondary;
     }
     case tf_heavy:
 	{
-        	if (nearest.second <= 150 && nearest.first->m_iHealth() < 65)
-            	    return melee;
-        	else if (nearest.second <= 200 && nearest.first->m_iHealth() < 65)
-            	    return active_slot;
-        	else
-            	    return secondary;
+	if (auto_spinup_prediction)
+	    if (nearest.second <= *distance_spinup)
+	    	hacks::shared::aimbot::doAutoZoom(true);
+        if (nearest.second <= 150 && nearest.first->m_iHealth() < 65)
+           return melee;
+        else if (nearest.second <= 200 && nearest.first->m_iHealth() < 65)
+            return active_slot;
+        else
+            return secondary;
 	}
     case tf_medic:
 	{
@@ -1421,11 +1525,10 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
 	if (auto_zoom_prediction)
 		if (nearest.second <= *distance)
 	    	hacks::shared::aimbot::doAutoZoom(true);
-        if (nearest.second <= 200)
+        if (nearest.second <= 250)
             return melee;
         else if (nearest.second <= 300 && nearest.first->m_iHealth() < 450)
             return active_slot;
-
         else
             return primary;
     }
@@ -1444,8 +1547,8 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     {
         if (nearest.second <= 200)
             return melee;
-        else if (nearest.second <= 300)
-            return active_slot;
+        else if (nearest.second <= 400)
+            return secondary;
         else
             return primary;
     }
@@ -1553,6 +1656,9 @@ void CreateMove()
         return;
     // Try to snipe sentries
     else if (snipeSentries())
+        return;
+    // Try to hide if reloading
+    else if (runReload())
         return;
     // Try to stalk enemies
     else if (stayNear())

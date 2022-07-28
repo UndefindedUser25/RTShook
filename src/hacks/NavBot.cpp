@@ -679,8 +679,9 @@ bool stayNearTarget(CachedEntity *ent)
         std::sort(good_areas.begin(), good_areas.end(), [](std::pair<CNavArea *, float> a, std::pair<CNavArea *, float> b) { return a.second < b.second; });
 
     // Try to path to all the good areas, based on distance
-    if (std::ranges::any_of(good_areas, [](std::pair<CNavArea *, float> area) { return navparser::NavEngine::navTo(area.first->m_center, staynear, true, !navparser::NavEngine::isPathing()); }))
-        return true;
+    for (auto &area : good_areas)
+        if (navparser::NavEngine::navTo(area.first->m_center, staynear, true, !navparser::NavEngine::isPathing()))
+            return true;
 
     return false;
 }
@@ -1007,8 +1008,9 @@ bool tryToSnipe(CachedEntity *ent)
     else
         std::sort(good_areas.begin(), good_areas.end(), [](std::pair<CNavArea *, float> a, std::pair<CNavArea *, float> b) { return a.second < b.second; });
 	
-    if (std::ranges::any_of(good_areas, [](std::pair<CNavArea *, float> area) { return navparser::NavEngine::navTo(area.first->m_center, snipe_sentry); }))
-        return true;
+    for (auto &area : good_areas)
+        if (navparser::NavEngine::navTo(area.first->m_center, snipe_sentry))
+            return true;
     return false;
 }
 

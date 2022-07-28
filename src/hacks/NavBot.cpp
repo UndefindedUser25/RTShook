@@ -1509,9 +1509,6 @@ void CreateMove()
     // Try to snipe sentries
     else if (snipeSentries())
         return;
-    // Try to hide if reloading
-    else if (runReload())
-        return;
     // Try to stalk enemies
     else if (stayNear())
         return;

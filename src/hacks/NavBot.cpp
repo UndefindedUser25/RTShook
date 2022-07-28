@@ -39,9 +39,9 @@ static settings::Boolean minigun_mode("navbot.minigun-mode", "true");
 static settings::Boolean engie_mode("navbot.engineer-mode", "true");
 static settings::Boolean path_nearest_bluilding("navbot.path.nearest-bluilding", "false");
 static settings::Float distance{ "aimbot.unzoom-prediction.distance", "3000" };
-static settings::Float distance_spinup{ "aimbot.spinup-prediction.distance", "3000" };
 static settings::Boolean auto_zoom_prediction{ "aimbot.auto.zoom-prediction", "false" };
-static settings::Boolean auto_spinup_prediction{ "aimbot.auto.spinup-prediction", "false" };
+static settings::Float distance_spinup{ "aimbot.spinup-prediction.distance", "3000" };
+static settings::Boolean auto_spinup_prediction{ "aimbot.spinup-prediction", "false" };
 
 #if ENABLE_VISUALS
 static settings::Boolean draw_danger("navbot.draw-danger", "false");
@@ -691,42 +691,93 @@ bool isStayNearTargetValid(CachedEntity *ent)
 {
     return CE_VALID(ent) && g_pPlayerResource->isAlive(ent->m_IDX) && ent->m_IDX != g_pLocalPlayer->entity_idx && g_pLocalPlayer->team != ent->m_iTeam() && player_tools::shouldTarget(ent) && !IsPlayerInvisible(ent) && !IsPlayerInvulnerable(ent);
 }
-	
-// Recursive function to find hiding spot
-std::optional<std::pair<CNavArea *, int>> findClosestHidingSpot(CNavArea *area, Vector vischeck_point, int recursion_count, int index = 0)
+
+// Try to stay near enemies and stalk them (or in case of sniper, try to stay far from them
+// and snipe them)
+bool stayNear()
 {
-    static std::vector<CNavArea *> already_recursed;
-    if (index == 0)
-        already_recursed.clear();
-    Vector area_origin = area->m_center;
-    area_origin.z += navparser::PLAYER_JUMP_HEIGHT;
+    PROF_SECTION(stayNear)
+    static Timer staynear_cooldown{};
+    static CachedEntity *previous_target = nullptr;
 
-    // Increment recursion index
-    index++;
+    // Stay near is expensive so we have to cache. We achieve this by only checking a pre-determined amount of players every
+    // CreateMove
+    constexpr int MAX_STAYNEAR_CHECKS_RANGE = 3;
+    constexpr int MAX_STAYNEAR_CHECKS_CLOSE = 2;
+    static int lowest_check_index           = 0;
 
-    // If the area works, return it
-    if (!IsVectorVisibleNavigation(area_origin, vischeck_point))
-        return std::pair<CNavArea *, int>{ area, index - 1 };
+    // Stay near is off
+    if (!stay_near)
+        return false;
+    // Don't constantly path, it's slow.
+    // Far range classes do not need to repath nearly as often as close range ones.
+    if (!staynear_cooldown.test_and_set(selected_config.prefer_far ? 2000 : 500))
+        return navparser::NavEngine::current_priority == staynear;
 
-    // Termination condition not hit yet
-    else if (index != recursion_count)
+    // Too high priority, so don't try
+    if (navparser::NavEngine::current_priority > staynear)
+        return false;
+
+    // Check and use our previous target if available
+    if (isStayNearTargetValid(previous_target))
     {
-        // Store the nearest area
-        std::optional<std::pair<CNavArea *, int>> best_area = std::nullopt;
-
-        for (auto &connection : area->m_connections)
+        auto ent_origin = previous_target->m_vecDormantOrigin();
+        if (ent_origin)
         {
-            if (std::find(already_recursed.begin(), already_recursed.end(), connection.area) != already_recursed.end())
-                continue;
-            already_recursed.push_back(connection.area);
-            auto area = findClosestHidingSpot(connection.area, vischeck_point, recursion_count, index);
-            if (area && (!best_area || area->second < best_area->second))
-                best_area = { area->first, area->second };
+            // Check if current target area is valid
+            if (navparser::NavEngine::isPathing())
+            {
+                auto crumbs = navparser::NavEngine::getCrumbs();
+                // We cannot just use the last crumb, as it is always nullptr
+                if (crumbs->size() > 1)
+                {
+                    auto last_crumb = (*crumbs)[crumbs->size() - 2];
+                    // Area is still valid, stay on it
+                    if (isAreaValidForStayNear(*ent_origin, last_crumb.navarea))
+                        return true;
+                }
+            }
+            // Else Check our origin for validity (Only for ranged classes)
+            else if (selected_config.prefer_far && isAreaValidForStayNear(*ent_origin, navparser::NavEngine::findClosestNavSquare(LOCAL_E->m_vecOrigin())))
+                return true;
         }
-        return best_area;
+        // Else we try to path again
+        if (stayNearTarget(previous_target))
+            return true;
+        // Failed, invalidate previous target and try others
+        previous_target = nullptr;
     }
-    else
-        return std::nullopt;
+
+    auto advance_count = selected_config.prefer_far ? MAX_STAYNEAR_CHECKS_RANGE : MAX_STAYNEAR_CHECKS_CLOSE;
+
+    // Ensure it is in bounds and also wrap around
+    if (lowest_check_index > g_IEngine->GetMaxClients())
+        lowest_check_index = 0;
+
+    int calls = 0;
+    // Test all entities
+    for (int i = lowest_check_index; i <= g_IEngine->GetMaxClients(); i++)
+    {
+        if (calls >= advance_count)
+            break;
+        calls++;
+        lowest_check_index++;
+        CachedEntity *ent = ENTITY(i);
+        if (!isStayNearTargetValid(ent))
+        {
+            calls--;
+            continue;
+        }
+        // Succeeded pathing
+        if (stayNearTarget(ent))
+        {
+            previous_target = ent;
+            return true;
+        }
+    }
+    // Stay near failed to find any good targets, add extra delay
+    staynear_cooldown.last += std::chrono::seconds(3);
+    return false;
 }
 
 // Try to attack people using melee if we are in a situation where this is viable
@@ -857,7 +908,7 @@ bool tryToSnipe(CachedEntity *ent)
         std::sort(good_areas.begin(), good_areas.end(), [](std::pair<CNavArea *, float> a, std::pair<CNavArea *, float> b) { return a.second > b.second; });
     else
         std::sort(good_areas.begin(), good_areas.end(), [](std::pair<CNavArea *, float> a, std::pair<CNavArea *, float> b) { return a.second < b.second; });
-	
+
     for (auto &area : good_areas)
         if (navparser::NavEngine::navTo(area.first->m_center, snipe_sentry))
             return true;
@@ -1213,7 +1264,7 @@ bool doRoam()
 {
     static Timer roam_timer;
     // Don't path constantly
-    if (!roam_timer.test_and_set(2000))
+    if (!roam_timer.test_and_set(200))
         return false;
 
     // Defend our objective if possible
@@ -1339,6 +1390,7 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     {
         if (nearest.second <= 200)
             return melee;
+        else
         if (nearest.second <= 700)
             return primary;
         else
@@ -1346,6 +1398,12 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     }
     case tf_heavy:
 	{
+        	if (nearest.second <= 150 && nearest.first->m_iHealth() < 65)
+            	    return melee;
+        	else if (nearest.second <= 200 && nearest.first->m_iHealth() < 65)
+            	    return active_slot;
+        	else
+            	    return secondary;
 	if (auto_spinup_prediction)
 	    if (nearest.second <= *distance_spinup)
 	    	hacks::shared::aimbot::doAutoZoom(true);
@@ -1377,10 +1435,12 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
 	if (auto_zoom_prediction)
 		if (nearest.second <= *distance)
 	    	hacks::shared::aimbot::doAutoZoom(true);
+        if (nearest.second <= 200)
         if (nearest.second <= 250)
             return melee;
         else if (nearest.second <= 300 && nearest.first->m_iHealth() < 450)
             return active_slot;
+
         else
             return primary;
     }
@@ -1399,6 +1459,8 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     {
         if (nearest.second <= 200)
             return melee;
+        else if (nearest.second <= 300)
+            return active_slot;
         else if (nearest.second <= 400)
             return secondary;
         else

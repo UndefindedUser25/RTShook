@@ -755,24 +755,6 @@ bool runReload()
     if (!local_area)
         return false;
 
-    // Get closest enemy to vicheck
-    CachedEntity *closest_visible_enemy = nullptr;
-    float best_distance                 = FLT_MAX;
-    for (auto &ent : entity_cache::valid_ents)
-    {
-        if (!ent->m_bAlivePlayer() || !ent->m_bEnemy())
-            continue;
-        if (ent->m_flDistance() > best_distance)
-            continue;
-        if (!ent->IsVisible())
-            continue;
-        if (!player_tools::shouldTarget(ent))
-            continue;
-
-        best_distance         = ent->m_flDistance();
-        closest_visible_enemy = ent;
-    }
-
     if (!closest_visible_enemy)
         return false;
 

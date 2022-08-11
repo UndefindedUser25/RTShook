@@ -1192,6 +1192,8 @@ std::optional<Vector> getControlPointGoal(int our_team)
     if ((*position).DistTo(LOCAL_E->m_vecOrigin()) <= 50.0f)
     {
         overwrite_capture = true;
+	// bot need Autozoom on capturing Control points.
+	hacks::shared::aimbot::doAutoZoom(true);
         return std::nullopt;
     }
     else

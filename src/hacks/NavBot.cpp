@@ -1437,13 +1437,12 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
 	if (auto_zoom_prediction)
 		if (nearest.second <= *distance)
 	    	hacks::shared::aimbot::doAutoZoom(true);
-        if (nearest.second <= 300)
-            return secondary;
-        if (nearest.second <= 250)
+        if (nearest.second <= 200)
             return melee;
-        else if (nearest.second <= 300 && nearest.first->m_iHealth() < 450)
+        else if (nearest.second <= 300)
+            return secondary;
+        else if (nearest.second <= 400)
             return active_slot;
-
         else
             return primary;
     }

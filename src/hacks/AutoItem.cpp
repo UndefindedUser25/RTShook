@@ -1,16 +1,13 @@
 /*
     This file is part of Cathook.
-
     Cathook is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
     Cathook is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with Cathook. If not, see <https://www.gnu.org/licenses/>.
 */
@@ -38,11 +35,6 @@ static settings::Boolean hats{ "auto-item.hats", "false" };
 static settings::Int hat1{ "auto-item.hats.1", "940" };
 static settings::Int hat2{ "auto-item.hats.2", "941" };
 static settings::Int hat3{ "auto-item.hats.3", "302" };
-    
-// 536 is Birthday noisemaker
-// 673 is Christmas noisemaker
-// 542 is vuvuzela noisemaker
-static settings::Int noisemaker_id{ "auto-item.noisemaker", "542" };
 
 static settings::Boolean debug{ "auto-item.debug", "false" };
 
@@ -50,8 +42,13 @@ static settings::Boolean debug{ "auto-item.debug", "false" };
     if (*debug)    \
     logging::Info("AutoItem.cpp: " __VA_ARGS__)
 
-static settings::Boolean autoNoisemaker{ "misc.auto-noisemaker", "false" };
+static settings::Boolean nm_id{ "misc.auto-noisemaker", "542" };
+    
 
+// 536 is Birthday noisemaker
+// 673 is Christmas noisemaker
+// 542 is vuvuzela noisemaker
+static int noisemaker_id = *nm_id;
 
 struct AchivementItem
 {
@@ -358,8 +355,7 @@ void CreateMove()
             equipItem(clazz, slots[(offset + 2) % 3], *hat3);
             offset = (offset + 1) % 3;
         }
-        /*how tf i have set noisemaker id?*/
-        if (autoNoisemaker && inv->GetFirstItemOfItemDef(*noisemaker_id))
+        if (autoNoisemaker && inv->GetFirstItemOfItemDef(noisemaker_id))
         {
             equipItem(clazz, 9, noisemaker_id, false, false);
         }

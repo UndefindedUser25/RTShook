@@ -6,7 +6,7 @@
 #include "hacks/AntiAntiAim.hpp"
 #include "sdk/dt_recv_redef.h"
 
-namespace hacks::anti_anti_aim
+namespace hacks::shared::anti_anti_aim
 {
 static settings::Boolean enable{ "anti-anti-aim.enable", "false" };
 static settings::Boolean debug{ "anti-anti-aim.debug.enable", "false" };
@@ -30,12 +30,13 @@ static inline void modifyAngles()
 static inline void CreateMove()
 {
     // Empty the array
-    sniperdot_array.fill(nullptr);
+    sniperdot_array.fill(0);
     // Find sniper dots
-    for (auto &dot_ent : entity_cache::valid_ents)
+    for (int i = g_IEngine->GetMaxClients() + 1; i <= HIGHEST_ENTITY; i++)
     {
+        CachedEntity *dot_ent = ENTITY(i);
         // Not a sniper dot
-        if (dot_ent->m_iClassID() != CL_CLASS(CSniperDot))
+        if (CE_BAD(dot_ent) || dot_ent->m_iClassID() != CL_CLASS(CSniperDot))
             continue;
         // Get the player it belongs to
         auto ent_idx = HandleToIDX(CE_INT(dot_ent, netvar.m_hOwnerEntity));
@@ -53,7 +54,9 @@ void frameStageNotify(ClientFrameStage_t stage)
     if (!enable || !g_IEngine->IsInGame())
         return;
     if (stage == FRAME_NET_UPDATE_POSTDATAUPDATE_START)
+    {
         modifyAngles();
+    }
 #endif
 }
 
@@ -112,10 +115,10 @@ static float resolveAnglePitch(float angle, brutedata &brute, CachedEntity *ent)
         if (brute.brutenum % 2)
         {
             // Pitch resolver
-            if (angle >= 90)
-                angle = -89;
-            if (angle <= -90)
-                angle = 89;
+            if (angle >= 45)
+                angle = -44.5;
+            if (angle <= -45)
+                angle = 44.5;
         }
     }
     // Sniper dot found, use it.
@@ -141,10 +144,10 @@ void increaseBruteNum(int idx)
     auto ent = ENTITY(idx);
     if (CE_BAD(ent) || !ent->player_info.friendsID)
         return;
-    auto &data = hacks::anti_anti_aim::resolver_map[ent->player_info.friendsID];
-    if (data.hits_in_a_row >= 4)
-        data.hits_in_a_row = 2;
-    else if (data.hits_in_a_row >= 2)
+    auto &data = hacks::shared::anti_anti_aim::resolver_map[ent->player_info.friendsID];
+    if (data.hits_in_a_row >= 2)
+        data.hits_in_a_row = 1;
+    else if (data.hits_in_a_row >= 1)
         data.hits_in_a_row = 0;
     else
     {
@@ -162,8 +165,8 @@ void increaseBruteNum(int idx)
 
 static void pitchHook(const CRecvProxyData *pData, void *pStruct, void *pOut)
 {
-    float flPitch     = pData->m_Value.m_Float;
-    auto *flPitch_out = (float *) pOut;
+    float flPitch      = pData->m_Value.m_Float;
+    float *flPitch_out = (float *) pOut;
 
     if (!enable)
     {
@@ -179,8 +182,8 @@ static void pitchHook(const CRecvProxyData *pData, void *pStruct, void *pOut)
 
 static void yawHook(const CRecvProxyData *pData, void *pStruct, void *pOut)
 {
-    float flYaw     = pData->m_Value.m_Float;
-    auto *flYaw_out = (float *) pOut;
+    float flYaw      = pData->m_Value.m_Float;
+    float *flYaw_out = (float *) pOut;
 
     if (!enable)
     {
@@ -211,14 +214,14 @@ static void hook()
         {
             for (int i = 0; i < pClass->m_pRecvTable->m_nProps; i++)
             {
-                auto *pProp1 = (RecvPropRedef *) &(pClass->m_pRecvTable->m_pProps[i]);
+                RecvPropRedef *pProp1 = (RecvPropRedef *) &(pClass->m_pRecvTable->m_pProps[i]);
                 if (!pProp1)
                     continue;
                 const char *pszName2 = pProp1->m_pVarName;
                 if (!strcmp(pszName2, "tfnonlocaldata"))
                     for (int j = 0; j < pProp1->m_pDataTable->m_nProps; j++)
                     {
-                        auto *pProp2 = (RecvPropRedef *) &(pProp1->m_pDataTable->m_pProps[j]);
+                        RecvPropRedef *pProp2 = (RecvPropRedef *) &(pProp1->m_pDataTable->m_pProps[j]);
                         if (!pProp2)
                             continue;
                         const char *name = pProp2->m_pVarName;
@@ -252,16 +255,14 @@ static void shutdown()
     *original_ptrY = original_ProxyFnY;
 }
 
-static InitRoutine init(
-    []()
-    {
-        hook();
-        EC::Register(EC::Shutdown, shutdown, "antiantiaim_shutdown");
-        EC::Register(EC::CreateMove, CreateMove, "cm_antiantiaim");
-        EC::Register(EC::CreateMoveWarp, CreateMove, "cmw_antiantiaim");
+static InitRoutine init([]() {
+    hook();
+    EC::Register(EC::Shutdown, shutdown, "antiantiaim_shutdown");
+    EC::Register(EC::CreateMove, CreateMove, "cm_antiantiaim");
+    EC::Register(EC::CreateMoveWarp, CreateMove, "cmw_antiantiaim");
 #if ENABLE_TEXTMODE
-        EC::Register(EC::CreateMove, modifyAngles, "cm_textmodeantiantiaim");
-        EC::Register(EC::CreateMoveWarp, modifyAngles, "cmw_textmodeantiantiaim");
+    EC::Register(EC::CreateMove, modifyAngles, "cm_textmodeantiantiaim");
+    EC::Register(EC::CreateMoveWarp, modifyAngles, "cmw_textmodeantiantiaim");
 #endif
-    });
-} // namespace hacks::anti_anti_aim
+});
+} // namespace hacks::shared::anti_anti_aim 

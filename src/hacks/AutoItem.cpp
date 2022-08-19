@@ -50,12 +50,7 @@ static settings::Boolean debug{ "auto-item.debug", "false" };
     if (*debug)    \
     logging::Info("AutoItem.cpp: " __VA_ARGS__)
 
-#if ENABLE_TEXTMODE
-static settings::Boolean autoNoisemaker{ "misc.auto-noisemaker", "true" };
-#else
 static settings::Boolean autoNoisemaker{ "misc.auto-noisemaker", "false" };
-#endif
-
 
 
 struct AchivementItem

@@ -32,7 +32,7 @@ static inline void CreateMove()
     // Empty the array
     sniperdot_array.fill(nullptr);
     // Find sniper dots
-    for (int i = g_IEngine->GetMaxClients() + 1; i <= HIGHEST_ENTITY; i++)
+    for (auto &dot_ent : entity_cache::valid_ents)
     {
         // Not a sniper dot
         if (dot_ent->m_iClassID() != CL_CLASS(CSniperDot))
@@ -112,10 +112,10 @@ static float resolveAnglePitch(float angle, brutedata &brute, CachedEntity *ent)
         if (brute.brutenum % 2)
         {
             // Pitch resolver
-            if (angle >= 45)
-                angle = -44.5;
-            if (angle <= -45)
-                angle = 44.5;
+            if (angle >= 90)
+                angle = -89;
+            if (angle <= -90)
+                angle = 89;
         }
     }
     // Sniper dot found, use it.

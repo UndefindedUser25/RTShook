@@ -42,7 +42,8 @@ static settings::Boolean debug{ "auto-item.debug", "false" };
     if (*debug)    \
     logging::Info("AutoItem.cpp: " __VA_ARGS__)
 
-static settings::Boolean nm_id{ "misc.auto-noisemaker", "542" };
+static settings::Boolean autoNoisemaker{ "auto-item.noisemaker", "false" };
+static settings::Int nm_id{ "auto-item.noisemaker-id", "542" };
     
 
 // 536 is Birthday noisemaker

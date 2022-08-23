@@ -42,14 +42,16 @@ static settings::Boolean debug{ "auto-item.debug", "false" };
     if (*debug)    \
     logging::Info("AutoItem.cpp: " __VA_ARGS__)
 
-static settings::Boolean autoNoisemaker{ "auto-item.noisemaker", "false" };
-static settings::Int nm_id{ "auto-item.noisemaker-id", "542" };
-    
+#if ENABLE_TEXTMODE
+static settings::Boolean autoNoisemaker{ "misc.auto-noisemaker", "true" };
+#else
+static settings::Boolean autoNoisemaker{ "misc.auto-noisemaker", "false" };
+#endif
 
 // 536 is Birthday noisemaker
 // 673 is Christmas noisemaker
 // 542 is vuvuzela noisemaker
-static int noisemaker_id = *nm_id;
+static int noisemaker_id = 536;
 
 struct AchivementItem
 {

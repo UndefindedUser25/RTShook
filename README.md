@@ -1,6 +1,6 @@
 # RTShook 
 
-So this its a my Project to running cRpt bots and playing casual stuff when you need contact me Please contact in Discord : Nerbura7724#3141
+So this its a my Project to running PCL bots and playing casual stuff when you need contact me Please contact in Discord : Nappys#3141
 
 ## Overview
 

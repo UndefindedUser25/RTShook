@@ -730,6 +730,7 @@ static void followCrumbs()
     {
         Vector next{ crumbs[*look_crumbs].vec.x, crumbs[*look_crumbs].vec.y, g_pLocalPlayer->v_Eye.z };
         next = GetAimAtAngles(g_pLocalPlayer->v_Eye, next);
+        current_user_cmd->viewangles = next;
     }
 
     if (look_legit && !hacks::shared::aimbot::isAiming())

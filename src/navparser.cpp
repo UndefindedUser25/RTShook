@@ -33,6 +33,7 @@ namespace navparser
 static settings::Boolean enabled("nav.enabled", "false");
 static settings::Boolean draw("nav.draw", "false");
 static settings::Boolean look{ "nav.look-at-path", "false" };
+static settings::Boolean looked_at_point{ "nav.look-at-point", "false" };
 static settings::Int look_crumbs{ "nav.look-crumbs", "0" };
 
 static settings::Boolean draw_debug_areas("nav.draw.debug-areas", "false");
@@ -688,7 +689,7 @@ static void followCrumbs()
     // 1. No jumping if zoomed (or revved)
     // 2. Jump if its necessary to do so based on z values
     // 3. Jump if stuck (not getting closer) for more than stuck_time/2 (500ms)
-    if ((!(g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed) && !(g_pLocalPlayer->bRevved || g_pLocalPlayer->bRevving) && (crouch || crumbs[0].vec.z - g_pLocalPlayer->v_Origin.z > 18) && last_jump.check(0)) || (last_jump.check(0) && inactivity.check(*stuck_time / 2)))
+    if ((!(g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed) && !(g_pLocalPlayer->bRevved || g_pLocalPlayer->bRevving) && (crouch || crumbs[0].vec.z - g_pLocalPlayer->v_Origin.z > 18) && last_jump.check(40)) || (last_jump.check(20) && inactivity.check(*stuck_time / 2)))
     {
         auto local = map->findClosestNavSquare(g_pLocalPlayer->v_Origin);
         // Check if current area allows jumping
@@ -723,15 +724,64 @@ static void followCrumbs()
         return;
     }*/
 
-    // Look at path
     if (look && !hacks::shared::aimbot::isAiming())
     {
-        Vector next{ crumbs[*look_crumbs].vec.x, crumbs[*look_crumbs].vec.y, g_pLocalPlayer->v_Eye.z };
-        next = GetAimAtAngles(g_pLocalPlayer->v_Eye, next);
+        float best_dist                = FLT_MAX;
+        std::optional<Vector> look_vec = std::nullopt;
+        for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+        {
+            CachedEntity *ent = ENTITY(i);
+            if (i == g_pLocalPlayer->entity_idx || CE_INVALID(ent) || !ent->m_bEnemy())
+                continue;
+            auto sound = soundcache::GetSoundLocation(i);
+            sound->z += PLAYER_JUMP_HEIGHT;
+            if (sound && sound->DistTo(g_pLocalPlayer->v_Eye) < best_dist && (IsVectorVisible(g_pLocalPlayer->v_Eye, *sound, true) || sound->DistTo(g_pLocalPlayer->v_Eye) <= 400.0f))
+            {
+                best_dist = sound->DistTo(g_pLocalPlayer->v_Eye);
+                look_vec  = sound;
+            }
+        }
+        if (look_vec)
+        {
+            Vector aim_ang = GetAimAtAngles(g_pLocalPlayer->v_Eye, *look_vec);
+            hacks::tf2::misc_aimbot::DoSlowAim(aim_ang, 20);
+            current_user_cmd->viewangles = aim_ang;
+        }
+        else
+        {
+            static Vector next{ crumbs[*look_crumbs].vec.x, crumbs[*look_crumbs].vec.y, g_pLocalPlayer->v_Eye.z };
+            static bool looked_at_point = true;
+            static Timer choose_new_point;
 
-        // Slow aim to smoothen
-        hacks::tf2::misc_aimbot::DoSlowAim(next);
-        current_user_cmd->viewangles = next;
+            static int wait_time = 1000;
+            static int aim_speed = 10;
+
+            if (looked_at_point && choose_new_point.test_and_set(wait_time))
+            {
+                next = { crumbs[*look_crumbs].vec.x, crumbs[*look_crumbs].vec.y, g_pLocalPlayer->v_Eye.z };
+                next = GetAimAtAngles(g_pLocalPlayer->v_Eye, next);
+                // look at a somewhat random point
+                next.x += UniformRandomInt(-1, 1);
+                next.y += UniformRandomInt(-45, 45);
+                fClampAngle(next);
+                looked_at_point = false;
+            }
+
+            // Pick a new point, we're looking at our current one closely enough
+            if ((current_user_cmd->viewangles - next).IsZero(10.0f))
+            {
+                if (!looked_at_point)
+                    choose_new_point.update();
+                looked_at_point = true;
+                wait_time       = 750 + UniformRandomInt(0, 4000);
+                aim_speed       = 10 + UniformRandomInt(0, 2);
+            }
+
+            Vector next_slow = next;
+            // Slow aim to smoothen
+            hacks::tf2::misc_aimbot::DoSlowAim(next_slow, aim_speed);
+            current_user_cmd->viewangles = next_slow;
+        }
     }
 
     WalkTo(current_vec);

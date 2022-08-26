@@ -21,6 +21,7 @@
 #include "Aimbot.hpp"
 #include "MiscAimbot.hpp"
 #include "navparser.hpp"
+#include "soundcache.hpp"
 #if ENABLE_VISUALS
 #include "drawing.hpp"
 #endif

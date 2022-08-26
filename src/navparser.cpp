@@ -34,7 +34,7 @@ namespace navparser
 static settings::Boolean enabled("nav.enabled", "false");
 static settings::Boolean draw("nav.draw", "false");
 static settings::Boolean look{ "nav.look-at-path", "false" };
-static settings::Boolean looked_at_point{ "nav.look-at-point", "false" };
+static settings::Boolean look_legit{ "nav.look-at-legit", "false" };
 static settings::Int look_crumbs{ "nav.look-crumbs", "0" };
 
 static settings::Boolean draw_debug_areas("nav.draw.debug-areas", "false");
@@ -724,8 +724,15 @@ static void followCrumbs()
         repath();
         return;
     }*/
-
+    
+        // Look at path
     if (look && !hacks::shared::aimbot::isAiming())
+    {
+        Vector next{ crumbs[*look_crumbs].vec.x, crumbs[*look_crumbs].vec.y, g_pLocalPlayer->v_Eye.z };
+        next = GetAimAtAngles(g_pLocalPlayer->v_Eye, next);
+    }
+
+    if (look_legit && !hacks::shared::aimbot::isAiming())
     {
         float best_dist                = FLT_MAX;
         std::optional<Vector> look_vec = std::nullopt;

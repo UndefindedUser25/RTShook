@@ -34,7 +34,8 @@ namespace navparser
 static settings::Boolean enabled("nav.enabled", "false");
 static settings::Boolean draw("nav.draw", "false");
 static settings::Boolean look{ "nav.look-at-path", "false" };
-static settings::Boolean look_legit{ "nav.look-at-legit", "false" };
+static settings::Boolean smooth_look{ "nav.look-at-path-but-smooth", "true" };
+static settings::Boolean look_legit{ "nav.look-at-legit", "false" };  
 static settings::Int look_crumbs{ "nav.look-crumbs", "0" };
 
 static settings::Boolean draw_debug_areas("nav.draw.debug-areas", "false");
@@ -42,12 +43,12 @@ static settings::Boolean log_pathing{ "nav.log", "false" };
 static settings::Int stuck_time{ "nav.stuck-time", "20000" };
 static settings::Int vischeck_cache_time{ "nav.vischeck-cache.time", "240" };
 static settings::Boolean vischeck_runtime{ "nav.vischeck-runtime.enabled", "true" };
-static settings::Int vischeck_time{ "nav.vischeck-runtime.delay", "2000" };
-static settings::Int stuck_detect_time{ "nav.anti-stuck.detection-time", "5" };
+static settings::Int vischeck_time{ "nav.vischeck-runtime.delay", "1200" };
+static settings::Int stuck_detect_time{ "nav.anti-stuck.detection-time", "3" };
 // How long until accumulated "Stuck time" expires
-static settings::Int stuck_expire_time{ "nav.anti-stuck.expire-time", "10" };
+static settings::Int stuck_expire_time{ "nav.anti-stuck.expire-time", "7" };
 // How long we should blacklist the node after being stuck for too long?
-static settings::Int stuck_blacklist_time{ "nav.anti-stuck.blacklist-time", "120" };
+static settings::Int stuck_blacklist_time{ "nav.anti-stuck.blacklist-time", "60" };
 static settings::Int sticky_ignore_time{ "nav.ignore.sticky-time", "15" };
 
 // Cast a Ray and return if it hit
@@ -730,6 +731,11 @@ static void followCrumbs()
     {
         Vector next{ crumbs[*look_crumbs].vec.x, crumbs[*look_crumbs].vec.y, g_pLocalPlayer->v_Eye.z };
         next = GetAimAtAngles(g_pLocalPlayer->v_Eye, next);
+        
+        if (smooth_look)
+        {
+        hacks::tf2::misc_aimbot::DoSlowAim(next);
+        }
         current_user_cmd->viewangles = next;
     }
 

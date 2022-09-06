@@ -322,7 +322,7 @@ bool CarryingMachina()
 {
     return CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 526;
 }
-
+/*
 static bool allowNoScope(CachedEntity *target)
 {
     if (target)
@@ -352,7 +352,7 @@ static bool allowNoScope(CachedEntity *target)
     }
 
     return false;
-}
+}*/
 	
 void doAutoZoom(bool target_found)
 {
@@ -373,7 +373,7 @@ void doAutoZoom(bool target_found)
         return;
     }
 
-    if (auto_zoom && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle))
+    if (auto_zoom && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle || LOCAL_E->m_bAlivePlayer()))
     {
         if (target_found)
             zoomTime.update();

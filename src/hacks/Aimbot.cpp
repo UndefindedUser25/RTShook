@@ -373,7 +373,7 @@ void doAutoZoom(bool target_found)
         return;
     }
 
-    if (auto_zoom && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle || LOCAL_E->m_bAlivePlayer()))
+    if (auto_zoom && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle))
     {
         if (target_found)
             zoomTime.update();

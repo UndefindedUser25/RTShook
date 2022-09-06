@@ -28,7 +28,7 @@ static settings::String debug_name{ "debug.log-events.name", "" };
 
 static void handlePlayerConnectClient(KeyValues *kv)
 {
-    PrintChat('Player "\x07%06X%s\x01" \x07%06X%s\x01 Joining the server.', 0xa06ba0, kv->GetString("name"), 0x914e65, kv->GetString("networkid"));
+    PrintChat("Player \x07%06X%s\x01 \x07%06X%s\x01 Joining the server.", 0xa06ba0, kv->GetString("name"), 0x914e65, kv->GetString("networkid"));
 }
 
 static void handlePlayerActivate(KeyValues *kv)
@@ -37,7 +37,7 @@ static void handlePlayerActivate(KeyValues *kv)
     int entity = GetPlayerForUserID(uid);
     player_info_s info{};
     if (GetPlayerInfo(entity, &info))
-        PrintChat('Player "\x07%06X%s\x01" \x07%06X%s\x01 Connected The server.', 0xa06ba0, info.name, 0x914e65, kv->GetString("networkid"));
+        PrintChat("Player \x07%06X%s\x01 \x07%06X%s\x01 Connected The server.", 0xa06ba0, info.name, 0x914e65, kv->GetString("networkid"));
 }
 
 static void handlePlayerDisconnect(KeyValues *kv)
@@ -45,7 +45,7 @@ static void handlePlayerDisconnect(KeyValues *kv)
     CachedEntity *player = ENTITY(GetPlayerForUserID(kv->GetInt("userid")));
     if (player == nullptr || RAW_ENT(player) == nullptr)
         return;
-    PrintChat('Player "\x07%06X%s\x01" \x07%06X%s\x01 Disconnected', colors::chat::team(player->m_iTeam()), kv->GetString("name"), 0x914e65, kv->GetString("networkid"));
+    PrintChat("Player \x07%06X%s\x01 \x07%06X%s\x01 Disconnected", colors::chat::team(player->m_iTeam()), kv->GetString("name"), 0x914e65, kv->GetString("networkid"));
 }
 
 static void handlePlayerTeam(KeyValues *kv)
@@ -120,7 +120,7 @@ static void handlePlayerChangeClass(KeyValues *kv)
     CachedEntity *player = ENTITY(GetPlayerForUserID(id));
     if (player == nullptr || RAW_ENT(player) == nullptr)
         return;
-    PrintChat('Player "\x07%06X%s\x01" changed class to \x07%06X%s\x01', colors::chat::team(player->m_iTeam()), info.name, 0xa06ba0, classname(kv->GetInt("class")));
+    PrintChat("Player \x07%06X%s\x01 changed class to \x07%06X%s\x01", colors::chat::team(player->m_iTeam()), info.name, 0xa06ba0, classname(kv->GetInt("class")));
 }
 
 static void handleVoteCast(KeyValues *kv)
@@ -131,7 +131,7 @@ static void handleVoteCast(KeyValues *kv)
     player_info_s info{};
     const char *team_s = teamname(team);
     if (GetPlayerInfo(idx, &info))
-        PrintChat('Player "\x07%06X%s\x01" Voted "\x07%06X%d\x01" on team "\x07%06X%s\x01"', colors::chat::team(team), info.name, colors::chat::team(team), vote_option, colors::chat::team(team), team_s);
+        PrintChat("Player \x07%06X%s\x01 Voted \x07%06X%d\x01 on team \x07%06X%s\x01", colors::chat::team(team), info.name, colors::chat::team(team), vote_option, colors::chat::team(team), team_s);
 }
 std::vector<KeyValues *> Iterate(KeyValues *event, int depth)
 {

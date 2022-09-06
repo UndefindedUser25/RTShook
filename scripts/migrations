@@ -36,7 +36,7 @@ if [ "$PRE_UPDATE" == "true" ]; then
   if [ ! -d "./.git" ]; then
     git init
     git remote add origin https://github.com/sibura7724/RTShook
-    cfg_write $configfile update_channel master
+    cfg_write $configfile update_channel main
   fi
 fi
 
@@ -45,7 +45,7 @@ fi
 #
 function init() {
   if [ "$INIT" == true ]; then
-    cfg_write $configfile update_channel master
+    cfg_write $configfile update_channel main
     cfg_write $configfile version $CURR_VERSION
   fi
 }

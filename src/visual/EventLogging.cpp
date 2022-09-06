@@ -106,7 +106,7 @@ static void handlePlayerSpawn(KeyValues *kv)
     CachedEntity *player = ENTITY(GetPlayerForUserID(id));
     if (player == nullptr || RAW_ENT(player) == nullptr)
         return;
-    PrintChat('Player "\x07%06X%s\x01" Respawned.', colors::chat::team(player->m_iTeam()), info.name);
+    PrintChat("Player \x07%06X%s\x01 Respawned.", colors::chat::team(player->m_iTeam()), info.name);
 }
 
 static void handlePlayerChangeClass(KeyValues *kv)

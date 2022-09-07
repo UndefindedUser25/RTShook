@@ -30,6 +30,7 @@ static settings::Boolean autoreload{ "aimbot.autoshoot.activate-heatmaker", "fal
 static settings::Boolean autoshoot_disguised{ "aimbot.autoshoot-disguised", "1" };
 static settings::Int multipoint{ "aimbot.multipoint", "0" };
 static settings::Int hitbox_mode{ "aimbot.hitbox-mode", "0" };
+static settings::Int vischeck_hitboxes{ "aimbot.vischeck-hitboxes", "0" };
 static settings::Float normal_fov{ "aimbot.fov", "0" };
 static settings::Int priority_mode{ "aimbot.priority-mode", "0" };
 static settings::Boolean wait_for_charge{ "aimbot.wait-for-charge", "0" };
@@ -280,6 +281,22 @@ std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox)
         }
     }
     return hitpoints;
+}
+
+bool isHitboxMedium(int hitbox)
+{
+    switch (hitbox)
+    {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+        return true;
+    default:
+        return false;
+    }
+    return false;
 }
 
 // Get the best point to aim at for a given hitbox

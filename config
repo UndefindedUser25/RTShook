@@ -30,7 +30,7 @@ do
 
     if [ "$response" == 1 ]; then
         response=$(dialog --keep-tite --title "Config" --menu "Select update channel" 0 0 0 1 "Main Version" 2 "Developer" --output-fd 1)
-        elif [ "$response" == 1 ]; then
+        if [ "$response" == 1 ]; then
             cfg_write $configfile update_channel main
         elif [ "$response" == 2 ]; then
             pushd scripts

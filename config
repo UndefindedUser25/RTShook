@@ -29,12 +29,10 @@ do
     fi
 
     if [ "$response" == 1 ]; then
-        response=$(dialog --keep-tite --title "Config" --menu "Select update channel" 0 0 0 1 "Stable (Recommended)" 2 "Master (Bleeding Edge)" 3 "Developer (Possible git issues, doesn't wipe modified files)" --output-fd 1)
-        if [ "$response" == 1 ]; then
-            cfg_write $configfile update_channel stable
+        response=$(dialog --keep-tite --title "Config" --menu "Select update channel" 0 0 0 1 "Main Version" 2 "Developer" --output-fd 1)
+        elif [ "$response" == 1 ]; then
+            cfg_write $configfile update_channel main
         elif [ "$response" == 2 ]; then
-            cfg_write $configfile update_channel master
-        elif [ "$response" == 3 ]; then
             pushd scripts
             ./developer
             popd

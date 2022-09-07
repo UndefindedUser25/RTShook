@@ -199,6 +199,77 @@ static std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
     positions.insert(positions.end(), corners, &corners[8]);
     positions.insert(positions.end(), line_positions, &line_positions[12]);
 
+   for (int i = 0; i < 20; ++i)
+    {
+        trace_t trace;
+        if (IsEntityVectorVisible(ent, positions[i], true, MASK_SHOT_HULL, &trace))
+        {
+            if (trace.hitbox == hitbox)
+                hitpoints.push_back(positions[i]);
+        }
+    }
+    if (*vischeck_hitboxes)
+    {
+        if (*vischeck_hitboxes == 1 && playerlist::AccessData(ent).state != playerlist::k_EState::RAGE)
+        {
+            return hitpoints;
+        }
+        int i = 0;
+        while (hitpoints.empty() && i <= 17) // Prevents returning empty at all costs. Loops through every hitbox
+        {
+            if (hitbox == i)
+                i++;
+            hitpoints = getHitpointsVischeck(ent, i);
+            i++;
+        }
+    }
+
+    return hitpoints;
+}
+std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox)
+{
+    std::vector<Vector> hitpoints;
+    auto hb = ent->hitboxes.GetHitbox(hitbox);
+    if (!multipoint)
+    {
+        hitpoints.push_back(hb->center);
+        return hitpoints;
+    }
+    auto bboxmin = hb->bbox->bbmin;
+    auto bboxmax = hb->bbox->bbmax;
+
+    auto transform = ent->hitboxes.GetBones()[hb->bbox->bone];
+    QAngle rotation;
+    Vector origin;
+
+    MatrixAngles(transform, rotation, origin);
+
+    Vector corners[8];
+    GenerateBoxVertices(origin, rotation, bboxmin, bboxmax, corners);
+
+    float shrink_size = 1;
+
+    if (!isHitboxMedium(hitbox)) // hitbox should be chosen based on size.
+        shrink_size = 3;
+    else
+        shrink_size = 6;
+
+    // Shrink positions by moving towards opposing corner
+    for (int i = 0; i < 8; i++)
+        corners[i] += (corners[7 - i] - corners[i]) / shrink_size;
+
+    // Generate middle points on line segments
+    // Define cleans up code
+
+    const Vector line_positions[12] = { GET_MIDDLE(0, 1), GET_MIDDLE(0, 2), GET_MIDDLE(1, 3), GET_MIDDLE(2, 3), GET_MIDDLE(7, 6), GET_MIDDLE(7, 5), GET_MIDDLE(6, 4), GET_MIDDLE(5, 4), GET_MIDDLE(0, 4), GET_MIDDLE(1, 5), GET_MIDDLE(2, 6), GET_MIDDLE(3, 7) };
+
+    // Create combined vector
+    std::vector<Vector> positions;
+
+    positions.reserve(sizeof(Vector) * 20);
+    positions.insert(positions.end(), corners, &corners[8]);
+    positions.insert(positions.end(), line_positions, &line_positions[12]);
+
     for (int i = 0; i < 20; ++i)
     {
         trace_t trace;
@@ -208,7 +279,6 @@ static std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
                 hitpoints.push_back(positions[i]);
         }
     }
-
     return hitpoints;
 }
 
@@ -373,7 +443,7 @@ void doAutoZoom(bool target_found)
         return;
     }
 
-    if (auto_zoom && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle))
+    if (auto_zoom && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle || LOCAL_E->m_bAlivePlayer()))
     {
         if (target_found)
             zoomTime.update();
@@ -851,6 +921,35 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
     if (target_highest_ent && bt_tick)
         hacks::tf2::backtrack::MoveToTick(*bt_tick);
     return target_highest_ent;
+}
+
+float projectileHitboxSize(int projectile_size)
+{
+    float projectile_hitbox_size = 6.3f;
+    switch (projectile_size)
+    {
+    case CL_CLASS(CTFRocketLauncher):
+    case CL_CLASS(CTFRocketLauncher_Mortar):
+    case CL_CLASS(CTFRocketLauncher_AirStrike):
+    case CL_CLASS(CTFRocketLauncher_DirectHit):
+    case CL_CLASS(CTFPipebombLauncher):
+    case CL_CLASS(CTFGrenadeLauncher):
+    case CL_CLASS(CTFCannon):
+        break;
+    case CL_CLASS(CTFFlareGun):
+    case CL_CLASS(CTFFlareGun_Revenge):
+    case CL_CLASS(CTFDRGPomson):
+        projectile_hitbox_size = 3;
+        break;
+    case CL_CLASS(CTFSyringeGun):
+    case CL_CLASS(CTFCompoundBow):
+        projectile_hitbox_size = 1;
+        break;
+    default:
+        break;
+    }
+
+    return projectile_hitbox_size;
 }
 
 // A second check to determine whether a target is good enough to be aimed at

@@ -48,6 +48,7 @@ void DoAutoshoot(CachedEntity *target = nullptr);
 int BestHitbox(CachedEntity *target);
 std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox);
 float projectileHitboxSize(int projectile_size);
+bool isHitboxMedium(int hitbox);
 int ClosestHitbox(CachedEntity *target);
 void DoSlowAim(Vector &inputAngle);
 bool UpdateAimkey();

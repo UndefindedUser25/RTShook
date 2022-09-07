@@ -46,6 +46,8 @@ bool IsTargetStateGood(CachedEntity *entity);
 void Aim(CachedEntity *entity);
 void DoAutoshoot(CachedEntity *target = nullptr);
 int BestHitbox(CachedEntity *target);
+std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox);
+float projectileHitboxSize(int projectile_size);
 int ClosestHitbox(CachedEntity *target);
 void DoSlowAim(Vector &inputAngle);
 bool UpdateAimkey();

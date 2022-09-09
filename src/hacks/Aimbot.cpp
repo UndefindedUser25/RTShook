@@ -584,8 +584,8 @@ static void CreateMove()
     // flNextPrimaryAttack meme
     if (only_can_shoot && g_pLocalPlayer->weapon()->m_iClassID() != CL_CLASS(CTFLaserPointer))
     {
-	if (p_fix && g_pLocalPlayer->weapon()->m_iClassID() != CL_CLASS(CTFMinigun))
-                DoAutoshoot();
+        if (p_fix && g_pLocalPlayer->weapon()->m_iClassID() != CL_CLASS(CTFMinigun))
+            DoAutoshoot();
         // Handle Huntsman
         if (g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFCompoundBow))
         {
@@ -667,8 +667,18 @@ static void CreateMove()
         }
         else if (CanShoot() && CE_INT(LOCAL_W, netvar.m_iClip1) != 0)
         {
-            Aim(target_entity);
-            DoAutoshoot(target_entity);
+            if (g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFMinigun))
+            {
+                if (CE_INT(g_pLocalPlayer->weapon(), netvar.iWeaponState) > 1)
+                    Aim(target_entity);
+                
+                DoAutoshoot(target_entity);
+            }
+            else
+            {
+                Aim(target_entity);
+                DoAutoshoot(target_entity);
+            }
         }
     }
     else

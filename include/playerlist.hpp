@@ -23,8 +23,8 @@ enum class k_EState
     IPC,
     TEXTMODE,
     CAT,
-    NULLNEXUS,
     PARTY,
+    NULLNEXUS,
     STATE_LAST = PARTY
 };
 #if ENABLE_VISUALS

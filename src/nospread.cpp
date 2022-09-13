@@ -18,8 +18,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "common.hpp"
-#include "crits.hpp"
+//#include "common.hpp"
+//#include "crits.hpp"
 #include "DetourHook.hpp"
 #include <regex>
 #include <boost/algorithm/string.hpp>

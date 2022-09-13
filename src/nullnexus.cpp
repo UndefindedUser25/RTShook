@@ -15,11 +15,7 @@ static settings::Boolean anon("nullnexus.user.anon", "false");
 static settings::String address("nullnexus.host", "nullnexus.cathook.club");
 static settings::String port("nullnexus.port", "3000");
 static settings::String endpoint("nullnexus.endpoint", "/api/v1/client");
-#if ENABLE_TEXTMODE
-static settings::Boolean proxyenabled("nullnexus.proxy.enabled", "true");
-#else
 static settings::Boolean proxyenabled("nullnexus.proxy.enabled", "false");
-#endif
 static settings::String proxysocket("nullnexus.relay.socket", "/tmp/nullnexus.sock");
 static settings::Boolean authenticate("nullnexus.auth", "true");
 #if ENABLE_VISUALS

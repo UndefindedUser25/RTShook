@@ -195,7 +195,7 @@ bool getHealth(bool low_priority = false)
 
         for (auto healthpack : total_ents)
             // If we succeeed, don't try to path to other packs
-            if (navparser::NavEngine::navTo(healthpack->m_vecOrigin(), priority, true, healthpack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 200.0f * 200.0f))
+            if (navparser::NavEngine::navTo(healthpack->m_vecOrigin(), priority, true, healthpack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 170.0f * 170.0f))
                 return true;
         health_cooldown.update();
     }
@@ -235,7 +235,7 @@ bool getAmmo(bool force = false)
         }
         for (auto ammopack : total_ents)
             // If we succeeed, don't try to path to other packs
-            if (navparser::NavEngine::navTo(ammopack->m_vecOrigin(), ammo, true, ammopack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 200.0f * 200.0f))
+            if (navparser::NavEngine::navTo(ammopack->m_vecOrigin(), ammo, true, ammopack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 170.0f * 170.0f))
             {
                 was_force = force;
                 return true;
@@ -1373,7 +1373,7 @@ static int slot = primary;
 
 static void autoJump(std::pair<CachedEntity *, float> &nearest)
 {
-    if (!autojump)
+    if (!autojump || navparser::NavEngine::current_priority == prio_melee)
         return;
     static Timer last_jump{};
     if (!last_jump.test_and_set(200) || CE_BAD(nearest.first))
@@ -1393,7 +1393,6 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     {
         if (nearest.second <= 200)
             return melee;
-        else
         if (nearest.second <= 700)
             return primary;
         else

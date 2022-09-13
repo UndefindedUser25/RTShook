@@ -54,7 +54,7 @@ void Load();
 
 constexpr bool IsFriendly(k_EState state)
 {
-    return state != k_EState::RAGE && state != k_EState::DEFAULT && state != k_EState::CAT;
+    return state != k_EState::RAGE && state != k_EState::DEFAULT && state != k_EState::CAT && state != k_EState::NULLNEXUS;
 }
 #if ENABLE_VISUALS
 rgba_t Color(unsigned steamid);

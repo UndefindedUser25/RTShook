@@ -17,6 +17,8 @@
 static settings::Int newlines_msg{ "chat.prefix-newlines", "0" };
 static settings::Boolean log_sent{ "debug.log-sent-chat", "false" };
 static settings::Boolean answerIdentify{ "chat.identify.answer", "true" };
+static settings::Boolean auto_mark_cat{ "chat.identify.mark-cat", "true" };
+static settings::Boolean auto_mark_rage{ "chat.identify.mark-rage", "false" };
 static Timer identify_timer{};
 constexpr int CAT_IDENTIFY   = 0xCA7;
 constexpr int CAT_REPLY      = 0xCA8;

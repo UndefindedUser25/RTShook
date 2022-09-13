@@ -28,6 +28,7 @@
             <AutoVariable width="fill" target="player-tools.auto-party" label="Automatically add party state"/>
 	    <AutoVariable width="fill" target="player-tools.ignore.cathook" label="Ignore Cathook user" tooltip="Set to about Ignore CAT stats."/>
 	    <AutoVariable width="fill" target="player-tools.ignore.legit" label="Ignore Legit player"/>
+	    <AutoVariable width="fill" target="player-tools.ignore.nullnexus" label="Ignore Nullnexus"/>
             <AutoVariable width="fill" target="killstreak.enable" label="Enable killstreak" tooltip="Add killstreak your any weapons."/>
             <AutoVariable width="fill" target="misc.backpack-expander.enabled" label="Expand backpack"/>
             <AutoVariable width="fill" target="misc.backpack-expander.slot-count" label="Backpack slots" min="1" max="3000"/>

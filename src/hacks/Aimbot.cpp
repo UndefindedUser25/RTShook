@@ -449,7 +449,7 @@ void doAutoZoom(bool target_found)
     static Timer zoomTime{};
 
     // Minigun spun up handler
-    if (auto_spin_up && g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFMinigun))
+    if (auto_spin_up && g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFMinigun) && target_found)
     {
         if (target_found)
             zoomTime.update();

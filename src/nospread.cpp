@@ -1,4 +1,6 @@
-//so yes its a nospread make by cathook thats good Feature.
+// To anyone reading this and planning to add it to their own cheat,
+// It would be nice if you could credit us, the Nullworks/Cathook team.
+// Thanks :)
 
 /*
 * Cathook
@@ -18,8 +20,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "common.hpp"
-#include "crits.hpp"
 #include "DetourHook.hpp"
 #include <regex>
 #include <boost/algorithm/string.hpp>
@@ -45,7 +45,7 @@ settings::Boolean draw_mantissa{ "nospread.draw-info.mantissa", "false" };
 settings::Boolean correct_ping{ "nospread.correct-ping", "true" };
 settings::Boolean use_avg_latency{ "nospread.use-average-latency", "false" };
 settings::Boolean extreme_accuracy{ "nospread.use-extreme-accuracy", "false" };
-bool is_syncing             = false;
+bool is_syncing = false;
 
 bool shouldNoSpread(bool _projectile)
 {
@@ -102,8 +102,8 @@ void CreateMove()
     // Huntsman check
     else if (LOCAL_W->m_iClassID() == CL_CLASS(CTFCompoundBow))
     {
-	if (current_late_user_cmd->buttons & IN_ATTACK || CE_FLOAT(LOCAL_W, netvar.flChargeBeginTime) == 0)
-	    return;
+        if (current_late_user_cmd->buttons & IN_ATTACK || CE_FLOAT(LOCAL_W, netvar.flChargeBeginTime) == 0)
+            return;
     }
     // Rest of weapons
     else if (!(current_late_user_cmd->buttons & IN_ATTACK))

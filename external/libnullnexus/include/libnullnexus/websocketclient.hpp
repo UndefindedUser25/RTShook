@@ -17,6 +17,7 @@
 #include <string>
 #include <thread>
 #include <queue>
+#include <utility>
 
 namespace beast     = boost::beast;         // from <boost/beast.hpp>
 namespace http      = beast::http;          // from <boost/beast/http.hpp>
@@ -77,7 +78,7 @@ class WebSocketClient
 
     bool is_running = false;
 
-    void log(std::string msg)
+    void log(const std::string &msg)
     {
         // std::cout << msg << std::endl;
     }
@@ -140,13 +141,15 @@ class WebSocketClient
         try
         {
             // Set a decorator to change the User-Agent of the handshake
-            NULLNEXUS_GETWS(set_option(websocket::stream_base::decorator([&](websocket::request_type &req) {
-                for (auto &entry : custom_connect_headers)
+            NULLNEXUS_GETWS(set_option(websocket::stream_base::decorator(
+                [&](websocket::request_type &req)
                 {
-                    req.set(entry.first, entry.second);
-                }
-                req.set(http::field::user_agent, std::string(BOOST_BEAST_VERSION_STRING) + " websocket-client-coro");
-            })));
+                    for (auto &entry : custom_connect_headers)
+                    {
+                        req.set(entry.first, entry.second);
+                    }
+                    req.set(http::field::user_agent, std::string(BOOST_BEAST_VERSION_STRING) + " websocket-client-coro");
+                })))
             // Perform the websocket handshake
             NULLNEXUS_GETWS(handshake(host, endpoint))
 
@@ -221,29 +224,31 @@ class WebSocketClient
             return;
         trySendMessageQueue();
     }
+    
     void trySendMessageQueue()
     {
         if (!NULLNEXUS_VALIDWS)
             return;
 
-        while (messages.size())
+        while (!messages.empty())
         {
             try
             {
                 if (!NULLNEXUS_VALIDWS)
                     throw std::exception();
-                NULLNEXUS_GETWS(write(net::buffer(messages.front())));
+                NULLNEXUS_GETWS(write(net::buffer(messages.front())))
                 messages.pop();
             }
             catch (...)
             {
                 message_queue_timer.cancel();
                 message_queue_timer.expires_from_now(boost::posix_time::seconds(1));
-                message_queue_timer.async_wait(std::bind(&WebSocketClient::handle_timerMessageQueue, this, std::placeholders::_1));
+                message_queue_timer.async_wait([this](auto &&PH1) { handle_timerMessageQueue(std::forward<decltype(PH1)>(PH1)); });
                 return;
             }
         }
     }
+    
     void onImmediateMessageSend(std::string msg, std::promise<bool> &ret)
     {
         try
@@ -253,7 +258,7 @@ class WebSocketClient
                 ret.set_value(false);
                 return;
             }
-            NULLNEXUS_GETWS(write(net::buffer(msg)));
+            NULLNEXUS_GETWS(write(net::buffer(msg)))
             ret.set_value(true);
         }
         catch (...)
@@ -262,7 +267,8 @@ class WebSocketClient
             return;
         }
     }
-    void onAsyncMessageSend(std::string msg)
+    
+    void onAsyncMessageSend(const std::string &msg)
     {
         // Push into a queue
         messages.push(msg);
@@ -284,8 +290,9 @@ class WebSocketClient
     {
         start_delay_timer.cancel();
         start_delay_timer.expires_from_now(boost::posix_time::seconds(RESTART_WAIT_TIME));
-        start_delay_timer.async_wait(std::bind(&WebSocketClient::handler_startDelayTimer, this, std::placeholders::_1));
+        start_delay_timer.async_wait([this](auto &&PH1) { handler_startDelayTimer(std::forward<decltype(PH1)>(PH1)); });
     }
+    
     void internalStart(std::promise<void> *ret)
     {
         if (is_running)
@@ -297,6 +304,7 @@ class WebSocketClient
         is_running = true;
         doConnectionAttempt(ret);
     }
+    
     void internalStop(std::promise<void> &ret)
     {
         if (!is_running)
@@ -312,14 +320,14 @@ class WebSocketClient
             tcpws->next_layer().cancel();
         if (NULLNEXUS_VALIDWS)
         {
-            NULLNEXUS_GETWS(close(websocket::close_code::normal));
+            NULLNEXUS_GETWS(close(websocket::close_code::normal))
         }
         ret.set_value();
     }
 
     void internalSetCustomHeaders(std::vector<std::pair<std::string, std::string>> headers, std::promise<void> &ret)
     {
-        custom_connect_headers = headers;
+        custom_connect_headers = std::move(headers);
         ret.set_value();
     }
 
@@ -328,31 +336,32 @@ public:
     {
         if (async)
             // Let boost deal with anything related to thread safety
-            net::post(ioc, std::bind(&WebSocketClient::internalStart, this, nullptr));
+            net::post(ioc, [this] { internalStart(nullptr); });
         else
         {
             std::promise<void> ret;
             auto future = ret.get_future();
             // Let boost deal with anything related to thread safety
-            net::post(ioc, std::bind(&WebSocketClient::internalStart, this, &ret));
+            net::post(ioc, [this, capture0 = &ret] { internalStart(capture0); });
             future.wait();
         }
     }
+    
     void stop()
     {
         std::promise<void> ret;
         auto future = ret.get_future();
         // Let boost deal with anything related to thread safety
-        net::post(ioc, std::bind(&WebSocketClient::internalStop, this, std::ref(ret)));
+        net::post(ioc, [this, &ret] { internalStop(ret); });
         future.wait();
     }
 
-    bool sendMessage(std::string msg, bool sendIfOffline = false)
+    bool sendMessage(const std::string &msg, bool sendIfOffline = false)
     {
         if (sendIfOffline)
         {
             // Let the worker thread handle this safely
-            net::post(ioc, std::bind(&WebSocketClient::onAsyncMessageSend, this, msg));
+            net::post(ioc, [this, msg] { onAsyncMessageSend(msg); });
             return true;
         }
         else
@@ -360,32 +369,33 @@ public:
             std::promise<bool> ret;
             auto future = ret.get_future();
             // Let the worker thread handle this safely
-            net::post(ioc, std::bind(&WebSocketClient::onImmediateMessageSend, this, msg, std::ref(ret)));
+            net::post(ioc, [this, msg, &ret] { onImmediateMessageSend(msg, ret); });
             future.wait();
             return future.get();
         }
     }
 
-    void setCustomHeaders(std::vector<std::pair<std::string, std::string>> headers)
+    void setCustomHeaders(const std::vector<std::pair<std::string, std::string>> &headers)
     {
         std::promise<void> ret;
         auto future = ret.get_future();
-        net::post(ioc, std::bind(&WebSocketClient::internalSetCustomHeaders, this, headers, std::ref(ret)));
+        net::post(ioc, [this, headers, &ret] { internalSetCustomHeaders(headers, ret); });
         future.wait();
     }
 
-    WebSocketClient(std::string host, std::string port, std::string endpoint, std::function<void(std::string)> callback) : host(host), port(port), endpoint(endpoint), callback(callback)
+    WebSocketClient(std::string host, std::string port, std::string endpoint, std::function<void(std::string)> callback) : host(std::move(host)), port(std::move(port)), endpoint(std::move(endpoint)), callback(std::move(callback))
     {
         isunix = false;
         work.emplace(ioc.get_executor());
-        worker.emplace(std::bind(&WebSocketClient::runIO, this));
+        worker.emplace([this] { runIO(); });
     }
+    
 #ifdef __linux__
-    WebSocketClient(std::string unixsocket_addr, std::string endpoint, std::function<void(std::string)> callback) : host(unixsocket_addr), endpoint(endpoint), callback(callback)
+    WebSocketClient(std::string unixsocket_addr, std::string endpoint, std::function<void(std::string)> callback) : host(std::move(unixsocket_addr)), endpoint(std::move(endpoint)), callback(std::move(callback))
     {
         isunix = true;
         work.emplace(ioc.get_executor());
-        worker.emplace(std::bind(&WebSocketClient::runIO, this));
+        worker.emplace([this] { runIO(); });
     }
 #endif
 

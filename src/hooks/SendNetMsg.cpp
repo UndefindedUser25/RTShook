@@ -200,8 +200,10 @@ void ProcessAchievement(IGameEvent *ach)
             send_achievement_reply_timer.update();
             send_achievement_reply = true;
         }
-        if (playerlist::ChangeState(info.friendsID, playerlist::k_EState::CAT))
-            PrintChat("\x07%06X%s\x01 Detected Cathook user as Premium Accounts Auto Mark as Cat", 0xe05938, info.name);
+        if (auto_mark_cat && playerlist::ChangeState(info.friendsID, playerlist::k_EState::CAT))
+            PrintChat("\x07%06X%s\x01 Detected cheater enable BOT IDENTIFY Auto Mark as Cat", 0xe05938, info.name);
+        if (auto_mark_rage && playerlist::ChangeState(info.friendsID, playerlist::k_EState::CAT))
+            PrintChat("\x07%06X%s\x01 Detected cheater enable BOT IDENTIFY Auto Mark as Rage", 0xe05938, info.name);
     }
 }
 

@@ -14,7 +14,7 @@
             <AutoVariable width="fill" target="misc.full-auto" label="Fully automated firing"/>
             <AutoVariable width="fill" target="misc.show-spectators" label="Show spectators"/>
             <AutoVariable width="fill" target="misc.tauntslide" label="Tauntslide"/>
-	    <AutoVariable width="fill" target="misc.fuckmode" label="Fuckmode" tooltip="idk. what happen"/>
+	    <AutoVariable width="fill" target="misc.fuckmode" label="Fuckmode" tooltip="idk. what happen"/>player-tools.ignore.legit
 	    <AutoVariable width="fill" target="misc.animfix.enabled" label="Fix Animation Hitable" tooltip="Rewite Setup bone who about taunting."/>
             <AutoVariable width="fill" target="announcer" label="Enable announcer"/>
         </List>
@@ -26,7 +26,8 @@
             <AutoVariable width="fill" target="player-tools.ignore.hoovy" label="Ignore hoovies" tooltip="When Heavy using Holiday Punch or More and Cronching"/>
             <AutoVariable width="fill" target="player-tools.ignore.taunting" label="Ignore taunting players"/>
             <AutoVariable width="fill" target="player-tools.auto-party" label="Automatically add party state"/>
-	    <AutoVariable width="fill" target="player-tools.ignore.cathook" label="Ignore Cathook user" tooltip="SEt to about Ignore CAT stats."/>
+	    <AutoVariable width="fill" target="player-tools.ignore.cathook" label="Ignore Cathook user" tooltip="Set to about Ignore CAT stats."/>
+	    <AutoVariable width="fill" target="player-tools.ignore.legit" label="Ignore Legit player"/>
             <AutoVariable width="fill" target="killstreak.enable" label="Enable killstreak" tooltip="Add killstreak your any weapons."/>
             <AutoVariable width="fill" target="misc.backpack-expander.enabled" label="Expand backpack"/>
             <AutoVariable width="fill" target="misc.backpack-expander.slot-count" label="Backpack slots" min="1" max="3000"/>

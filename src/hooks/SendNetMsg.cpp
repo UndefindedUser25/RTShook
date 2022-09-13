@@ -79,6 +79,7 @@ settings::Boolean identify{ "chat.identify", "true" };
 settings::Boolean identify{ "chat.identify", "false" };
 #endif
 
+// i will not see this working anymore. Goodbye cl_drawline Have a nice day.
 /*void ProcessSendline(IGameEvent *kv)
 {
     int player_idx = kv->GetInt("player", 0xDEAD);
@@ -204,7 +205,7 @@ void ProcessAchievement(IGameEvent *ach)
         }
         if (auto_mark_cat && playerlist::ChangeState(info.friendsID, playerlist::k_EState::CAT))
             PrintChat("\x07%06X%s\x01 Detected cheater enable BOT IDENTIFY Auto Mark as Cat", 0xe05938, info.name);
-        if (auto_mark_rage && playerlist::ChangeState(info.friendsID, playerlist::k_EState::CAT))
+        if (auto_mark_rage && playerlist::ChangeState(info.friendsID, playerlist::k_EState::RAGE))
             PrintChat("\x07%06X%s\x01 Detected cheater enable BOT IDENTIFY Auto Mark as Rage", 0xe05938, info.name);
     }
 }

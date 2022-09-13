@@ -33,7 +33,7 @@ void printmsg(std::string &usr, std::string &msg, int colour = 0xff9340)
 #if !ENFORCE_STREAM_SAFETY && ENABLE_VISUALS
     if (msg.size() > 128 || usr.size() > 32)
     {
-        logging::Info("Nullnexus: Message too large.");
+        logging::Info("Nullnexus: Message too fucking large.");
         return;
     }
     if (g_Settings.bInvalid)
@@ -79,8 +79,8 @@ void authedplayers(std::vector<std::string> steamids)
                                if (steamid == steamidhash)
                                {
                                    // Use actual steamid to set cat status
-                                   if (playerlist::ChangeState(pinfo.friendsID, playerlist::k_EState::CAT))
-                                       PrintChat("\x07%06X%s\x01 Marked as CAT (Nullnexus user)", 0xe05938, pinfo.name);
+                                   if (playerlist::ChangeState(pinfo.friendsID, playerlist::k_EState::NULLNEXUS))
+                                       PrintChat("\x07%06X%s\x01 Enable Nullnexus Auto mark stat Cat.", 0xe05938, pinfo.name);
                                    return true;
                                }
                                return false;

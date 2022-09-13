@@ -190,6 +190,7 @@ target_include_directories(cathook SYSTEM PRIVATE
         "external/source-sdk-2013-headers/mp/src/common"
         "external/source-sdk-2013-headers/mp/src/public/tier0"
         "external/source-sdk-2013-headers/mp/src/public/tier1"
+        "external/source-sdk-2013-headers/mp/src/public/steam"
         "external/source-sdk-2013-headers/mp/src/tier1"
         "external/source-sdk-2013-headers/mp/src")
 
@@ -217,7 +218,6 @@ set_target_properties(cathook PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY
 add_subdirectory(src)
 add_subdirectory(include)
 add_subdirectory(external)
-add_subdirectory(modules)
 
 
 target_precompile_headers(cathook PRIVATE "${CMAKE_SOURCE_DIR}/include/common.hpp")

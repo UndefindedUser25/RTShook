@@ -117,8 +117,10 @@ void Load()
 rgba_t Color(unsigned steamid)
 {
     const auto &pl = AccessData(steamid);
-    if (pl.state == k_EState::CAT && pl.state == k_EState::NULLNEXUS)
+    if (pl.state == k_EState::CAT)
         return colors::RainbowCurrent();
+    if (pl.state == k_EState::NULLNEXUS)
+        return colors::green
     else if (pl.color.a)
         return pl.color;
 

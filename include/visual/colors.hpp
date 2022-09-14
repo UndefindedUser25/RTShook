@@ -25,7 +25,8 @@ constexpr unsigned white     = 0xE6E6E6;
 constexpr unsigned purple    = 0x7D4071;
 constexpr unsigned yellowish = 0xF0E68C;
 constexpr unsigned orange    = 0xCF7336;
-constexpr unsigned blue    = 0x00bdff;
+constexpr unsigned blue      = 0x00bdff;
+constexpr unsigned green     = 0x8aff9a;
 
 constexpr unsigned team(int team)
 {

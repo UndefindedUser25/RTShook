@@ -518,10 +518,10 @@ void ProcessUserCmd(CUserCmd *cmd)
     switch (int(pitch_fake))
     {
     case 1:
-        p += 360.0f
+        p += 360.0f;
         break;
     case 2:
-        p -= 360.0f
+        p -= 360.0f;
         break;
     case 3: // Inverse
 		if (p <= -89.0f)

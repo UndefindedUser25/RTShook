@@ -387,7 +387,6 @@ void refreshLocalBuildings()
         {
             for (auto &ent : entity_cache::valid_ent)
             {
-                CachedEntity *ent = ENTITY(i);
                 if (ent->m_bEnemy() || !ent->m_bAlivePlayer())
                     continue;
                 auto cid = ent->m_iClassID();

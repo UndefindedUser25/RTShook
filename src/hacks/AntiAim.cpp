@@ -468,17 +468,17 @@ void ProcessUserCmd(CUserCmd *cmd)
 	case 10: // Omega
 		if (!yaw_mode)
         {
-            randyaw += RandFloatRange(-30.0f, 30.0f);
+            randyaw += RandFloatRange(-35.0f, 35.0f);
             y = randyaw;
         }
         else
             y = randyaw - 180.0f + RandFloatRange(-40.0f, 40.0f);
 		break;
-	case 11: // Random
+	case 11: // Shitty Random
 		y     = RandFloatRange(-65536.0f, 65536.0f);
 		clamp = false;
 		break;
-	case 12: // Random Clamped
+	case 12: // Random
 		y = RandFloatRange(-180.0f, 180.0f);
 		break;
 	default:
@@ -517,11 +517,11 @@ void ProcessUserCmd(CUserCmd *cmd)
     // Fake is done afterwards so that they can be applied on top of the real angles set above
     switch (int(pitch_fake))
     {
-    case 1: // Up
-        p -= 360.0f;
+    case 1:
+        p += 360.0f
         break;
-    case 2: // Down
-        p += 360.0f;
+    case 2:
+        p -= 360.0f
         break;
     case 3: // Inverse
 		if (p <= -89.0f)
@@ -529,8 +529,8 @@ void ProcessUserCmd(CUserCmd *cmd)
 		else if (p >= 89.0f)
 			p -= 360.0f;
         break;
-    case 4: // Random
-        p = RandFloatRange(-89.0f, 89.0f);
+    case 4: // Center im not sure.
+        p = 360.0f;
         break;
     }
     

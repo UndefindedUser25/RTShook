@@ -80,7 +80,7 @@ void DrawCheatVisuals()
         PROF_SECTION(PT_info_text);
         if (info_text)
         {
-            AddSideString("RTShook v2.4", colors::gui);
+            AddSideString("RTShook v2.4 Build ", __DATE__ , colors::gui);
             if (!info_text_min)
             {
                 AddSideString(hack::GetVersion(),

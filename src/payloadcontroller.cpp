@@ -17,10 +17,11 @@ void Update()
         for (auto &entry : payloads)
             entry.clear();
 
-        for (auto &ent : entity_cache::valid_ents)
+        for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
         {
+            CachedEntity *ent = ENTITY(i);
             // Not the object we need or invalid (team)
-            if (ent->m_iClassID() != CL_CLASS(CObjectCartDispenser) || ent->m_iTeam() < TEAM_RED || ent->m_iTeam() > TEAM_BLU)
+            if (CE_BAD(ent) || ent->m_iClassID() != CL_CLASS(CObjectCartDispenser) || ent->m_iTeam() < TEAM_RED || ent->m_iTeam() > TEAM_BLU)
                 continue;
             int team = ent->m_iTeam();
 

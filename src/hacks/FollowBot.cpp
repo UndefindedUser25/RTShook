@@ -500,13 +500,14 @@ static void cm()
                 if (entity->m_bEnemy())
                     continue;
                 // favor closer entitys
+
                 if (follow_target && ENTITY(follow_target)->m_flDistance() < entity->m_flDistance()) // favor closer entitys
                     continue;
                 // check if new target has a higher priority than current
                 // target
                 if (ClassPriority(ENTITY(follow_target)) >= ClassPriority(entity))
                     continue;
-            }
+
                 if (startFollow(entity, isNavBotCM))
                 {
                     // ooooo, a target

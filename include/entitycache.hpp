@@ -218,9 +218,7 @@ public:
 namespace entity_cache
 {
 
-// I NEED PRICE OF SHIT REFRESH THAT
-extern std::vector<CachedEntity *> valid_ents;
-extern CachedEntity array[MAX_ENTITIES];
+extern CachedEntity array[MAX_ENTITIES]; // b1g fat array in
 inline CachedEntity &Get(int idx)
 {
     if (idx < 0 || idx >= 2048)

@@ -385,7 +385,7 @@ void refreshLocalBuildings()
         myDispenser = nullptr;
         if (CE_GOOD(LOCAL_E))
         {
-            for (auto &ent : entity_cache::valid_ents)
+            for (auto &ent : entity_cache::valid_ent)
             {
                 if (ent->m_bEnemy() || !ent->m_bAlivePlayer())
                     continue;

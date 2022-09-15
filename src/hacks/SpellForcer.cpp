@@ -137,6 +137,7 @@ CachedEntity *getClosestSpell()
         return ent;
     for (auto &spell : entity_cache::valid_ents)
     {
+        CachedEntity *spell = ENTITY(i);
         if (!spell->m_vecDormantOrigin() || (spell->m_ItemType() != ITEM_SPELL && spell->m_ItemType() != ITEM_SPELL_RARE))
             continue;
         float dist = spell->m_flDistance();

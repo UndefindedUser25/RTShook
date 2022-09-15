@@ -32,8 +32,9 @@ static inline void CreateMove()
     // Empty the array
     sniperdot_array.fill(nullptr);
     // Find sniper dots
-    for (auto &dot_ent : entity_cache::valid_ents)
+    for (int i = g_IEngine->GetMaxClients() + 1; i <= HIGHEST_ENTITY; i++)
     {
+        CachedEntity *dot_ent = ENTITY(i);
         // Not a sniper dot
         if (dot_ent->m_iClassID() != CL_CLASS(CSniperDot))
             continue;

@@ -120,7 +120,7 @@ rgba_t Color(unsigned steamid)
     if (pl.state == k_EState::CAT)
         return colors::RainbowCurrent();
     if (pl.state == k_EState::NULLNEXUS)
-        return colors::green
+        return colors::green;
     else if (pl.color.a)
         return pl.color;
 

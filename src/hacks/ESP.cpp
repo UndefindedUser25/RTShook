@@ -355,12 +355,13 @@ static void cm()
     std::lock_guard<std::mutex> esp_lock(threadsafe_mutex);
 
     // Update entites every 1/5s
-    const bool entity_tick = g_GlobalVars->tickcount % TIME_TO_TICKS(0.20f) == 0;
 
     ResetEntityStrings(entity_tick); // Clear any strings entities have
     entities_need_repaint.clear();   // Clear data on entities that need redraw
-    int max_clients = g_GlobalVars->maxClients;
-    int limit       = HIGHEST_ENTITY;
+    int max_clients          = g_GlobalVars->maxClients;
+    int limit                = HIGHEST_ENTITY;
+    bool run_all_ents        = false;
+    const bool vischeck_tick = g_GlobalVars->tickcount % TIME_TO_TICKS(0.50f) == 0;
 
     // If not using any other special esp, we lower the min to the max
     // clients
@@ -382,23 +383,58 @@ static void cm()
 
             bool player = i < max_clients;
 
-            if (player)
-            {
-                ProcessEntity(ent);
-                hitboxUpdate(ent);
-            }
-            else if (entity_tick)
-            {
-                ProcessEntity(ent);
-                hitboxUpdate(ent);
-            }
+                if (player)
+                {
+                    ProcessEntity(ent);
+                    hitboxUpdate(ent);
+                }
+                else if (entity_tick)
+                {
+                    ProcessEntity(ent);
+                    hitboxUpdate(ent);
+                }
 
-            if (data[ent->m_IDX].needs_paint)
+                if (data[ent->m_IDX].needs_paint)
+                {
+                    // Checking this every tick is a waste of nanoseconds
+                    if (vischeck_tick && vischeck)
+                        data[ent->m_IDX].transparent = !ent->IsVisible();
+                    entities_need_repaint.push_back({ ent->m_IDX, ent->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) });
+                }
+            }
+        }
+    }
+    else
+    {
+        { // Prof section ends when out of scope, these brackets here.
+            PROF_SECTION(CM_ESP_EntityLoop);
+            // Loop through entities
+            for (auto &ent_index : entity_cache::valid_ents)
             {
-                // Checking this every tick is a waste of nanoseconds
-                if (vischeck_tick && vischeck)
-                    data[ent->m_IDX].transparent = !ent->IsVisible();
-                entities_need_repaint.push_back({ ent->m_IDX, ent->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) });
+                // Get an entity from the loop tick and process it
+                if (!ent_index->m_bAlivePlayer())
+                    continue;
+
+                bool player = ent_index->m_IDX < max_clients;
+
+                if (player)
+                {
+                    ProcessEntity(ent_index);
+                    hitboxUpdate(ent_index);
+                }
+                else if (entity_tick)
+                {
+                    ProcessEntity(ent_index);
+                    hitboxUpdate(ent_index);
+                }
+
+                if (data[ent_index->m_IDX].needs_paint)
+                {
+                    // Checking this every tick is a waste of nanoseconds
+                    if (vischeck_tick && vischeck)
+                        data[ent_index->m_IDX].transparent = !ent_index->IsVisible();
+                    entities_need_repaint.push_back({ ent_index->m_IDX, ent_index->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) });
+                }
             }
         }
     }

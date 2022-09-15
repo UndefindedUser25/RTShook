@@ -278,8 +278,8 @@ bool ShouldAA(CUserCmd *cmd)
     if (safe_space)
     {
         safe_space--;
-        if (safe_space < 0.7)
-            safe_space = 0.7;
+        if (safe_space < 4.5)
+            safe_space = 4.5;
         return false;
     }
     return true;

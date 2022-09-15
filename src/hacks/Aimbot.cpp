@@ -861,7 +861,7 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
     CachedEntity *target_highest_ent                            = 0;
     target_highest_score                                        = -256;
     std::optional<hacks::tf2::backtrack::BacktrackData> bt_tick = std::nullopt;
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 1; i <= HIGHEST_ENTITY; i++)
     {
         ent = ENTITY(i);
         if (CE_BAD(ent))
@@ -902,7 +902,7 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
         {
             // Distance Priority, Uses this is melee is used
             if (GetWeaponMode() == weaponmode::weapon_melee || (int) priority_mode == 2)
-                scr = 4096.0f - calculated_data_array[ent->m_IDX].aim_position.DistTo(g_pLocalPlayer->v_Eye);
+                scr = 4096.0f - calculated_data_array[i].aim_position.DistTo(g_pLocalPlayer->v_Eye);
             else
             {
                 switch ((int) priority_mode)
@@ -917,7 +917,7 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
                     scr = 450.0f - ent->m_iHealth();
                     break;
                 case 4: // Distance Priority (Furthest Away)
-                    scr = calculated_data_array[ent->m_IDX].aim_position.DistTo(g_pLocalPlayer->v_Eye);
+                    scr = calculated_data_array[i].aim_position.DistTo(g_pLocalPlayer->v_Eye);
                     break;
                 case 5: // Health Priority (Highest)
                     scr = ent->m_iHealth() * 4;
@@ -942,7 +942,7 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
 
         // Restore tick
         if (shouldBacktrack(ent))
-            hacks::tf2::backtrack::RestoreEntity(ent->m_IDX);
+            hacks::tf2::backtrack::RestoreEntity(i);
     }
 
     if (target_highest_ent && bt_tick)

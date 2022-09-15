@@ -4,6 +4,8 @@
  *  Created on: May 22, 2017
  *      Author: nullifiedcat 
  *
+ *  Edit on: Aug 13, 2021
+ *      Author: cRpt
  */
 
 #include <MiscTemporary.hpp>
@@ -26,6 +28,7 @@
 #include "drawmgr.hpp"
 
 static settings::Boolean info_text{ "hack-info.enable", "true" };
+static settings::Boolean draw_box{ "hack-info.box", "false" };
 static settings::Boolean info_text_min{ "hack-info.minimal", "true" };
 
 void render_cheat_visuals()
@@ -80,11 +83,20 @@ void DrawCheatVisuals()
         PROF_SECTION(PT_info_text);
         if (info_text)
         {
-            AddSideString("RTShook v2.4 Build ", __DATE__ , colors::gui);
+	    if (draw_box) // I need type this because. if enable always RTShook always crash on inject.
+	    {
+            draw::RectangleOutlined(3,6,153,23, colors::RainbowCurrent() , 5);
+            draw::Rectangle(3,6,153,23, colors::black);
+  	    }
+            AddSideString("RTShook by Nerbura", colors::gui);
             if (!info_text_min)
             {
                 AddSideString(hack::GetVersion(),
                               colors::gui);                  // github commit and date
+#if ENABLE_GUI
+                AddSideString("Press '" + open_gui_button.toString() + "' key to open/close menu.", colors::gui);
+                AddSideString("Use mouse to Select Menu Feature.", colors::gui);
+#endif
             }
         }
     }

@@ -863,6 +863,9 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
     std::optional<hacks::tf2::backtrack::BacktrackData> bt_tick = std::nullopt;
     for (auto &ent : entity_cache::valid_ents)
     {
+        ent = ENTITY(i);
+        if (CE_BAD(ent))
+            continue; // Check for null and dormant
         // Check whether the current ent is good enough to target
         bool isTargetGood = false;
 

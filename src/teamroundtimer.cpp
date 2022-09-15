@@ -25,12 +25,12 @@ void CTeamRoundTimer::Update()
     IClientEntity *ent;
 
     entity = 0;
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 0; i <= HIGHEST_ENTITY; i++)
     {
-        auto result_ent = ent->InternalEntity();
-        if (ent && result_ent->GetClientClass()->m_ClassID == CL_CLASS(CTeamRoundTimer))
+        ent = g_IEntityList->GetClientEntity(i);
+        if (ent && ent->GetClientClass()->m_ClassID == CL_CLASS(CTeamRoundTimer))
         {
-            entity = ent->m_IDX;
+            entity = i;
             return;
         }
     }

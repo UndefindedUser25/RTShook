@@ -468,11 +468,11 @@ void ProcessUserCmd(CUserCmd *cmd)
 	case 10: // Omega
 		if (!yaw_mode)
         {
-            randyaw += RandFloatRange(-30.0f, 330.0f);
+            randyaw += RandFloatRange(-30.0f, 30.0f);
             y = randyaw;
         }
         else
-            y = randyaw - 90.0f + RandFloatRange(-35.0f, 35.0f);
+            y = randyaw - 360.0f + RandFloatRange(-45.0f, 45.0f);
 		break;
 	case 11: // Shitty Random
 		y     = RandFloatRange(-65536.0f, 65536.0f);

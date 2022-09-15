@@ -24,6 +24,7 @@ void Update()
     if (!flags[0].ent || !flags[1].ent)
         for (auto &ent : entity_cache::valid_ents)
         {
+            CachedEntity *ent = ENTITY(i);
             // We cannot identify a bad entity as a flag due to the unreliability of it
             if (ent->m_iClassID() != CL_CLASS(CCaptureFlag))
                 continue;
@@ -153,7 +154,7 @@ ETFFlagStatus getStatus(int team)
 namespace plcontroller
 {
 
-// Valid_ents that controls all the payloads for each team. Red team is first, then comes blue team.
+// Array that controls all the payloads for each team. Red team is first, then comes blue team.
 static std::array<std::vector<CachedEntity *>, 2> payloads;
 static Timer update_payloads{};
 
@@ -168,7 +169,6 @@ void Update()
 
         for (auto &ent : entity_cache::valid_ents)
         {
-
             // Not the object we need or invalid (team)
             if (ent->m_iClassID() != CL_CLASS(CObjectCartDispenser) || ent->m_iTeam() < TEAM_RED || ent->m_iTeam() > TEAM_BLU)
                 continue;
@@ -484,9 +484,7 @@ void LevelInit()
     cpcontroller::LevelInit();
 }
 
-static InitRoutine init(
-    []()
-    {
-        EC::Register(EC::CreateMove, CreateMove, "capturelogic_update");
-        EC::Register(EC::LevelInit, LevelInit, "capturelogic_levelinit");
-    });
+static InitRoutine init([]() {
+    EC::Register(EC::CreateMove, CreateMove, "capturelogic_update");
+    EC::Register(EC::LevelInit, LevelInit, "capturelogic_levelinit");
+});

@@ -123,9 +123,10 @@ bool shouldSearchAmmo()
 std::vector<CachedEntity *> getDispensers()
 {
     std::vector<CachedEntity *> entities;
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
     {
-        if (ent->m_iClassID() != CL_CLASS(CObjectDispenser) || ent->m_iTeam() != g_pLocalPlayer->team)
+        CachedEntity *ent = ENTITY(i);
+        if (CE_BAD(ent) || ent->m_iClassID() != CL_CLASS(CObjectDispenser) || ent->m_iTeam() != g_pLocalPlayer->team)
             continue;
         if (CE_BYTE(ent, netvar.m_bCarryDeploy) || CE_BYTE(ent, netvar.m_bHasSapper) || CE_BYTE(ent, netvar.m_bBuilding))
             continue;
@@ -145,8 +146,11 @@ std::vector<CachedEntity *> getDispensers()
 std::vector<CachedEntity *> getEntities(const std::vector<k_EItemType> &itemtypes)
 {
     std::vector<CachedEntity *> entities;
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
     {
+        CachedEntity *ent = ENTITY(i);
+        if (CE_BAD(ent))
+            continue;
         for (auto &itemtype : itemtypes)
         {
             if (ent->m_ItemType() == itemtype)
@@ -385,10 +389,10 @@ void refreshLocalBuildings()
         myDispenser = nullptr;
         if (CE_GOOD(LOCAL_E))
         {
-            for (auto &ent : entity_cache::valid_ent)
+            for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
             {
                 CachedEntity *ent = ENTITY(i);
-                if (ent->m_bEnemy() || !ent->m_bAlivePlayer())
+                if (!ent || CE_BAD(ent) || ent->m_bEnemy() || !ent->m_bAlivePlayer())
                     continue;
                 auto cid = ent->m_iClassID();
                 if (cid != CL_CLASS(CObjectSentrygun) && cid != CL_CLASS(CObjectDispenser))
@@ -950,8 +954,9 @@ bool snipeSentries()
     if (!snipe_sentries_shortrange && (g_pLocalPlayer->clazz == tf_scout || g_pLocalPlayer->clazz == tf_pyro))
         return false;
 
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
     {
+        CachedEntity *ent = ENTITY(i);
         // Invalid sentry
         if (!isSnipeTargetValid(ent))
             continue;

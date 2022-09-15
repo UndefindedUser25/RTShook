@@ -13,7 +13,7 @@
 namespace hacks::shared::antiaim
 {
 bool force_fakelag = false;
-float used_yaw     = 0.0f;
+float used_yaw     = 0.5f;
 static settings::Boolean enable{ "antiaim.enable", "0" };
 
 static settings::Boolean no_clamping{ "antiaim.no-clamp", "0" };
@@ -278,8 +278,8 @@ bool ShouldAA(CUserCmd *cmd)
     if (safe_space)
     {
         safe_space--;
-        if (safe_space < 0)
-            safe_space = 0;
+        if (safe_space < 0.7)
+            safe_space = 0.7;
         return false;
     }
     return true;
@@ -304,7 +304,7 @@ float edgeDistance(float edgeRayYaw)
     forward.x = cp * cy;
     forward.y = cp * sy;
     forward.z = -sp;
-    forward   = forward * 300.0f + g_pLocalPlayer->v_Eye;
+    forward   = forward * 450.0f + g_pLocalPlayer->v_Eye;
     ray.Init(g_pLocalPlayer->v_Eye, forward);
     // trace::g_pFilterNoPlayer to only focus on the enviroment
     g_ITrace->TraceRay(ray, 0x4200400B, &trace::filter_no_player, &trace);
@@ -324,9 +324,9 @@ bool findEdge(float edgeOrigYaw)
 
     // If the distance is too far, then set the distance to max so the angle
     // isnt used
-    if (edgeLeftDist >= 260)
+    if (edgeLeftDist >= 300)
         edgeLeftDist = 999999999;
-    if (edgeRightDist >= 260)
+    if (edgeRightDist >= 300)
         edgeRightDist = 999999999;
 
     // If none of the vectors found a wall, then dont edge
@@ -528,6 +528,9 @@ void ProcessUserCmd(CUserCmd *cmd)
 			p += 360.0f;
 		else if (p >= 89.0f)
 			p -= 360.0f;
+        break;
+    case 4: // Random
+        p = RandFloatRange(-89.0f, 89.0f);
         break;
     }
     

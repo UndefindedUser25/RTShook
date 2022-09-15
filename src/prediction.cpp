@@ -373,7 +373,6 @@ void Prediction_PaintTraverse()
                     continue;
                 auto pos  = ProjectilePrediction_Engine(ent, hitbox_t::spine_3, 1980.0f, 0.0f, 1.0f, 0.0f);
                 auto pos2 = ProjectilePrediction(ent, hitbox_t::spine_3, 1980.0f, 0.0f, 1.0f, 0.0f);
-
                 Vector aaa;
                 if (draw::WorldToScreen(pos.first, aaa))
                     draw::Rectangle(aaa.x, aaa.y, 5, 5, colors::yellow);
@@ -406,7 +405,6 @@ void Prediction_PaintTraverse()
                 /*if (!ent->m_bEnemy())
                     continue;
                 auto pos = ProjectilePrediction(ent, hitbox_t::spine_3, 1980.0f, 0.0f, 1.0f, 0.0f);
-
                 Vector aaa;
                 if (draw::WorldToScreen(pos, aaa))
                     draw::Rectangle(aaa.x, aaa.y, 5, 5, colors::yellow);*/
@@ -670,19 +668,6 @@ std::pair<Vector, Vector> ProjectilePrediction(CachedEntity *ent, int hb, float 
                   result.y - origin.y, result.z - origin.z);*/
     return { result, initialvel_result };
 }
-
-bool didProjectileHit(Vector start_point, Vector end_point, CachedEntity *entity, int projectile_size)
-{
-
-    trace::filter_default.SetSelf(RAW_ENT(g_pLocalPlayer->entity));
-    Ray_t ray;
-    trace_t trace_obj;
-    trace_t *tracer = &trace_obj;
-    ray.Init(start_point, end_point, Vector(0, -projectile_size, -projectile_size), Vector(0, projectile_size, projectile_size));
-    g_ITrace->TraceRay(ray, MASK_SHOT_HULL, &trace::filter_default, tracer);
-    return (((IClientEntity *) tracer->m_pEnt) == RAW_ENT(entity) || !tracer->DidHit());
-}
-
 
 float DistanceToGround(CachedEntity *ent)
 {

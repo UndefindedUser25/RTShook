@@ -22,10 +22,11 @@ void Update()
         return;
     // Find flags if missing
     if (!flags[0].ent || !flags[1].ent)
-        for (auto &ent : entity_cache::valid_ents)
+        for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
         {
+            CachedEntity *ent = ENTITY(i);
             // We cannot identify a bad entity as a flag due to the unreliability of it
-            if (ent->m_iClassID() != CL_CLASS(CCaptureFlag))
+            if (CE_BAD(ent) || ent->m_iClassID() != CL_CLASS(CCaptureFlag))
                 continue;
 
             // Store flags

@@ -14,9 +14,9 @@ namespace hacks::shared::antiaim
 {
 bool force_fakelag = false;
 float used_yaw     = 0.5f;
-static settings::Boolean enable{ "antiaim.enable", "0" };
+static settings::Boolean enable{ "antiaim.enable", "false" };
 
-static settings::Boolean no_clamping{ "antiaim.no-clamp", "0" };
+static settings::Boolean no_clamping{ "antiaim.no-clamp", "false" };
 static settings::Float roll{ "antiaim.roll", "0" };
 static settings::Float spin{ "antiaim.spin-speed", "10" };
 

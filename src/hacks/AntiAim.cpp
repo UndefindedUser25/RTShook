@@ -472,7 +472,7 @@ void ProcessUserCmd(CUserCmd *cmd)
             y = randyaw;
         }
         else
-            y = randyaw - 180.0f + RandFloatRange(-40.0f, 40.0f);
+            y = randyaw - 180.0f + RandFloatRange(-45.0f, 45.0f);
 		break;
 	case 11: // Shitty Random
 		y     = RandFloatRange(-65536.0f, 65536.0f);

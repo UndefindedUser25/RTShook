@@ -138,15 +138,16 @@ int getCarriedBuilding()
 {
     if (CE_INT(LOCAL_E, netvar.m_bCarryingObject))
         return HandleToIDX(CE_INT(LOCAL_E, netvar.m_hCarriedObject));
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 1; i < MAX_ENTITIES; i++)
     {
-        if (ent->m_Type() != ENTITY_BUILDING)
+        auto ent = ENTITY(i);
+        if (CE_BAD(ent) || ent->m_Type() != ENTITY_BUILDING)
             continue;
         if (HandleToIDX(CE_INT(ent, netvar.m_hBuilder)) != LOCAL_E->m_IDX)
             continue;
         if (!CE_INT(ent, netvar.m_bPlacing))
             continue;
-        return ent->m_IDX;
+        return i;
     }
     return -1;
 }
@@ -756,8 +757,11 @@ static CatCommand dump_vars_by_name("debug_dump_netvars_name", "Dump netvars of 
                                         if (args.ArgC() < 2)
                                             return;
                                         std::string name(args.Arg(1));
-                                        for (auto &ent : entity_cache::valid_ents)
+                                        for (int i = 0; i <= HIGHEST_ENTITY; i++)
                                         {
+                                            CachedEntity *ent = ENTITY(i);
+                                            if (CE_BAD(ent))
+                                                continue;
                                             ClientClass *clz = RAW_ENT(ent)->GetClientClass();
                                             if (!clz)
                                                 continue;

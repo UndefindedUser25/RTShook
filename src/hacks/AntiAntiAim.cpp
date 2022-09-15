@@ -30,13 +30,13 @@ static inline void modifyAngles()
 static inline void CreateMove()
 {
     // Empty the array
-    sniperdot_array.fill(0);
+    sniperdot_array.fill(nullptr);
     // Find sniper dots
     for (int i = g_IEngine->GetMaxClients() + 1; i <= HIGHEST_ENTITY; i++)
     {
         CachedEntity *dot_ent = ENTITY(i);
         // Not a sniper dot
-        if (CE_BAD(dot_ent) || dot_ent->m_iClassID() != CL_CLASS(CSniperDot))
+        if (dot_ent->m_iClassID() != CL_CLASS(CSniperDot))
             continue;
         // Get the player it belongs to
         auto ent_idx = HandleToIDX(CE_INT(dot_ent, netvar.m_hOwnerEntity));
@@ -76,11 +76,11 @@ static float resolveAngleYaw(float angle, brutedata &brute)
     int entry = (int) std::floor((brute.brutenum / 2.0f)) % yaw_resolves.size();
     angle += yaw_resolves[entry];
 
-    while (angle > 180)
-        angle -= 360;
+    while (angle > 90)
+        angle -= 180;
 
-    while (angle < -180)
-        angle += 360;
+    while (angle < -90)
+        angle += 180;
     brute.new_angle.y = angle;
     return angle;
 }
@@ -115,10 +115,10 @@ static float resolveAnglePitch(float angle, brutedata &brute, CachedEntity *ent)
         if (brute.brutenum % 2)
         {
             // Pitch resolver
-            if (angle >= 45)
-                angle = -44.5;
-            if (angle <= -45)
-                angle = 44.5;
+            if (angle >= 90)
+                angle = -89;
+            if (angle <= -90)
+                angle = 89;
         }
     }
     // Sniper dot found, use it.

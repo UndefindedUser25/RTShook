@@ -46,7 +46,7 @@ float cur_yaw[2] = {
 	0.0f
 };
 
-int safe_space = 0;
+int safe_space = 4.5;
 
 float aaaa_timer_start = 0.0f;
 float aaaa_timer       = 0.0f;
@@ -150,9 +150,9 @@ void FuckPitch(float &io_pitch)
     constexpr float max_pitch = 149489.97f;
     // static FuckData_s fuck_data;
     static k_EFuckMode fuckmode = k_EFuckMode::FM_RANDOMVARS;
-    // static int fuckmode_ticks   = 0;
+    static int fuckmode_ticks   = 0;
 
-    /*if (!fuckmode_ticks) {
+    if (!fuckmode_ticks) {
         fuckmode = rand() % k_EFuckMode::FM_COUNT;
         fuckmode_ticks = rand() % 333;
         switch (fuckmode) {
@@ -166,7 +166,7 @@ void FuckPitch(float &io_pitch)
         case k_EFuckMode::FM_RANDOMVARS:
             break;
         }
-    }*/
+    }
 
     switch (fuckmode)
     {
@@ -530,7 +530,7 @@ void ProcessUserCmd(CUserCmd *cmd)
 			p -= 360.0f;
         break;
     case 4: // Center im not sure.
-        p = 360.0f;
+        p += 271.0f;
         break;
     }
     

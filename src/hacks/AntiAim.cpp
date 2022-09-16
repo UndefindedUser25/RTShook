@@ -46,7 +46,7 @@ float cur_yaw[2] = {
 	0.0f
 };
 
-int safe_space = 4.5;
+int safe_space = 0;
 
 float aaaa_timer_start = 0.0f;
 float aaaa_timer       = 0.0f;
@@ -278,8 +278,8 @@ bool ShouldAA(CUserCmd *cmd)
     if (safe_space)
     {
         safe_space--;
-        if (safe_space < 4.5)
-            safe_space = 4.5;
+        if (safe_space < 0)
+            safe_space = 2;
         return false;
     }
     return true;
@@ -468,11 +468,11 @@ void ProcessUserCmd(CUserCmd *cmd)
 	case 10: // Omega
 		if (!yaw_mode)
         {
-            randyaw += RandFloatRange(-30.0f, 30.0f);
+            randyaw += RandFloatRange(-20.0f, 20.0f);
             y = randyaw;
         }
         else
-            y = randyaw - 360.0f + RandFloatRange(-45.0f, 45.0f);
+            y = randyaw - 360.0f + RandFloatRange(-30.0f, 30.0f);
 		break;
 	case 11: // Shitty Random
 		y     = RandFloatRange(-65536.0f, 65536.0f);

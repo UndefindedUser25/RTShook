@@ -150,7 +150,7 @@ void FuckPitch(float &io_pitch)
     constexpr float max_pitch = 149489.97f;
     // static FuckData_s fuck_data;
     static k_EFuckMode fuckmode = k_EFuckMode::FM_RANDOMVARS;
-    static int fuckmode_ticks   = 0;
+    /*static int fuckmode_ticks   = 0;
 
     if (!fuckmode_ticks) {
         fuckmode = rand() % k_EFuckMode::FM_COUNT;
@@ -166,7 +166,7 @@ void FuckPitch(float &io_pitch)
         case k_EFuckMode::FM_RANDOMVARS:
             break;
         }
-    }
+    }*/
 
     switch (fuckmode)
     {

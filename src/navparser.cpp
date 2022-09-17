@@ -40,7 +40,8 @@ static settings::Int look_crumbs{ "nav.look-crumbs", "0" };
 
 static settings::Boolean draw_debug_areas("nav.draw.debug-areas", "false");
 static settings::Boolean log_pathing{ "nav.log", "false" };
-static settings::Int stuck_time{ "nav.stuck-time", "20000" };
+static settings::Int stuck_time{ "nav.stuck-time", "4000" };
+static settings::Int duck_check{ "nav.last-duck-check", "125" };
 static settings::Int vischeck_cache_time{ "nav.vischeck-cache.time", "240" };
 static settings::Boolean vischeck_runtime{ "nav.vischeck-runtime.enabled", "true" };
 static settings::Int vischeck_time{ "nav.vischeck-runtime.delay", "1200" };
@@ -600,6 +601,7 @@ void cancelPath()
 }
 
 static Timer last_jump{};
+static Timer last_duck{};
 // Used to determine if we want to jump or if we want to crouch
 static bool crouch          = false;
 static int ticks_since_jump = 0;
@@ -695,10 +697,10 @@ static void followCrumbs()
     {
         auto local = map->findClosestNavSquare(g_pLocalPlayer->v_Origin);
         // Check if current area allows jumping
-        if (!local || !(local->m_attributeFlags & (NAV_MESH_NO_JUMP | NAV_MESH_STAIRS)))
+        if (!local || !(local->m_attributeFlags & (NAV_MESH_NO_JUMP | NAV_MESH_STAIRS | NAV_MESH_INVALID)))
         {
             // Make it crouch until we land, but jump the first tick [whatever.]
-            current_user_cmd->buttons |= crouch ? IN_DUCK : IN_JUMP;
+            current_user_cmd->buttons = crouch ? IN_DUCK : IN_JUMP;
 
             // Only flip to crouch state, not to jump state
             if (!crouch)
@@ -709,11 +711,12 @@ static void followCrumbs()
             ticks_since_jump++;
 
             // Update jump timer now since we are back on ground
-            if (crouch && CE_INT(LOCAL_E, netvar.iFlags) & FL_ONGROUND && ticks_since_jump > 3)
+            if (crouch && last_duck.check(*duck_check) && ticks_since_jump > 0)
             {
                 // Reset
                 crouch = false;
                 last_jump.update();
+		last_duck.update();
             }
         }
     }

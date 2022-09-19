@@ -29,6 +29,10 @@ static settings::Float yaw_fake_static{ "antiaim.yaw.fake.static", "0" };
 static settings::Int yaw_real{ "antiaim.yaw.real", "0" };
 static settings::Float yaw_real_static{ "antiaim.yaw.real.static", "0" };
 
+static settings::Bool crouch{ "antiaim.crouch", "0" };
+static settings::Int dur{ "antiaim.crouch.dur", "15" };
+static settings::Int dursneak{ "antiaim.crouch.dursneak", "15" };
+
 static settings::Boolean aaaa_enable{ "antiaim.aaaa.enable", "0" };
 static settings::Float aaaa_interval{ "antiaim.aaaa.interval.seconds", "0" };
 static settings::Float aaaa_interval_random_high{ "antiaim.aaaa.interval.random-high", "10" };
@@ -352,6 +356,42 @@ bool findEdge(float edgeOrigYaw)
     }
 }
 
+Timer delay{};
+int val       = 0;
+int value[32] = { 0 };
+void FakeCrouch(CUserCmd *cmd)
+{
+    if (!crouch || !(cmd->buttons & IN_DUCK))
+        return;
+    static bool bDoCrouch   = false;
+    static int iCrouchCount = 0;
+
+    if (iCrouchCount == *dur)
+    {
+        iCrouchCount = 0;
+        bDoCrouch    = !bDoCrouch;
+    }
+    else
+    {
+        iCrouchCount++;
+    }
+    if (bDoCrouch)
+    {
+        cmd->buttons |= IN_DUCK;
+        *bSendPackets = true;
+    }
+    else
+    {
+        if (iCrouchCount + *dursneak < *dur)
+            cmd->buttons &= ~IN_DUCK;
+        *bSendPackets = false;
+    }
+
+    if ((cmd->buttons & IN_ATTACK))
+        *bSendPackets = true;
+}
+static float randyaw = 0.0f;
+
 // Function to give you a static angle to use
 float useEdge(float edgeViewAngle)
 {
@@ -548,6 +588,7 @@ void ProcessUserCmd(CUserCmd *cmd)
     if (!g_pLocalPlayer->isFakeAngleCM)
         used_yaw = y;
     g_pLocalPlayer->bUseSilentAngles = true;
+    FakeCrouch(cmd);
 }
 
 bool isEnabled()

@@ -29,7 +29,7 @@ static settings::Float yaw_fake_static{ "antiaim.yaw.fake.static", "0" };
 static settings::Int yaw_real{ "antiaim.yaw.real", "0" };
 static settings::Float yaw_real_static{ "antiaim.yaw.real.static", "0" };
 
-static settings::Bool crouch{ "antiaim.crouch", "0" };
+static settings::Boollean crouch{ "antiaim.crouch", "0" };
 static settings::Int dur{ "antiaim.crouch.dur", "15" };
 static settings::Int dursneak{ "antiaim.crouch.dursneak", "15" };
 
@@ -357,6 +357,7 @@ bool findEdge(float edgeOrigYaw)
 }
 
 Timer delay{};
+static bool crouch          = false;
 int val       = 0;
 int value[32] = { 0 };
 void FakeCrouch(CUserCmd *cmd)

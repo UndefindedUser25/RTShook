@@ -358,6 +358,7 @@ bool findEdge(float edgeOrigYaw)
 
 Timer delay{};
 static bool crouch          = false;
+static float randyaw = 0.0f;
 int val       = 0;
 int value[32] = { 0 };
 void FakeCrouch(CUserCmd *cmd)

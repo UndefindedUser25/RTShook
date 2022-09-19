@@ -433,7 +433,6 @@ float useEdge(float edgeViewAngle)
     // return with the angle choosen
     return edgeYaw;
 }
-static float randyaw = 0.0f;
 void ProcessUserCmd(CUserCmd *cmd)
 {
 	// Not running

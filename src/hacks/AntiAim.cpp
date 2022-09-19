@@ -29,7 +29,7 @@ static settings::Float yaw_fake_static{ "antiaim.yaw.fake.static", "0" };
 static settings::Int yaw_real{ "antiaim.yaw.real", "0" };
 static settings::Float yaw_real_static{ "antiaim.yaw.real.static", "0" };
 
-static settings::Boolean crouch{ "antiaim.crouch", "0" };
+static settings::Boolean fake_crouch{ "antiaim.crouch", "0" };
 static settings::Int dur{ "antiaim.crouch.dur", "15" };
 static settings::Int dursneak{ "antiaim.crouch.dursneak", "15" };
 
@@ -355,15 +355,14 @@ bool findEdge(float edgeOrigYaw)
         return true;
     }
 }
-
 Timer delay{};
-static bool crouch          = false;
-static float randyaw = 0.0f;
+bool crouch          = false;
+float randyaw = 0.0f;
 int val       = 0;
 int value[32] = { 0 };
 void FakeCrouch(CUserCmd *cmd)
 {
-    if (!crouch || !(cmd->buttons & IN_DUCK))
+    if (!fake_crouch || !(cmd->buttons & IN_DUCK))
         return;
     static bool bDoCrouch   = false;
     static int iCrouchCount = 0;
@@ -392,7 +391,6 @@ void FakeCrouch(CUserCmd *cmd)
     if ((cmd->buttons & IN_ATTACK))
         *bSendPackets = true;
 }
-static float randyaw = 0.0f;
 
 // Function to give you a static angle to use
 float useEdge(float edgeViewAngle)

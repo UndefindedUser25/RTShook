@@ -899,7 +899,7 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
         {
             // Distance Priority, Uses this is melee is used
             if (GetWeaponMode() == weaponmode::weapon_melee || (int) priority_mode == 2)
-                scr = 4096.0f - calculated_data_array[i].aim_position.DistTo(g_pLocalPlayer->v_Eye);
+                scr = 4096.0f - calculated_data_array[ent->m_IDX].aim_position.DistTo(g_pLocalPlayer->v_Eye);
             else
             {
                 switch ((int) priority_mode)

@@ -713,9 +713,8 @@ CachedEntity *getClosestEntity(Vector vec)
 {
     float distance         = FLT_MAX;
     CachedEntity *best_ent = nullptr;
-    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
         if (CE_VALID(ent) && ent->m_vecDormantOrigin() && ent->m_bAlivePlayer() && ent->m_bEnemy() && vec.DistTo(ent->m_vecOrigin()) < distance)
         {
             distance = vec.DistTo(*ent->m_vecDormantOrigin());
@@ -729,9 +728,8 @@ CachedEntity *getClosestNonlocalEntity(Vector vec)
 {
     float distance         = FLT_MAX;
     CachedEntity *best_ent = nullptr;
-    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
         if (CE_VALID(ent) && ent->m_IDX != g_pLocalPlayer->entity_idx && ent->m_vecDormantOrigin() && ent->m_bAlivePlayer() && ent->m_bEnemy() && vec.DistTo(ent->m_vecOrigin()) < distance)
         {
             distance = vec.DistTo(*ent->m_vecDormantOrigin());
@@ -1815,15 +1813,8 @@ CatCommand print_classnames("debug_print_classnames", "Lists classnames currentl
                                 CachedEntity *ent;
 
                                 // Go through all the entities
-                                for (int i = 0; i <= HIGHEST_ENTITY; i++)
+                                for (auto &ent : entity_cache::valid_ents)
                                 {
-
-                                    // Get an entity
-                                    ent = ENTITY(i);
-                                    // Check for null/dormant
-                                    if (CE_BAD(ent))
-                                        continue;
-
                                     // Print in console, the class name of the ent
                                     logging::Info(format(RAW_ENT(ent)->GetClientClass()->m_pNetworkName).c_str());
                                 }

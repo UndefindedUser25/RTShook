@@ -1,5 +1,5 @@
 /*
- * entitycache.h
+ * entitycache.hpp
  *
  *  Created on: Nov 7, 2016
  *      Author: nullifiedcat
@@ -37,7 +37,7 @@ constexpr int MAX_STRINGS = 16;
 
 #define PROXY_ENTITY true
 
-#if PROXY_ENTITY == true
+#if PROXY_ENTITY
 #define RAW_ENT(ce) ce->InternalEntity()
 #else
 #define RAW_ENT(ce) ce->m_pEntity
@@ -50,12 +50,12 @@ constexpr int MAX_STRINGS = 16;
 #define CE_BYTE(entity, offset) CE_VAR(entity, offset, unsigned char)
 #define CE_VECTOR(entity, offset) CE_VAR(entity, offset, Vector)
 
-#define CE_GOOD(entity) (entity && !g_Settings.bInvalid && entity->Good())
+#define CE_GOOD(entity) ((entity) && !g_Settings.bInvalid && (entity)->Good())
 #define CE_BAD(entity) (!CE_GOOD(entity))
-#define CE_VALID(entity) (entity && !g_Settings.bInvalid && entity->Valid())
+#define CE_VALID(entity) ((entity) && !g_Settings.bInvalid && (entity)->Valid())
 #define CE_INVALID(entity) (!CE_VALID(entity))
 
-#define IDX_GOOD(idx) (idx >= 0 && idx <= HIGHEST_ENTITY && idx < MAX_ENTITIES)
+#define IDX_GOOD(idx) ((idx) >= 0 && (idx) <= HIGHEST_ENTITY && (idx) < MAX_ENTITIES)
 #define IDX_BAD(idx) !IDX_GOOD(idx)
 
 #define HIGHEST_ENTITY (entity_cache::max)
@@ -97,7 +97,7 @@ public:
 
     const int m_IDX;
 
-    int m_iClassID()
+    int m_iClassID() const
     {
         if (RAW_ENT(this))
             if (RAW_ENT(this)->GetClientClass())
@@ -105,20 +105,20 @@ public:
                     return RAW_ENT(this)->GetClientClass()->m_ClassID;
         return 0;
     };
-    Vector m_vecOrigin()
+    Vector m_vecOrigin() const
     {
         return RAW_ENT(this)->GetAbsOrigin();
     };
     std::optional<Vector> m_vecDormantOrigin();
-    int m_iTeam()
+    int m_iTeam() const
     {
         return NET_INT(RAW_ENT(this), netvar.iTeamNum);
     };
-    bool m_bAlivePlayer()
+    bool m_bAlivePlayer() const
     {
         return !(NET_BYTE(RAW_ENT(this), netvar.iLifeState));
     };
-    bool m_bEnemy()
+    bool m_bEnemy() const
     {
         if (CE_BAD(g_pLocalPlayer->entity))
             return true;
@@ -126,46 +126,89 @@ public:
     };
     int m_iMaxHealth()
     {
-        if (m_Type() == ENTITY_PLAYER)
+        switch (m_Type())
+        {
+        case ENTITY_PLAYER:
             return g_pPlayerResource->GetMaxHealth(this);
-        else if (m_Type() == ENTITY_BUILDING)
+        case ENTITY_BUILDING:
             return NET_INT(RAW_ENT(this), netvar.iBuildingMaxHealth);
-        else
+        default:
             return 0.0f;
+        }
     };
-    int m_iHealth()
+    int m_iHealth() const
     {
-        if (m_Type() == ENTITY_PLAYER)
+        switch (m_Type())
+        {
+        case ENTITY_PLAYER:
             return NET_INT(RAW_ENT(this), netvar.iHealth);
-        else if (m_Type() == ENTITY_BUILDING)
+        case ENTITY_BUILDING:
             return NET_INT(RAW_ENT(this), netvar.iBuildingHealth);
-        else
+        default:
             return 0.0f;
+        }
     };
-    Vector &m_vecAngle()
+    Vector &m_vecAngle() const
     {
         return CE_VECTOR(this, netvar.m_angEyeAngles);
     };
 
     // Entity fields start here
-    EntityType m_Type()
+    EntityType m_Type() const
     {
-        EntityType ret = ENTITY_GENERIC;
-        int classid    = m_iClassID();
-        if (classid == CL_CLASS(CTFPlayer))
+        EntityType ret;
+        int classid = m_iClassID();
+        switch (classid)
+        {
+        case CL_CLASS(CTFPlayer):
+        {
             ret = ENTITY_PLAYER;
-        else if (classid == CL_CLASS(CTFGrenadePipebombProjectile) || classid == CL_CLASS(CTFProjectile_Cleaver) || classid == CL_CLASS(CTFProjectile_Jar) || classid == CL_CLASS(CTFProjectile_JarMilk) || classid == CL_CLASS(CTFProjectile_Arrow) || classid == CL_CLASS(CTFProjectile_EnergyBall) || classid == CL_CLASS(CTFProjectile_EnergyRing) || classid == CL_CLASS(CTFProjectile_GrapplingHook) || classid == CL_CLASS(CTFProjectile_HealingBolt) || classid == CL_CLASS(CTFProjectile_Rocket) || classid == CL_CLASS(CTFProjectile_SentryRocket) || classid == CL_CLASS(CTFProjectile_BallOfFire) || classid == CL_CLASS(CTFProjectile_Flare))
+            break;
+        }
+        case CL_CLASS(CTFGrenadePipebombProjectile):
+        case CL_CLASS(CTFProjectile_Cleaver):
+        case CL_CLASS(CTFProjectile_Jar):
+        case CL_CLASS(CTFProjectile_JarMilk):
+        case CL_CLASS(CTFProjectile_Arrow):
+        case CL_CLASS(CTFProjectile_EnergyBall):
+        case CL_CLASS(CTFProjectile_EnergyRing):
+        case CL_CLASS(CTFProjectile_GrapplingHook):
+        case CL_CLASS(CTFProjectile_HealingBolt):
+        case CL_CLASS(CTFProjectile_Rocket):
+        case CL_CLASS(CTFProjectile_SentryRocket):
+        case CL_CLASS(CTFProjectile_BallOfFire):
+        case CL_CLASS(CTFProjectile_Flare):
+        {
             ret = ENTITY_PROJECTILE;
-        else if (classid == CL_CLASS(CObjectTeleporter) || classid == CL_CLASS(CObjectSentrygun) || classid == CL_CLASS(CObjectDispenser))
+            break;
+        }
+        case CL_CLASS(CObjectTeleporter):
+        case CL_CLASS(CObjectSentrygun):
+        case CL_CLASS(CObjectDispenser):
+        {
             ret = ENTITY_BUILDING;
-        else if (classid == CL_CLASS(CZombie) || classid == CL_CLASS(CTFTankBoss) || classid == CL_CLASS(CMerasmus) || classid == CL_CLASS(CMerasmusDancer) || classid == CL_CLASS(CEyeballBoss) || classid == CL_CLASS(CHeadlessHatman))
+            break;
+        }
+        case CL_CLASS(CZombie):
+        case CL_CLASS(CTFTankBoss):
+        case CL_CLASS(CMerasmus):
+        case CL_CLASS(CMerasmusDancer):
+        case CL_CLASS(CEyeballBoss):
+        case CL_CLASS(CHeadlessHatman):
+        {
             ret = ENTITY_NPC;
-        else
+            break;
+        }
+        default:
+        {
             ret = ENTITY_GENERIC;
+            break;
+        }
+        }
         return ret;
     };
 
-    float m_flDistance()
+    float m_flDistance() const
     {
         if (CE_GOOD(g_pLocalPlayer->entity))
             return g_pLocalPlayer->v_Origin.DistTo(m_vecOrigin());
@@ -175,12 +218,15 @@ public:
 
     bool m_bCritProjectile()
     {
-        if (m_Type() == EntityType::ENTITY_PROJECTILE)
+        switch (m_Type())
+        {
+        case EntityType::ENTITY_PROJECTILE:
             return IsProjectileACrit(this);
-        else
+        default:
             return false;
+        }
     };
-    bool m_bGrenadeProjectile()
+    bool m_bGrenadeProjectile() const
     {
         return m_iClassID() == CL_CLASS(CTFGrenadePipebombProjectile) || m_iClassID() == CL_CLASS(CTFProjectile_Cleaver) || m_iClassID() == CL_CLASS(CTFProjectile_Jar) || m_iClassID() == CL_CLASS(CTFProjectile_JarMilk);
     };
@@ -188,13 +234,13 @@ public:
     bool m_bAnyHitboxVisible{ false };
     bool m_bVisCheckComplete{ false };
 
-    k_EItemType m_ItemType()
+    /*k_EItemType m_ItemType()
     {
         if (m_Type() == ENTITY_GENERIC)
             return g_ItemManager.GetItemType(this);
         else
             return ITEM_NONE;
-    };
+    };*/
 
     unsigned long m_lSeenTicks{ 0 };
     unsigned long m_lLastSeen{ 0 };
@@ -205,7 +251,7 @@ public:
     hitbox_cache::EntityHitboxCache &hitboxes;
     player_info_s player_info{};
     Averager<float> velocity_averager{ 8 };
-    bool was_dormant()
+    bool was_dormant() const
     {
         return RAW_ENT(this)->IsDormant();
     };
@@ -217,8 +263,9 @@ public:
 
 namespace entity_cache
 {
-
-extern CachedEntity array[MAX_ENTITIES]; // b1g fat array in
+// b1g fat array in
+extern std::vector<CachedEntity *> valid_ents;
+extern CachedEntity array[MAX_ENTITIES];
 inline CachedEntity &Get(int idx)
 {
     if (idx < 0 || idx >= 2048)

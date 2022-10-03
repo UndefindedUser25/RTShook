@@ -8,7 +8,7 @@
 #include <hacks/ESP.hpp>
 #include <PlayerTools.hpp>
 #include <settings/Bool.hpp>
-#include "common.hpp"	
+#include "common.hpp"
 #include "soundcache.hpp"
 
 namespace hacks::shared::esp
@@ -21,8 +21,6 @@ static settings::Int box_corner_size_height{ "esp.box.corner-size.height", "10" 
 static settings::Int box_corner_size_width{ "esp.box.corner-size.width", "10" };
 static settings::Boolean box_3d_player{ "esp.box.player-3d", "false" };
 static settings::Boolean box_3d_building{ "esp.box.building-3d", "false" };
-static settings::Boolean auto_zoom_wallhack{ "aimbot.auto.zoom.wallhack", "0" };
-static settings::Boolean auto_unzoom_wallhack{ "aimbot.auto.unzoom.wallhack", "0" };
 
 static settings::Boolean draw_bones{ "esp.bones", "false" };
 static settings::Float bones_thickness{ "esp.bones.thickness", "0.5" };
@@ -359,46 +357,81 @@ static void cm()
 
     ResetEntityStrings(entity_tick); // Clear any strings entities have
     entities_need_repaint.clear();   // Clear data on entities that need redraw
-    int max_clients = g_GlobalVars->maxClients;
-    int limit       = HIGHEST_ENTITY;
-
+    int max_clients          = g_GlobalVars->maxClients;
+    int limit                = HIGHEST_ENTITY;
+    bool run_all_ents        = false;
+    const bool vischeck_tick = g_GlobalVars->tickcount % TIME_TO_TICKS(0.50f) == 0;
     // If not using any other special esp, we lower the min to the max
     // clients
     if (!buildings && !proj_esp && !item_esp)
-        limit = std::min(max_clients, HIGHEST_ENTITY);
+    {
 
-    // Do a vischeck every 1/2s
-    const bool vischeck_tick = g_GlobalVars->tickcount % TIME_TO_TICKS(0.50f) == 0;
+        // Do a vischeck every 1/2s
 
-    { // Prof section ends when out of scope, these brackets here.
-        PROF_SECTION(CM_ESP_EntityLoop);
-        // Loop through entities
-        for (int i = 0; i <= limit; i++)
-        {
-            // Get an entity from the loop tick and process it
-            CachedEntity *ent = ENTITY(i);
-            if (CE_INVALID(ent) || !ent->m_bAlivePlayer())
-                continue;
-
-            bool player = i < max_clients;
-
-            if (player)
+        { // Prof section ends when out of scope, these brackets here.
+            PROF_SECTION(CM_ESP_EntityLoop);
+            // Loop through entities
+            for (int i = 0; i <= max_clients; i++)
             {
-                ProcessEntity(ent);
-                hitboxUpdate(ent);
+                // Get an entity from the loop tick and process it
+                CachedEntity *ent = ENTITY(i);
+                if (CE_INVALID(ent) || !ent->m_bAlivePlayer())
+                    continue;
+
+                bool player = i < max_clients;
+
+                if (player)
+                {
+                    ProcessEntity(ent);
+                    hitboxUpdate(ent);
+                }
+                else if (entity_tick)
+                {
+                    ProcessEntity(ent);
+                    hitboxUpdate(ent);
+                }
+
+                if (data[ent->m_IDX].needs_paint)
+                {
+                    // Checking this every tick is a waste of nanoseconds
+                    if (vischeck_tick && vischeck)
+                        data[ent->m_IDX].transparent = !ent->IsVisible();
+                    entities_need_repaint.push_back({ ent->m_IDX, ent->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) });
+                }
             }
-            else if (entity_tick)
+        }
+    }
+    else
+    {
+        { // Prof section ends when out of scope, these brackets here.
+            PROF_SECTION(CM_ESP_EntityLoop);
+            // Loop through entities
+            for (auto &ent_index : entity_cache::valid_ents)
             {
-                ProcessEntity(ent);
-                hitboxUpdate(ent);
-            }
+                // Get an entity from the loop tick and process it
+                if (!ent_index->m_bAlivePlayer())
+                    continue;
 
-            if (data[ent->m_IDX].needs_paint)
-            {
-                // Checking this every tick is a waste of nanoseconds
-                if (vischeck_tick && vischeck)
-                    data[ent->m_IDX].transparent = !ent->IsVisible();
-                entities_need_repaint.push_back({ ent->m_IDX, ent->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) });
+                bool player = ent_index->m_IDX < max_clients;
+
+                if (player)
+                {
+                    ProcessEntity(ent_index);
+                    hitboxUpdate(ent_index);
+                }
+                else if (entity_tick)
+                {
+                    ProcessEntity(ent_index);
+                    hitboxUpdate(ent_index);
+                }
+
+                if (data[ent_index->m_IDX].needs_paint)
+                {
+                    // Checking this every tick is a waste of nanoseconds
+                    if (vischeck_tick && vischeck)
+                        data[ent_index->m_IDX].transparent = !ent_index->IsVisible();
+                    entities_need_repaint.push_back({ ent_index->m_IDX, ent_index->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) });
+                }
             }
         }
     }
@@ -1377,20 +1410,6 @@ void _FASTCALL ProcessEntity(CachedEntity *ent)
                         // (unsigned)v_iLegitSeenTicks->GetInt())
             // return;
         }
-
-static Timer zoomTime{};
-
-    	if (auto_zoom_wallhack && ent->m_bEnemy() && playerlist::IsDefault(info.friendsID))
-      	   {
-           zoomTime.update();
-        	if (vischeck && !ent->IsVisible() && g_pLocalPlayer->holding_sniper_rifle && not g_pLocalPlayer->bZoomed)
-           	current_user_cmd->buttons |= IN_ATTACK2;
-           }
-        else if (auto_unzoom_wallhack)
-	   {	
-            	if (g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed && zoomTime.check(7000))
-                current_user_cmd->buttons |= IN_ATTACK2;
-	   }
 
         // Powerup handling
         if (powerup_esp)

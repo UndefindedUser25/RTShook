@@ -71,15 +71,7 @@
                 </Select>
             </LabeledObject>
             <AutoVariable width="fill" target="aimbot.target.max-range" label="Max range" tooltip="Entities further than this distance will not be targeted. Measured in Hammer units."/>
-            <LabeledObject width="fill" label="Multipoint">
-                <Select target="aimbot.multipoint">
-                    <Option name="Disabled" value="0"/>
-                    <Option name="Small hitboxes" value="1"/>
-                    <Option name="Medium hitboxes" value="2"/>
-                    <Option name="Big hitboxes" value="3"/>
-                    <Option name="HvH hitboxes" value="4"/>
-                </Select>
-            </LabeledObject>
+            <AutoVariable width="fill" target="aimbot.multipoint" label="Multipoint"/>
              <LabeledObject width="fill" label="All Hitboxes" tooltip="This will vischeck as many hitboxes as it can on the target to see if it can shoot. This will reduce your FPS.">
                 <Select target="aimbot.vischeck-hitboxes">
                     <Option name="Disable" value="0"/>

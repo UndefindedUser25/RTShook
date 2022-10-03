@@ -13,6 +13,7 @@
 #include "navparser.hpp"
 #include "MiscAimbot.hpp"
 #include "Misc.hpp"
+#include <hacks/AntiAim.hpp>
 
 namespace hacks::tf2::NavBot
 {

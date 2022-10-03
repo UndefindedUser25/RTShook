@@ -226,6 +226,7 @@ void do_random_votekick()
     if (!GetPlayerInfo(GetPlayerForUserID(target), &info))
         return;
     hack::ExecuteCommand("callvote kick \"" + std::to_string(target) + " cheating\"");
+    hack::ExecuteCommand("callvote kick \"" + std::to_string(target) + " cheating\"");
 }
 
 // Get Muh money

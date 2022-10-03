@@ -27,9 +27,7 @@ and a lot of useful features, including
 * And Some Feature like a rathook. [paste but good enough.] 
 
 ## Installion for using catbots
-* You need to be clone RTShook 
-* Rename Files name RTShook to cathook 
-* When installation completes Copy cathook files (RTShook Renamed) Delete a Normal cathook first and Paste to catbot-setup files and ./update
+* type `./build-cathook` in terminal
 [i recommented using developer mode]
 
 when have say need put Username and Password type your username of github user and Password here : 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

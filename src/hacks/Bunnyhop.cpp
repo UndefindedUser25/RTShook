@@ -51,7 +51,7 @@ static void CreateMove()
             current_user_cmd->buttons = current_user_cmd->buttons & ~IN_JUMP;
         }
         // More speed on jumping
-        if (duck_on_jump && ticks_last_jump++ >= 6)
+        if (duck_on_jump && FL_ONGROUND)
         {
             current_user_cmd->buttons = ~IN_DUCK;
         }

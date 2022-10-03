@@ -42,7 +42,7 @@ static void CreateMove()
     bool jump = (current_user_cmd->buttons & IN_JUMP);
     bool duck = (current_user_cmd->buttons & IN_DUCK);
     // Check if player is not on the ground and player is holding their jump key
-    if (!ground && jump)
+    if (!ground && jump && duck)
     {
         // If the ticks since last jump are greater or equal to 9, then force
         // the player to stop jumping The bot disables jump untill player hits

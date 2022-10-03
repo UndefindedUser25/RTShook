@@ -163,26 +163,11 @@ static std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
     GenerateBoxVertices(origin, rotation, bboxmin, bboxmax, corners);
 
     float shrink_size = 1;
-    switch (*multipoint)
-    {
-    // Shrink alot
-    case 1:
+    
+    if (!isHitboxMedium(hitbox)) // hitbox should be chosen based on size.
         shrink_size = 3;
-        break;
-    // Decently shrink
-    case 2:
-        shrink_size = 5;
-        break;
-    // Shrink very little (we still have to shrink a bit else we will wiff due to rotation)
-    case 3:
-        shrink_size = 10;
-        break;
-    case 4:
-        shrink_size = 11;
-        break;
-    default:
+    else
         shrink_size = 6;
-    }
 
     // Shrink positions by moving towards opposing corner
     for (int i = 0; i < 8; i++)
@@ -1117,6 +1102,37 @@ bool IsTargetStateGood(CachedEntity *entity)
             return false;
         AimbotCalculatedData_s &cd = calculated_data_array[entity->m_IDX];
         cd.hitbox                  = hitbox;
+        
+        if (*vischeck_hitboxes && !*multipoint)
+        {
+            if (*vischeck_hitboxes == 1 && playerlist::AccessData(entity).state != playerlist::k_EState::RAGE)
+            {
+                return true;
+            }
+
+            else
+            {
+                int i = 0;
+                trace_t first_tracer;
+                if (IsEntityVectorVisible(entity, entity->hitboxes.GetHitbox(cd.hitbox)->center, true, MASK_SHOT_HULL, &first_tracer))
+                    return true;
+                while (i <= 17) // Prevents returning empty at all costs. Loops through every hitbox
+                {
+                    if (i == cd.hitbox)
+                        i++;
+                    trace_t test_trace;
+                    std::vector<Vector> centered_hitbox = getHitpointsVischeck(entity, i);
+
+                    if (IsEntityVectorVisible(entity, centered_hitbox[0], true, MASK_SHOT_HULL, &test_trace))
+                    {
+                        cd.hitbox = i;
+                        return true;
+                    }
+                    i++;
+                }
+                return false; // It looped through every hitbox and found nothing. It isn't visible.
+            }
+        }
 
         // Vis check + fov check
         if (!VischeckPredictedEntity(entity))

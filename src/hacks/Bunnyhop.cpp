@@ -11,6 +11,7 @@
 namespace hacks::shared::bunnyhop
 {
 static settings::Boolean enable{ "bunnyhop.enable", "false" };
+static settings::Boolean duck_on_jump{ "bunnyhop.duck-on-jump.enable", "false" };
 static settings::Int bhop_chance{ "bunnyhop.chance", "100" };
 
 // Var for user settings
@@ -39,7 +40,6 @@ static void CreateMove()
     bool ground = CE_INT(g_pLocalPlayer->entity, netvar.iFlags) & (1 << 0);
     // Var for if the player is pressing jump
     bool jump = (current_user_cmd->buttons & IN_JUMP);
-
     // Check if player is not on the ground and player is holding their jump key
     if (!ground && jump)
     {
@@ -49,6 +49,11 @@ static void CreateMove()
         if (ticks_last_jump++ >= 9)
         {
             current_user_cmd->buttons = current_user_cmd->buttons & ~IN_JUMP;
+        }
+        // More speed on jumping
+        if (duck_on_jump && ticks_last_jump++ >= 4.5)
+        {
+            current_user_cmd->buttons = current_user_cmd->buttons & ~IN_DUCK;
         }
     }
 

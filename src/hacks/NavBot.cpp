@@ -848,10 +848,7 @@ bool meleeAttack(int slot, std::pair<CachedEntity *, float> &nearest)
     // If we are close enough, don't even bother with using the navparser to get there
     if (nearest.second < 200 && isVisible)
     {
-        if (hacks::shared::antiaim::isDisabled())
-        {
         AimAt(g_pLocalPlayer->v_Eye, nearest.first->hitboxes.GetHitbox(head)->center, current_user_cmd); //Aim for it. to counter Backstab
-        }
         WalkTo(nearest.first->m_vecOrigin());
         navparser::NavEngine::cancelPath();
         return true;

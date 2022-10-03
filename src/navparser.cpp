@@ -41,7 +41,6 @@ static settings::Int look_crumbs{ "nav.look-crumbs", "0" };
 static settings::Boolean draw_debug_areas("nav.draw.debug-areas", "false");
 static settings::Boolean log_pathing{ "nav.log", "false" };
 static settings::Int stuck_time{ "nav.stuck-time", "20000" };
-static settings::Int duck_check{ "nav.last-duck-check", "125" };
 static settings::Int vischeck_cache_time{ "nav.vischeck-cache.time", "240" };
 static settings::Boolean vischeck_runtime{ "nav.vischeck-runtime.enabled", "true" };
 static settings::Int vischeck_time{ "nav.vischeck-runtime.delay", "1200" };
@@ -711,7 +710,7 @@ static void followCrumbs()
             ticks_since_jump++;
 
             // Update jump timer now since we are back on ground
-            if (crouch && last_duck.check(*duck_check) && ticks_since_jump > 0)
+            if (crouch && last_duck.check(150) && ticks_since_jump > 0)
             {
                 // Reset
                 crouch = false;

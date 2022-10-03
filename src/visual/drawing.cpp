@@ -208,16 +208,16 @@ void Initialize()
     }
 #if ENABLE_GLEZ_DRAWING
     glez::preInit();
-    fonts::menu.reset(new fonts::font(paths::getDataPath("/menu/cour.ttf"), 10));
+    fonts::menu.reset(new fonts::font(paths::getDataPath("/menu/Verdana.ttf"), 10));
     fonts::esp.reset(new fonts::font(paths::getDataPath("/menu/cour.ttf"), 10));
     fonts::center_screen.reset(new fonts::font(paths::getDataPath("/menu/ArchivoBlack-Regular.ttf"), 12));
 #elif ENABLE_ENGINE_DRAWING
-    fonts::menu.reset(new fonts::font(paths::getDataPath("/menu/cour.ttf"), 10, true));
+    fonts::menu.reset(new fonts::font(paths::getDataPath("/menu/Verdana.ttf"), 10, true));
     fonts::esp.reset(new fonts::font(paths::getDataPath("/menu/cour.ttf"), 10, true));
     fonts::center_screen.reset(new fonts::font(paths::getDataPath("/menu/ArchivoBlack-Regular.ttf"), 12, true));
 #elif ENABLE_IMGUI_DRAWING
     fonts::menu.reset(new fonts::font(paths::getDataPath("/menu/ArchivoBlack-Regular.ttf"), 13, true));
-    fonts::esp.reset(new fonts::font(paths::getDataPath("/menu/ArchivoBlack-Regular.ttf"), 13, true));
+    fonts::esp.reset(new fonts::font(paths::getDataPath("/menu/cour.ttf"), 13, true));
     fonts::center_screen.reset(new fonts::font(paths::getDataPath("/menu/ArchivoBlack-Regular.ttf"), 14, true));
 #endif
 #if ENABLE_ENGINE_DRAWING

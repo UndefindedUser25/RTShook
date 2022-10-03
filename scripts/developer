@@ -26,7 +26,7 @@ configfile="$DIR/updater-preferences"
 cfg_write $configfile update_channel developer
 
 while true; do
-    read -p "Would you like to reset your repository to the origin/master branch? y/n " yn
+    read -p "Would you like to reset your repository to the origin/main branch? y/n " yn
     case $yn in
         [Yy]* ) break;;
         [Nn]* ) exit;;
@@ -35,7 +35,7 @@ while true; do
 done
 
 # more git setup
-git reset --hard origin/master
+git reset --hard origin/main
 git submodule foreach --recursive 'git reset --hard'
 git submodule sync
 git submodule update --init --recursive

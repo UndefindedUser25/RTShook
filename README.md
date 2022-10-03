@@ -28,7 +28,6 @@ and a lot of useful features, including
 
 ## Installion for using catbots
 * type `./build-cathook` in terminal
-[i recommented using developer mode]
 
 when have say need put Username and Password type your username of github user and Password here : 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
 

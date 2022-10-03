@@ -40,6 +40,7 @@ static void CreateMove()
     bool ground = CE_INT(g_pLocalPlayer->entity, netvar.iFlags) & (1 << 0);
     // Var for if the player is pressing jump
     bool jump = (current_user_cmd->buttons & IN_JUMP);
+    bool duck = (current_user_cmd->buttons & IN_DUCK);
     // Check if player is not on the ground and player is holding their jump key
     if (!ground && jump)
     {
@@ -53,7 +54,7 @@ static void CreateMove()
         // More speed on jumping
         if (duck_on_jump && FL_ONGROUND)
         {
-            current_user_cmd->buttons = ~IN_DUCK;
+            current_user_cmd->buttons |= IN_DUCK;
         }
     }
 

@@ -19,6 +19,7 @@
 #include "FollowBot.hpp"
 #include "Warp.hpp"
 #include "AntiCheatBypass.hpp"
+#include <vector2.h>
 
 namespace hacks::shared::aimbot
 {
@@ -36,6 +37,7 @@ static settings::Int priority_mode{ "aimbot.priority-mode", "0" };
 static settings::Boolean wait_for_charge{ "aimbot.wait-for-charge", "0" };
 
 static settings::Boolean silent{ "aimbot.silent", "1" };
+static settings::Boolean silent_assist{ "aimbot.silentassist", "0" };
 static settings::Boolean target_lock{ "aimbot.lock-target", "0" };
 #if ENABLE_VISUALS
 static settings::Boolean assistance_only{ "aimbot.assistance.only", "0" };
@@ -1304,6 +1306,55 @@ bool IsTargetStateGood(CachedEntity *entity)
 // A function to aim at a specific entitiy
 void Aim(CachedEntity *entity)
 {
+    if (silent_assist)
+    {
+        //TODO: paste this
+        /*
+        vector2_t aimassist::calculate_point( vector2_t object, vector2_t cursor ) {
+           const auto distance    = cursor.delta( object ).length();
+           auto       screen_size = get_screen();
+
+           auto amplitude = 120;
+           auto power     = 1.f / ( 2.f + ceaihack::config::features::aimassist::power ) * amplitude;
+
+           float half_screen = (float) min( screen_size.width, screen_size.height ) / 2;
+           auto  importance  = powf( 1.0f - min( 1.0f, max( distance / half_screen, 0.0f ) ), power );
+
+           const auto x = object.x - ( object.x * importance + cursor.x * ( 1.f - importance ) );
+           const auto y = object.y - ( object.y * importance + cursor.y * ( 1.f - importance ) );
+
+           vector2_t calculated_point = { object.x - x, object.y - y };
+
+           last_importance = importance;
+           last_point      = calculated_point;
+
+           return calculated_point;
+        }
+        */
+        if (CE_BAD(entity))
+            return;
+
+        // base
+        Vector angles = GetAimAtAngles(g_pLocalPlayer->v_Eye, PredictEntity(entity, false), LOCAL_E);
+        auto viewangles   = current_user_cmd->viewangles;
+        Vector slow_delta = { 0, 0, 0 };
+
+        slow_delta = angles - viewangles;
+
+        while (slow_delta.y > 180)
+            slow_delta.y -= 360;
+        while (slow_delta.y < -180)
+            slow_delta.y += 360;
+
+        angles = viewangles + slow_delta;
+        fClampAngle(angles);
+        //g_pLocalPlayer->bUseSilentAngles = true;
+        current_user_cmd->viewangles = angles;
+        aimed_this_tick              = true;
+        //viewangles_this_tick         = angles;
+        return;
+    }
+
     if (*miss_chance > 0 && UniformRandomInt(0, 99) < *miss_chance)
         return;
 

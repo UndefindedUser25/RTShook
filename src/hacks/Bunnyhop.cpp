@@ -11,7 +11,6 @@
 namespace hacks::shared::bunnyhop
 {
 static settings::Boolean enable{ "bunnyhop.enable", "false" };
-static settings::Boolean duck_on_jump{ "bunnyhop.duck-on-jump.enable", "false" };
 static settings::Int bhop_chance{ "bunnyhop.chance", "100" };
 
 // Var for user settings
@@ -40,9 +39,9 @@ static void CreateMove()
     bool ground = CE_INT(g_pLocalPlayer->entity, netvar.iFlags) & (1 << 0);
     // Var for if the player is pressing jump
     bool jump = (current_user_cmd->buttons & IN_JUMP);
-    bool duck = (current_user_cmd->buttons & IN_DUCK);
+
     // Check if player is not on the ground and player is holding their jump key
-    if (!ground && jump && duck)
+    if (!ground && jump)
     {
         // If the ticks since last jump are greater or equal to 9, then force
         // the player to stop jumping The bot disables jump untill player hits

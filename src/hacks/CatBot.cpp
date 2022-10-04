@@ -32,10 +32,7 @@ static settings::Boolean auto_crouch{ "cat-bot.auto-crouch", "false" };
 static settings::Boolean always_crouch{ "cat-bot.always-crouch", "false" };
 static settings::Boolean random_votekicks{ "cat-bot.votekicks", "false" };
 static settings::Boolean votekick_rage_only{ "cat-bot.votekicks.rage-only", "false" };
-
-#if ENABLE_TEXTMODE
 static settings::Boolean autoReport{ "cat-bot.autoreport", "false" };
-#else
 
 static settings::Boolean autovote_map{ "cat-bot.autovote-map", "true" };
 

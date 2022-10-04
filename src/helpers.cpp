@@ -1724,7 +1724,7 @@ void FastStop()
     auto control  = (speed < sv_stopspeed->GetFloat()) ? sv_stopspeed->GetFloat() : speed;
     auto drop     = control * friction * g_GlobalVars->interval_per_tick;
 
-    if (speed > drop - 1.0f)
+    if (speed > drop - 0.5f)
     {
         Vector velocity = vel;
         Vector direction;

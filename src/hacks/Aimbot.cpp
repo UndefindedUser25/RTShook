@@ -38,8 +38,6 @@ static settings::Boolean wait_for_charge{ "aimbot.wait-for-charge", "0" };
 
 static settings::Boolean silent{ "aimbot.silent", "1" };
 static settings::Boolean silent_assist{ "aimbot.silentassist", "0" };
-static settings::Float silent_assist_power{ "aimbot.silentassist-power", "0.8" };
-static settings::Float silent_assist_smooth{ "aimbot.silentassist-smooth", "0.50" };
 static settings::Boolean target_lock{ "aimbot.lock-target", "0" };
 #if ENABLE_VISUALS
 static settings::Boolean assistance_only{ "aimbot.assistance.only", "0" };
@@ -1310,8 +1308,6 @@ void Aim(CachedEntity *entity)
 {
     if (silent_assist)
     {
-        //if (!MouseMoving())
-        //   return;
         //TODO: paste this
         /*
         vector2_t aimassist::calculate_point( vector2_t object, vector2_t cursor ) {
@@ -1334,64 +1330,28 @@ void Aim(CachedEntity *entity)
 
            return calculated_point;
         }
-        void aimassist::perform_aim_correction( osu::player *player, vector2_t pos ) {
-            cursor_position = pos;
-            auto out        = player->hom->get_current_object();
-
-            if ( out.base != 0 ) {
-                object_position    = get_relative_pos_to_gamefield( out.base_position.get() );
-                object_radius      = player->get_object_radius();
-                predicted_position = calculate_point( object_position, cursor_position );
-
-                auto current_radius = pos.distance( object_position );
-
-                if ( current_radius <= object_radius * ceaihack::config::features::aimassist::radius_start_correction && current_radius > object_radius ) {
-                    cursor_position.interpolate_to( predicted_position, 0.35f );
-                }
-            }
-        }
         */
         if (CE_BAD(entity))
             return;
 
+        // base
         Vector angles = GetAimAtAngles(g_pLocalPlayer->v_Eye, PredictEntity(entity, false), LOCAL_E);
         auto viewangles   = current_user_cmd->viewangles;
         Vector slow_delta = { 0, 0, 0 };
 
-        //slow_delta = angles - viewangles;
-        vector2_t object = vector2_t(angles);
-        vector2_t player = vector2_t(viewangles);
-        auto distance    = player.delta(object).length();
-        //g_ICvar->ConsoleColorPrintf(MENU_COLOR, "%.6f\n", distance);
-
-        auto amplitude    = 120;
-        auto power        = 1.f / ( 2.f + *silent_assist_power ) * amplitude;
-        //float half_screen = (float) min( screen_size.width, screen_size.height ) / 2;
-        //float half_screen = 360.0f;
-        auto importance   = powf( 1.0f - min( 1.0f, max( distance, 0.6f ) ), power );
-        //g_ICvar->ConsoleColorPrintf(MENU_COLOR, "%.6f\n", importance);
-
-        auto x = object.x - ( object.x * importance + player.x * ( 1.f - importance ) );
-        auto y = object.y - ( object.y * importance + player.y * ( 1.f - importance ) );
-
-        slow_delta = { x, y, 0 };
+        slow_delta = angles - viewangles;
 
         while (slow_delta.y > 180)
             slow_delta.y -= 360;
         while (slow_delta.y < -180)
             slow_delta.y += 360;
 
-        //g_ICvar->ConsoleColorPrintf(MENU_COLOR, "%.4f, %.4f, %.4f\n", viewangles.x, viewangles.y, viewangles.z);
-
-        slow_delta /= 1.0f + *silent_assist_smooth;
-
         angles = viewangles + slow_delta;
         fClampAngle(angles);
-
-        g_pLocalPlayer->bUseSilentAngles = true;
-        current_user_cmd->viewangles     = angles;
-        aimed_this_tick                  = true;
-        viewangles_this_tick             = angles;
+        //g_pLocalPlayer->bUseSilentAngles = true;
+        current_user_cmd->viewangles = angles;
+        aimed_this_tick              = true;
+        //viewangles_this_tick         = angles;
         return;
     }
 

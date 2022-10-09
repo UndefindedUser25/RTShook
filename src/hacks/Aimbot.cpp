@@ -19,7 +19,6 @@
 #include "FollowBot.hpp"
 #include "Warp.hpp"
 #include "AntiCheatBypass.hpp"
-#include <vector2.h>
 
 namespace hacks::shared::aimbot
 {

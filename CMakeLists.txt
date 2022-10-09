@@ -218,6 +218,7 @@ set_target_properties(cathook PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY
 add_subdirectory(src)
 add_subdirectory(include)
 add_subdirectory(external)
+add_subdirectory(modules)
 
 
 target_precompile_headers(cathook PRIVATE "${CMAKE_SOURCE_DIR}/include/common.hpp")

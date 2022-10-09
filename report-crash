@@ -124,7 +124,7 @@ FULL_COMMIT="$(git rev-parse HEAD)"
 
 if [ "$ON_ATTACH" == "false" ]; then
     read -p "Do you want to submit this crash? y/n " -n 1 -r
-    echo
+    echo "sending..."
 else
     REPLY="y"
 fi
@@ -135,7 +135,6 @@ then
          -H 'Content-Type: application/json' \
          "https://sentry.io/api/6428828/store/?sentry_version=7&sentry_key=a60f3d152d0641998a39058f512bb384&sentry_client=curl-bash/0.1"
     echo -e "\n"
-    echo Thank you!
-    echo 'Contact us about this and send us the id above: https://t.me/nullworks https://cathook.club/issues'
+    echo Send now.
     echo
 fi

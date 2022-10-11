@@ -11,7 +11,7 @@
 #include "PlayerTools.hpp"
 #include "MiscAimbot.hpp"
 
-namespace hacks::autoheal
+namespace hacks::tf::autoheal
 {
 std::vector<int> called_medic{};
 static settings::Boolean enable{ "autoheal.enable", "false" };

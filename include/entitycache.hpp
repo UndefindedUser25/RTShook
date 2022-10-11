@@ -234,13 +234,13 @@ public:
     bool m_bAnyHitboxVisible{ false };
     bool m_bVisCheckComplete{ false };
 
-    k_EItemType m_ItemType()
+    /*k_EItemType m_ItemType()
     {
         if (m_Type() == ENTITY_GENERIC)
             return g_ItemManager.GetItemType(this);
         else
             return ITEM_NONE;
-    };
+    };*/
 
     unsigned long m_lSeenTicks{ 0 };
     unsigned long m_lLastSeen{ 0 };

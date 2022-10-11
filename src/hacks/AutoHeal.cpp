@@ -11,7 +11,7 @@
 #include "PlayerTools.hpp"
 #include "MiscAimbot.hpp"
 
-namespace hacks::tf::autoheal
+namespace hacks::autoheal
 {
 std::vector<int> called_medic{};
 static settings::Boolean enable{ "autoheal.enable", "false" };
@@ -215,11 +215,8 @@ int BlastDangerValue(CachedEntity *patient)
         return 1;
     }
     // Find rockets/pipes nearby
-    for (int i = PLAYER_ARRAY_SIZE; i <= HIGHEST_ENTITY; i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
-        if (CE_BAD(ent))
-            continue;
         if (!ent->m_bEnemy())
             continue;
         if (ent->m_Type() != ENTITY_PROJECTILE)
@@ -228,7 +225,7 @@ int BlastDangerValue(CachedEntity *patient)
             continue;
         if (patient->m_vecOrigin().DistTo(ent->m_vecOrigin()) > (int) auto_vacc_proj_danger_range)
             continue;
-        proj_data_array.push_back(proj_data_s{ i, ent->m_vecOrigin() });
+        proj_data_array.push_back(proj_data_s{ ent->m_IDX, ent->m_vecOrigin() });
     }
     return 0;
 }
@@ -250,11 +247,8 @@ int NearbyEntities()
     int ret = 0;
     if (CE_BAD(LOCAL_E) || CE_BAD(LOCAL_W))
         return ret;
-    for (int i = 0; i <= HIGHEST_ENTITY; i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
-        if (CE_BAD(ent))
-            continue;
         if (ent == LOCAL_E)
             continue;
         if (!ent->m_bAlivePlayer())
@@ -388,7 +382,6 @@ bool ShouldChargePlayer(int idx)
     CachedEntity *target              = ENTITY(idx);
     const float damage_accum_duration = g_GlobalVars->curtime - data[idx].accum_damage_start;
     const int health                  = target->m_iHealth();
-
 
     if (health > g_pPlayerResource->GetMaxHealth(target))
         return false;
@@ -533,7 +526,7 @@ int HealingPriority(int idx)
     float overhealp     = ((float) overheal / (float) maxoverheal);
     float healthp       = ((float) health / (float) maxhealth);
     // Base Class priority
-    priority += hacks::shared::followbot::ClassPriority(ent) * 1.3;
+    priority += hacks::followbot::ClassPriority(ent) * 1.3;
 
     // wait that's illegal
     if (g_pPlayerResource->GetClass(ent) == 0)
@@ -563,7 +556,7 @@ int HealingPriority(int idx)
 #if ENABLE_IPC
     if (ipc::peer)
     {
-        if (hacks::shared::followbot::isEnabled() && hacks::shared::followbot::follow_target == idx)
+        if (hacks::followbot::isEnabled() && hacks::followbot::follow_target == idx)
         {
             priority *= 6.0f;
         }
@@ -583,7 +576,7 @@ int BestTarget()
     int best_score = INT_MIN;
     if (steamid_only)
         return best;
-    for (int i = 0; i <= g_IEngine->GetMaxClients(); i++)
+    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
     {
         int score = HealingPriority(i);
         if (score > best_score && score != -1)
@@ -677,11 +670,8 @@ void CreateMove()
         if (target_is_healing_target && look_at_target)
         {
             Vector angles = GetAimAtAngles(g_pLocalPlayer->v_Eye, out->center);
-            hacks::tf2::misc_aimbot::DoSlowAim(angles);
-
+            hacks::misc_aimbot::DoSlowAim(angles);
             current_user_cmd->viewangles = angles;
-            if (!target_is_healing_target && (g_GlobalVars->tickcount % 2) == 0)
-                current_user_cmd->buttons |= IN_ATTACK;
         }
 
         // Set angles to new target
@@ -698,7 +688,6 @@ void CreateMove()
     else if (autoheal_mode == 1 && !target_is_healing_target)
         current_user_cmd->buttons |= IN_ATTACK;
 
-
     if (IsVaccinator() && CE_GOOD(target) && auto_vacc)
     {
         int opt = OptimalResistance(target, &pop);
@@ -709,21 +698,20 @@ void CreateMove()
             current_user_cmd->buttons |= IN_ATTACK2;
         }
     }
-
     else
     {
         if (pop_uber_auto && ShouldPop())
             current_user_cmd->buttons |= IN_ATTACK2;
-        // Uber on "CHARGE ME DOCTOR!"
-        if (pop_uber_voice)
-        {
-            auto uber_array = std::move(called_medic);
-            for (auto i : uber_array)
-                if (i == CurrentHealingTargetIDX)
-                {
-                    current_user_cmd->buttons |= IN_ATTACK2;
-                }
-        }
+    }
+
+    // Uber on "CHARGE ME DOCTOR!"
+    if (pop_uber_voice)
+    {
+        // Hey you wanna get deleted?
+        auto uber_array = std::move(called_medic);
+        for (auto i : uber_array)
+            if (i == CurrentHealingTargetIDX)
+                current_user_cmd->buttons |= IN_ATTACK2;
     }
 }
 
@@ -746,4 +734,4 @@ static InitRoutine Init(
         EC::Register(EC::CreateMove, CreateMove, "autoheal", EC::average);
         // EC::Register(EC::LevelInit, LevelInit, "autoheal_lvlinit", EC::average);
     });
-} // namespace hacks::tf::autoheal
+} // namespace hacks::autoheal

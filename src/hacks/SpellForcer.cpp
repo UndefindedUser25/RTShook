@@ -3,7 +3,7 @@
 
 namespace hacks::spellforcer
 {
-static settings::Boolean enabled("spellforce.enabled", "false");
+static settings::tf::Boolean enabled("spellforce.enabled", "false");
 
 bool isEnabled()
 {
@@ -291,4 +291,4 @@ static InitRoutine init(
         EC::Register(EC::CreateMoveLate, CreateMoveLate, "spellforcer_cml", EC::early);
     });
 
-} // namespace hacks::spellforcer
+} // namespace hacks::tf::spellforcer

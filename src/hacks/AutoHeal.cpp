@@ -249,6 +249,7 @@ int NearbyEntities()
         return ret;
     for (auto &ent : entity_cache::valid_ents)
     {
+
         if (ent == LOCAL_E)
             continue;
         if (!ent->m_bAlivePlayer())
@@ -526,7 +527,7 @@ int HealingPriority(int idx)
     float overhealp     = ((float) overheal / (float) maxoverheal);
     float healthp       = ((float) health / (float) maxhealth);
     // Base Class priority
-    priority += hacks::followbot::ClassPriority(ent) * 1.3;
+    priority += hacks::shared::followbot::ClassPriority(ent) * 1.3;
 
     // wait that's illegal
     if (g_pPlayerResource->GetClass(ent) == 0)
@@ -556,7 +557,7 @@ int HealingPriority(int idx)
 #if ENABLE_IPC
     if (ipc::peer)
     {
-        if (hacks::followbot::isEnabled() && hacks::followbot::follow_target == idx)
+        if (hacks::shared::followbot::isEnabled() && hacks::shared::followbot::follow_target == idx)
         {
             priority *= 6.0f;
         }
@@ -576,7 +577,7 @@ int BestTarget()
     int best_score = INT_MIN;
     if (steamid_only)
         return best;
-    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+    for (int i = 0; i <= g_IEngine->GetMaxClients(); i++)
     {
         int score = HealingPriority(i);
         if (score > best_score && score != -1)
@@ -670,7 +671,7 @@ void CreateMove()
         if (target_is_healing_target && look_at_target)
         {
             Vector angles = GetAimAtAngles(g_pLocalPlayer->v_Eye, out->center);
-            hacks::misc_aimbot::DoSlowAim(angles);
+            hacks::tf2::misc_aimbot::DoSlowAim(angles);
             current_user_cmd->viewangles = angles;
         }
 
@@ -734,4 +735,4 @@ static InitRoutine Init(
         EC::Register(EC::CreateMove, CreateMove, "autoheal", EC::average);
         // EC::Register(EC::LevelInit, LevelInit, "autoheal_lvlinit", EC::average);
     });
-} // namespace hacks::autoheal
+} // namespace hacks::tf::autoheal

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.24)
 
 set(NativePrecompiledHeaders 1)
 # Ensure that only 32 bit libraries are used.
@@ -85,6 +85,12 @@ endif()
 #
 # End of config stuff
 #
+
+	# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
+	if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+		cmake_policy(SET CMP0135 NEW)
+	endif()
+
 
 if (EnableVisuals)
     set(OpenGL_GL_PREFERENCE "LEGACY")

@@ -109,4 +109,3 @@ int GetScoreForEntity(CachedEntity *entity)
         total = 999;
     return total;
 }
-Footer

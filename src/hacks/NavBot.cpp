@@ -14,7 +14,7 @@
 #include "MiscAimbot.hpp"
 #include "Misc.hpp"
 
-namespace hacks::tf2::NavBot
+namespace hacks::NavBot
 {
 static settings::Boolean enabled("navbot.enabled", "false");
 static settings::Boolean search_health("navbot.search-health", "true");
@@ -820,7 +820,7 @@ bool meleeAttack(int slot, std::pair<CachedEntity *, float> &nearest)
     }
 
     // Charge aimbot things
-    if (hacks::tf2::misc_aimbot::ShouldChargeAim() && re::C_BasePlayer::GetEquippedDemoShield(raw_local) && re::CTFPlayerShared::GetChargeMeter(re::CTFPlayerShared::GetPlayerShared(raw_local)) == 100.0f)
+    if (hacks::misc_aimbot::ShouldChargeAim() && re::C_BasePlayer::GetEquippedDemoShield(raw_local) && re::CTFPlayerShared::GetChargeMeter(re::CTFPlayerShared::GetPlayerShared(raw_local)) == 100.0f)
     {
         // Distance normally covered per second by charge
         float distance_per_second = 750.0f;
@@ -1635,4 +1635,4 @@ static InitRoutine init(
         LevelInit();
     });
 
-} // namespace hacks::tf2::NavBot
+} // namespace hacks::NavBot

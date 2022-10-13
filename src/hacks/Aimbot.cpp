@@ -346,7 +346,7 @@ bool shouldbacktrack_cache = false;
 
 void updateShouldBacktrack()
 {
-    if (!hacks::tf2::backtrack::backtrackEnabled() || hacks::tf2::backtrack::hasData() || projectile_mode || !(*backtrackAimbot || force_backtrack_aimbot))
+    if (!hacks::backtrack::backtrackEnabled() || hacks::backtrack::hasData() || projectile_mode || !(*backtrackAimbot || force_backtrack_aimbot))
         shouldbacktrack_cache = false;
     else
         shouldbacktrack_cache = true;
@@ -480,7 +480,7 @@ static void CreateMove()
 
     spectatorUpdate();
     // Adjust for AC
-    if (hacks::tf2::antianticheat::enabled)
+    if (hacks::antianticheat::enabled)
         fov = std::min(fov > 0.0f ? fov : FLT_MAX, 10.0f);
 
     if (CE_BAD(LOCAL_E) || !LOCAL_E->m_bAlivePlayer() || CE_BAD(LOCAL_W))
@@ -692,14 +692,14 @@ static void CreateMove()
 // Just hold m1 if we were aiming at something before and are in rapidfire
 static void CreateMoveWarp()
 {
-    if (hacks::tf2::warp::in_rapidfire && aimed_this_tick)
+    if (hacks::warp::in_rapidfire && aimed_this_tick)
     {
         current_user_cmd->viewangles     = viewangles_this_tick;
         g_pLocalPlayer->bUseSilentAngles = *silent;
         current_user_cmd->buttons |= IN_ATTACK;
     }
     // Warp should call aimbot normally
-    else if (!hacks::tf2::warp::in_rapidfire)
+    else if (!hacks::warp::in_rapidfire)
         CreateMove();
 }
 
@@ -802,7 +802,7 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
         {
             if (shouldBacktrack(target_last))
             {
-                auto good_ticks_tmp = hacks::tf2::backtrack::getGoodTicks(target_last);
+                auto good_ticks_tmp = hacks::backtrack::getGoodTicks(target_last);
                 if (good_ticks_tmp)
                 {
                     auto good_ticks = *good_ticks_tmp;
@@ -815,11 +815,11 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
                     {
                         if (!validateTickFOV(bt_tick))
                             continue;
-                        hacks::tf2::backtrack::MoveToTick(bt_tick);
+                        hacks::backtrack::MoveToTick(bt_tick);
                         if (IsTargetStateGood(target_last))
                             return target_last;
                         // Restore if bad target
-                        hacks::tf2::backtrack::RestoreEntity(target_last->m_IDX);
+                        hacks::backtrack::RestoreEntity(target_last->m_IDX);
                     }
                 }
             }
@@ -839,13 +839,13 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
     CachedEntity *ent;
     CachedEntity *target_highest_ent                            = 0;
     target_highest_score                                        = -256;
-    std::optional<hacks::tf2::backtrack::BacktrackData> bt_tick = std::nullopt;
+    std::optional<hacks::backtrack::BacktrackData> bt_tick = std::nullopt;
     for (auto &ent : entity_cache::valid_ents)
     {
         // Check whether the current ent is good enough to target
         bool isTargetGood = false;
 
-        static std::optional<hacks::tf2::backtrack::BacktrackData> temp_bt_tick = std::nullopt;
+        static std::optional<hacks::backtrack::BacktrackData> temp_bt_tick = std::nullopt;
         if (shouldBacktrack(ent))
         {
             auto good_ticks_tmp = tf2::backtrack::getGoodTicks(ent);
@@ -861,14 +861,14 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
                 {
                     if (!validateTickFOV(bt_tick))
                         continue;
-                    hacks::tf2::backtrack::MoveToTick(bt_tick);
+                    hacks::backtrack::MoveToTick(bt_tick);
                     if (IsTargetStateGood(ent))
                     {
                         isTargetGood = true;
                         temp_bt_tick = bt_tick;
                         break;
                     }
-                    hacks::tf2::backtrack::RestoreEntity(ent->m_IDX);
+                    hacks::backtrack::RestoreEntity(ent->m_IDX);
                 }
             }
         }
@@ -918,11 +918,11 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
 
         // Restore tick
         if (shouldBacktrack(ent))
-            hacks::tf2::backtrack::RestoreEntity(ent->m_IDX);
+            hacks::backtrack::RestoreEntity(ent->m_IDX);
     }
 
     if (target_highest_ent && bt_tick)
-        hacks::tf2::backtrack::MoveToTick(*bt_tick);
+        hacks::backtrack::MoveToTick(*bt_tick);
     return target_highest_ent;
 }
 
@@ -1895,7 +1895,7 @@ void rvarCallback(settings::VariableBase<float> &, float after)
 static InitRoutine EC(
     []()
     {
-        hacks::tf2::backtrack::latency.installChangeCallback(rvarCallback);
+        hacks::backtrack::latency.installChangeCallback(rvarCallback);
         EC::Register(EC::LevelInit, Reset, "INIT_Aimbot", EC::average);
         EC::Register(EC::LevelShutdown, Reset, "RESET_Aimbot", EC::average);
         EC::Register(EC::CreateMove, CreateMove, "CM_Aimbot", EC::late);

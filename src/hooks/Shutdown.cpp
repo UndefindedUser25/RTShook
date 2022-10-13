@@ -48,14 +48,17 @@ DEFINE_HOOKED_METHOD(Shutdown, void, INetChannel *this_, const char *reason)
     if (autoabandon && !ignoredc)
         tfmm::disconnectAndAbandon();
     ignoredc = false;
-    hacks::shared::autojoin::onShutdown();
+    hacks::autojoin::onShutdown();
     std::string message = reason;
     votelogger::onShutdown(message);
     if (*random_name)
     {
         if (randomnames_file.TryLoad("names.txt"))
         {
-            name_forced = randomnames_file.lines.at(rand() % randomnames_file.lines.size());
+            std::random_device rd;
+            std::mt19937 mt(rd());
+            std::uniform_real_distribution<double> dist(0.0, randomnames_file.lines.size());
+            name_forced = randomnames_file.lines.at((int) dist(mt));
         }
     }
     else
@@ -72,7 +75,10 @@ static InitRoutine init(
                 {
                     if (randomnames_file.TryLoad("names.txt"))
                     {
-                        name_forced = randomnames_file.lines.at(rand() % randomnames_file.lines.size());
+                        std::random_device rd;
+                        std::mt19937 mt(rd());
+                        std::uniform_real_distribution<double> dist(0.0, randomnames_file.lines.size());
+                        name_forced = randomnames_file.lines.at((int) dist(mt));
                     }
                 }
                 else

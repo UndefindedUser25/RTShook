@@ -8,9 +8,8 @@
 #include "common.hpp"
 #include <PlayerTools.hpp>
 #include <settings/Bool.hpp>
-#include "soundcache.hpp"
 
-namespace hacks::tf::autosticky
+namespace hacks::autosticky
 {
 static settings::Boolean enable{ "autosticky.enable", "false" };
 static settings::Boolean buildings{ "autosticky.buildings", "true" };
@@ -63,20 +62,17 @@ bool IsTarget(CachedEntity *ent)
         if (!player_tools::shouldTarget(ent))
             return false;
 
-        IF_GAME(IsTF())
-        {
-            // Dont target invulnerable players, ex: uber, bonk
-            if (IsPlayerInvulnerable(ent))
-                return false;
+        // Don't target invulnerable players, ex: uber, bonk
+        if (IsPlayerInvulnerable(ent))
+            return false;
 
-            // If settings allow, ignore taunting players
-            // if (ignore_taunting && HasCondition<TFCond_Taunting>(ent)) return
-            // false;
+        // If settings allow, ignore taunting players
+        // if (ignore_taunting && HasCondition<TFCond_Taunting>(ent)) return
+        // false;
 
-            // If settings don't allow, dont target cloaked players
-            if (*legit && IsPlayerInvisible(ent))
-                return false;
-        }
+        // If settings don't allow, don't target cloaked players
+        if (*legit && IsPlayerInvisible(ent))
+            return false;
 
         // Target is good
         return true;
@@ -84,11 +80,9 @@ bool IsTarget(CachedEntity *ent)
         // Building specific
     }
     else if (ent->m_Type() == ENTITY_BUILDING)
-    {
         return *buildings;
-    }
 
-    // Target isnt a good type
+    // Target isn't a good type
     return false;
 }
 
@@ -98,9 +92,6 @@ void CreateMove()
     // Check user settings if auto-sticky is enabled
     if (!enable)
         return;
-
-    // Check if game is a tf game
-    // IF_GAME (!IsTF()) return;
 
     // Check if player is demoman
     if (g_pLocalPlayer->clazz != tf_demoman)
@@ -124,23 +115,13 @@ void CreateMove()
     targets.clear();
 
     // Cycle through the ents and search for valid ents
-    for (int i = 0; i <= HIGHEST_ENTITY; i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        // Assign the for loops index to an ent
-        CachedEntity *ent = ENTITY(i);
-        // Check for dormancy and if valid
-        if (CE_INVALID(ent))
-            continue;
-        // Check if ent is a bomb or suitable target and push to respective
-        // arrays
+        // Check if ent is a bomb or suitable target and push to respective arrays
         if (IsBomb(ent))
-        {
             bombs.push_back(ent);
-        }
         else if (IsTarget(ent))
-        {
             targets.push_back(ent);
-        }
     }
 
     // Loop through every target for a given bomb
@@ -188,7 +169,7 @@ void CreateMove()
                             shouldExplode = true;
                         else if (*legit == 2 && CE_GOOD(target) && IsVectorVisible(g_pLocalPlayer->v_Eye, bomb->m_vecOrigin(), true) && IsVectorVisible(g_pLocalPlayer->v_Eye, *position, true))
                             shouldExplode = true;
-                        
+
                         if (shouldExplode)
                         {
                             // Aim at bomb
@@ -210,4 +191,4 @@ void CreateMove()
 }
 
 static InitRoutine EC([]() { EC::Register(EC::CreateMove, CreateMove, "auto_sticky", EC::average); });
-} // namespace hacks::tf::autosticky
+} // namespace hacks::autosticky

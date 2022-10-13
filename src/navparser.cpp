@@ -21,7 +21,6 @@
 #include "Aimbot.hpp"
 #include "MiscAimbot.hpp"
 #include "navparser.hpp"
-#include "soundcache.hpp"
 #if ENABLE_VISUALS
 #include "drawing.hpp"
 #endif
@@ -34,21 +33,17 @@ namespace navparser
 static settings::Boolean enabled("nav.enabled", "false");
 static settings::Boolean draw("nav.draw", "false");
 static settings::Boolean look{ "nav.look-at-path", "false" };
-static settings::Boolean smooth_look{ "nav.look-at-path-but-smooth", "true" };
-static settings::Boolean look_legit{ "nav.look-at-legit", "false" };  
-static settings::Int look_crumbs{ "nav.look-crumbs", "0" };
-
 static settings::Boolean draw_debug_areas("nav.draw.debug-areas", "false");
 static settings::Boolean log_pathing{ "nav.log", "false" };
-static settings::Int stuck_time{ "nav.stuck-time", "20000" };
+static settings::Int stuck_time{ "nav.stuck-time", "1000" };
 static settings::Int vischeck_cache_time{ "nav.vischeck-cache.time", "240" };
 static settings::Boolean vischeck_runtime{ "nav.vischeck-runtime.enabled", "true" };
-static settings::Int vischeck_time{ "nav.vischeck-runtime.delay", "1200" };
-static settings::Int stuck_detect_time{ "nav.anti-stuck.detection-time", "3" };
+static settings::Int vischeck_time{ "nav.vischeck-runtime.delay", "2000" };
+static settings::Int stuck_detect_time{ "nav.anti-stuck.detection-time", "5" };
 // How long until accumulated "Stuck time" expires
-static settings::Int stuck_expire_time{ "nav.anti-stuck.expire-time", "7" };
+static settings::Int stuck_expire_time{ "nav.anti-stuck.expire-time", "10" };
 // How long we should blacklist the node after being stuck for too long?
-static settings::Int stuck_blacklist_time{ "nav.anti-stuck.blacklist-time", "60" };
+static settings::Int stuck_blacklist_time{ "nav.anti-stuck.blacklist-time", "120" };
 static settings::Int sticky_ignore_time{ "nav.ignore.sticky-time", "15" };
 
 // Cast a Ray and return if it hit
@@ -62,7 +57,7 @@ static bool CastRay(Vector origin, Vector endpos, unsigned mask, ITraceFilter *f
     // This was found to be So inefficient that it is literally unusable for our purposes. it is almost 1000x slower than the above.
     // ray.Init(origin, target, -right * HALF_PLAYER_WIDTH, right * HALF_PLAYER_WIDTH);
 
-    PROF_SECTION(IEVV_TraceRay);
+    PROF_SECTION(IEVV_TraceRay)
     g_ITrace->TraceRay(ray, mask, filter, &trace);
 
     return trace.DidHit();
@@ -119,7 +114,7 @@ struct ConnectionInfo
     enum State
     {
         // Tried using this connection, failed for some reason
-        STUCK,
+        STUCK
     };
     int expire_tick;
     State state;
@@ -163,12 +158,12 @@ navPoints determinePoints(CNavArea *current, CNavArea *next)
     // Do the same for the other area
     auto next_closest = next->getNearestPoint(area_center.AsVector2D());
 
-    // Use one of them as a center point, the one that is either x or y alligned with a center
+    // Use one of them as a center point, the one that is either x or y aligned with a center
     // Of the areas.
     // This will avoid walking into walls.
     auto center_point = area_closest;
 
-    // Determine if alligned, if not, use the other one as the center point
+    // Determine if aligned, if not, use the other one as the center point
     if (center_point.x != area_center.x && center_point.y != area_center.y && center_point.x != next_center.x && center_point.y != next_center.y)
     {
         center_point = next_closest;
@@ -179,8 +174,8 @@ navPoints determinePoints(CNavArea *current, CNavArea *next)
     // Nearest point to center on "next"m used for height checks
     auto center_next = next->getNearestPoint(center_point.AsVector2D());
 
-    return navPoints(area_center, center_point, center_next, next_center);
-};
+    return {area_center, center_point, center_next, next_center};
+}
 
 class Map : public micropather::Graph
 {
@@ -192,7 +187,7 @@ public:
     std::unordered_map<std::pair<CNavArea *, CNavArea *>, CachedConnection, boost::hash<std::pair<CNavArea *, CNavArea *>>> vischeck_cache;
     std::unordered_map<std::pair<CNavArea *, CNavArea *>, CachedStucktime, boost::hash<std::pair<CNavArea *, CNavArea *>>> connection_stuck_time;
     // This is a pure blacklist that does not get cleared and is for free usage internally and externally, e.g. blacklisting where enemies are standing
-    // This blacklist only gets cleared on map change, and can be used time independantly.
+    // This blacklist only gets cleared on map change, and can be used time independently.
     // the enum is the Blacklist reason, so you can easily edit it
     std::unordered_map<CNavArea *, BlacklistReason> free_blacklist;
     // When the local player stands on one of the nav squares the free blacklist should NOT run
@@ -273,14 +268,12 @@ public:
                     adjacent->push_back(micropather::StateCost{ reinterpret_cast<void *>(connection.area), cost });
                 }
                 else
-                {
                     vischeck_cache[key] = { TICKCOUNT_TIMESTAMP(60), false };
-                }
             }
         }
     }
 
-    // Function for getting closest Area to player, aka "LocalNav"
+    // Function for getting the closest area to the player, aka "LocalNav"
     CNavArea *findClosestNavSquare(const Vector &vec)
     {
         auto vec_corrected = vec;
@@ -372,7 +365,7 @@ public:
             {
                 // Should we even ignore the sentry?
                 // Soldier/Heavy do not care about Level 1 or mini sentries
-                bool is_strong_class = g_pLocalPlayer->clazz == tf_soldier || g_pLocalPlayer->clazz == tf_heavy;
+                bool is_strong_class = g_pLocalPlayer->clazz == tf_heavy;
                 int bullet           = CE_INT(ent, netvar.m_iAmmoShells);
                 int rocket           = CE_INT(ent, netvar.m_iAmmoRockets);
                 if ((is_strong_class && (CE_BYTE(ent, netvar.m_bMiniBuilding) || CE_INT(ent, netvar.iUpgradeLevel) == 1)) || (bullet == 0 && (CE_INT(ent, netvar.iUpgradeLevel) != 3 || rocket == 0)))
@@ -475,7 +468,7 @@ public:
         pather.Reset();
     }
 
-    // Uncesseray thing that is sadly necessary
+    // Unnecessary thing that is sadly necessary
     void PrintStateInfo(void *) override
     {
     }
@@ -494,7 +487,8 @@ Vector last_destination;
 
 bool isReady()
 {
-    return enabled && map && map->state == NavState::Active;
+    // F you Pipeline
+    return enabled && map && map->state == NavState::Active && (GetLevelName() == "plr_pipeline" || (g_pGameRules->roundmode > 3 && (g_pTeamRoundTimer->GetRoundState() != RT_STATE_SETUP || g_pLocalPlayer->team != TEAM_BLU)));
 }
 
 bool isPathing()
@@ -545,19 +539,19 @@ bool navTo(const Vector &destination, int priority, bool should_repath, bool nav
 
     for (size_t i = 0; i < path.size(); i++)
     {
-        CNavArea *area = reinterpret_cast<CNavArea *>(path.at(i));
+        auto *area = reinterpret_cast<CNavArea *>(path.at(i));
 
         // All entries besides the last need an extra crumb
         if (i != path.size() - 1)
         {
-            CNavArea *next_area = (CNavArea *) path.at(i + 1);
+            auto *next_area = (CNavArea *) path.at(i + 1);
 
             auto points = determinePoints(area, next_area);
 
             points.center = handleDropdown(points.center, points.next);
 
-            crumbs.push_back({ area, std::move(points.current) });
-            crumbs.push_back({ area, std::move(points.center) });
+            crumbs.push_back({ area, points.current });
+            crumbs.push_back({ area, points.center });
         }
         else
             crumbs.push_back({ area, area->m_center });
@@ -600,7 +594,6 @@ void cancelPath()
 }
 
 static Timer last_jump{};
-static Timer last_duck{};
 // Used to determine if we want to jump or if we want to crouch
 static bool crouch          = false;
 static int ticks_since_jump = 0;
@@ -677,7 +670,7 @@ static void followCrumbs()
     if (reset_z)
         current_vec.z = g_pLocalPlayer->v_Origin.z;
 
-    // We are close enough to the second crumb, Skip both (This is espcially helpful with drop downs)
+    // We are close enough to the second crumb, Skip both (This is especially helpful with drop-downs)
     if (crumbs.size() > 1 && crumbs[1].vec.DistTo(g_pLocalPlayer->v_Origin) < 50)
     {
         last_crumb = crumbs[1];
@@ -688,18 +681,32 @@ static void followCrumbs()
         inactivity.update();
     }
 
+    // If we make any progress at all, reset this
+    else
+    {
+        // If we spend way too long on this crumb, ignore the logic below
+        if (!time_spent_on_crumb.check(*stuck_detect_time * 1000))
+        {
+            Vector vel;
+            velocity::EstimateAbsVelocity(RAW_ENT(LOCAL_E), vel);
+            // 44.0f -> Revved brass beast, do not use z axis as jumping counts towards that. Yes this will mean long falls will trigger it, but that is not really bad.
+            if (!vel.AsVector2D().IsZero(40.0f))
+                inactivity.update();
+        }
+    }
+
     // Detect when jumping is necessary.
     // 1. No jumping if zoomed (or revved)
-    // 2. Jump if its necessary to do so based on z values
+    // 2. Jump if it's necessary to do so based on z values
     // 3. Jump if stuck (not getting closer) for more than stuck_time/2 (500ms)
-    if ((!(g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed) && !(g_pLocalPlayer->bRevved || g_pLocalPlayer->bRevving) && (crouch || crumbs[0].vec.z - g_pLocalPlayer->v_Origin.z > 18) && last_jump.check(40)) || (last_jump.check(20) && inactivity.check(*stuck_time / 4)))
+    if ((!(g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed) && !(g_pLocalPlayer->bRevved || g_pLocalPlayer->bRevving) && (crouch || crumbs[0].vec.z - g_pLocalPlayer->v_Origin.z > 18) && last_jump.check(200)) || (last_jump.check(200) && inactivity.check(*stuck_time / 2)))
     {
         auto local = map->findClosestNavSquare(g_pLocalPlayer->v_Origin);
         // Check if current area allows jumping
-        if (!local || !(local->m_attributeFlags & (NAV_MESH_NO_JUMP | NAV_MESH_STAIRS | NAV_MESH_INVALID)))
+        if (!local || !(local->m_attributeFlags & (NAV_MESH_NO_JUMP | NAV_MESH_STAIRS)))
         {
-            // Make it crouch until we land, but jump the first tick [whatever.]
-            current_user_cmd->buttons = crouch ? IN_DUCK : IN_JUMP;
+            // Make it crouch until we land, but jump the first tick
+            current_user_cmd->buttons |= crouch ? IN_DUCK : IN_JUMP;
 
             // Only flip to crouch state, not to jump state
             if (!crouch)
@@ -710,12 +717,11 @@ static void followCrumbs()
             ticks_since_jump++;
 
             // Update jump timer now since we are back on ground
-            if (crouch && last_duck.check(150) && ticks_since_jump > 0)
+            if (crouch && CE_INT(LOCAL_E, netvar.iFlags) & FL_ONGROUND && ticks_since_jump > 3)
             {
                 // Reset
                 crouch = false;
                 last_jump.update();
-		last_duck.update();
             }
         }
     }
@@ -727,78 +733,16 @@ static void followCrumbs()
         repath();
         return;
     }*/
-    
-        // Look at path
-    if (look && !hacks::shared::aimbot::isAiming())
+
+    // Look at path
+    if (look && !hacks::aimbot::isAiming())
     {
-        Vector next{ crumbs[*look_crumbs].vec.x, crumbs[*look_crumbs].vec.y, g_pLocalPlayer->v_Eye.z };
+        Vector next{ crumbs[0].vec.x, crumbs[0].vec.y, g_pLocalPlayer->v_Eye.z };
         next = GetAimAtAngles(g_pLocalPlayer->v_Eye, next);
-        
-        if (smooth_look)
-        {
-        hacks::tf2::misc_aimbot::DoSlowAim(next);
-        }
+
+        // Slow aim to smoothen
+        hacks::misc_aimbot::DoSlowAim(next);
         current_user_cmd->viewangles = next;
-    }
-
-    if (look_legit && !hacks::shared::aimbot::isAiming())
-    {
-        float best_dist                = FLT_MAX;
-        std::optional<Vector> look_vec = std::nullopt;
-        for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
-        {
-            CachedEntity *ent = ENTITY(i);
-            if (i == g_pLocalPlayer->entity_idx || CE_INVALID(ent) || !ent->m_bEnemy())
-                continue;
-            auto sound = soundcache::GetSoundLocation(i);
-            sound->z += PLAYER_JUMP_HEIGHT;
-            if (sound && sound->DistTo(g_pLocalPlayer->v_Eye) < best_dist && (IsVectorVisible(g_pLocalPlayer->v_Eye, *sound, true) || sound->DistTo(g_pLocalPlayer->v_Eye) <= 400.0f))
-            {
-                best_dist = sound->DistTo(g_pLocalPlayer->v_Eye);
-                look_vec  = sound;
-            }
-        }
-        if (look_vec)
-        {
-            Vector aim_ang = GetAimAtAngles(g_pLocalPlayer->v_Eye, *look_vec);
-            hacks::tf2::misc_aimbot::DoSlowAim(aim_ang, 20);
-            current_user_cmd->viewangles = aim_ang;
-        }
-        else
-        {
-            static Vector next{ crumbs[*look_crumbs].vec.x, crumbs[*look_crumbs].vec.y, g_pLocalPlayer->v_Eye.z };
-            static bool looked_at_point = true;
-            static Timer choose_new_point;
-
-            static int wait_time = 1000;
-            static int aim_speed = 10;
-
-            if (looked_at_point && choose_new_point.test_and_set(wait_time))
-            {
-                next = { crumbs[*look_crumbs].vec.x, crumbs[*look_crumbs].vec.y, g_pLocalPlayer->v_Eye.z };
-                next = GetAimAtAngles(g_pLocalPlayer->v_Eye, next);
-                // look at a somewhat random point
-                next.x += UniformRandomInt(-1, 1);
-                next.y += UniformRandomInt(-45, 45);
-                fClampAngle(next);
-                looked_at_point = false;
-            }
-
-            // Pick a new point, we're looking at our current one closely enough
-            if ((current_user_cmd->viewangles - next).IsZero(10.0f))
-            {
-                if (!looked_at_point)
-                    choose_new_point.update();
-                looked_at_point = true;
-                wait_time       = 750 + UniformRandomInt(0, 4000);
-                aim_speed       = 10 + UniformRandomInt(0, 2);
-            }
-
-            Vector next_slow = next;
-            // Slow aim to smoothen
-            hacks::tf2::misc_aimbot::DoSlowAim(next_slow, aim_speed);
-            current_user_cmd->viewangles = next_slow;
-        }
     }
 
     WalkTo(current_vec);
@@ -808,7 +752,7 @@ static Timer vischeck_timer{};
 void vischeckPath()
 {
     // No crumbs to check, or vischeck timer should not run yet, bail.
-    if (crumbs.size() < 1 || !vischeck_timer.test_and_set(*vischeck_time))
+    if (crumbs.size() < 2 || !vischeck_timer.test_and_set(*vischeck_time))
         return;
 
     // Iterate all the crumbs
@@ -831,9 +775,7 @@ void vischeckPath()
         }
         // Else we can update the cache (if not marked bad before this)
         else if (map->vischeck_cache.find(key) == map->vischeck_cache.end() || map->vischeck_cache[key].vischeck_state)
-        {
             map->vischeck_cache[key] = { TICKCOUNT_TIMESTAMP(*vischeck_cache_time), true };
-        }
     }
 }
 
@@ -875,10 +817,8 @@ void checkBlacklist()
             break;
         // A path Node is blacklisted, abandon pathing
         for (auto &entry : map->free_blacklist)
-        {
             if (entry.first == crumb.navarea)
                 should_abandon = true;
-        }
     }
     if (should_abandon)
         abandonPath();
@@ -887,7 +827,7 @@ void checkBlacklist()
 void updateStuckTime()
 {
     // No crumbs
-    if (!crumbs.size())
+    if (crumbs.empty())
         return;
     // We're stuck, add time to connection
     if (inactivity.check(*stuck_time / 2))
@@ -925,6 +865,16 @@ void CreateMove()
         cancelPath();
         return;
     }
+    round_states round_state = g_pTeamRoundTimer->GetRoundState();
+    // Still in setup time, if on fitting team, then do not path yet
+    // F you Pipeline
+    if (round_state == RT_STATE_SETUP && GetLevelName() != "plr_pipeline" && g_pLocalPlayer->team == TEAM_BLU)
+    {
+        if (navparser::NavEngine::isPathing())
+            navparser::NavEngine::cancelPath();
+        return;
+    }
+
     if (vischeck_runtime)
         vischeckPath();
     checkBlacklist();
@@ -961,9 +911,7 @@ void LevelInit()
         map = std::make_unique<Map>(nav_path);
     }
     else
-    {
         map->Reset();
-    }
 }
 
 // Return the whole thing
@@ -1037,7 +985,7 @@ void Draw()
         Vector scrEdge;
         edge.z += PLAYER_JUMP_HEIGHT;
         if (draw::WorldToScreen(edge, scrEdge))
-            draw::Rectangle(scrEdge.x - 2.0f, scrEdge.y - 2.0f, 0.0f, 0.0f, colors::RainbowCurrent());
+            draw::Rectangle(scrEdge.x - 2.0f, scrEdge.y - 2.0f, 4.0f, 4.0f, colors::red);
         drawNavArea(area);
     }
 
@@ -1051,19 +999,19 @@ void Draw()
         Vector start_screen, end_screen;
         if (draw::WorldToScreen(start_pos, start_screen))
         {
-            draw::Rectangle(start_screen.x - 2.0f, start_screen.y - 2.0f, 0.0f, 0.0f, colors::RainbowCurrent());
+            draw::Rectangle(start_screen.x - 5.0f, start_screen.y - 5.0f, 10.0f, 10.0f, colors::white);
 
             if (i < crumbs.size() - 1)
             {
                 Vector end_pos = crumbs[i + 1].vec;
                 if (draw::WorldToScreen(end_pos, end_screen))
-                    draw::Line(start_screen.x, start_screen.y, end_screen.x - start_screen.x, end_screen.y - start_screen.y, colors::RainbowCurrent(), 2.0f);
+                    draw::Line(start_screen.x, start_screen.y, end_screen.x - start_screen.x, end_screen.y - start_screen.y, colors::white, 2.0f);
             }
         }
     }
 }
 #endif
-}; // namespace NavEngine
+} // namespace NavEngine
 
 Vector loc;
 
@@ -1094,22 +1042,16 @@ static CatCommand nav_debug_check("nav_debug_check", "Perform nav checks between
 
                                       // Too high for us to jump!
                                       if (points.center_next.z - points.center.z > PLAYER_JUMP_HEIGHT)
-                                      {
                                           return logging::Info("Nav: Area too high!");
-                                      }
 
                                       points.current.z += PLAYER_JUMP_HEIGHT;
                                       points.center.z += PLAYER_JUMP_HEIGHT;
                                       points.next.z += PLAYER_JUMP_HEIGHT;
 
                                       if (IsPlayerPassableNavigation(points.current, points.center) && IsPlayerPassableNavigation(points.center, points.next))
-                                      {
                                           logging::Info("Nav: Area is player passable!");
-                                      }
                                       else
-                                      {
                                           logging::Info("Nav: Area is NOT player passable! %.2f,%.2f,%.2f %.2f,%.2f,%.2f %.2f,%.2f,%.2f", points.current.x, points.current.y, points.current.z, points.center.x, points.center.y, points.center.z, points.next.x, points.next.y, points.next.z);
-                                      }
                                   });
 
 static CatCommand nav_debug_blacklist("nav_debug_blacklist", "Blacklist connection between two areas for 30s. First area: cat_nav_set Second area: Your location while running this command.",

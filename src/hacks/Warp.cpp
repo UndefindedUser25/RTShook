@@ -9,15 +9,15 @@
 #if ENABLE_VISUALS
 #include "drawing.hpp"
 #endif
-#include "MiscAimbot.hpp"
 #include "PlayerTools.hpp"
 #include "DetourHook.hpp"
 #include "WeaponData.hpp"
 #include "MiscTemporary.hpp"
 #include "Think.hpp"
 #include "Aimbot.hpp"
+#include "NavBot.hpp"
 
-namespace hacks::tf2::warp
+namespace hacks::warp
 {
 static settings::Boolean enabled{ "warp.enabled", "false" };
 static settings::Boolean no_movement{ "warp.rapidfire.no-movement", "true" };
@@ -28,25 +28,24 @@ static settings::Boolean wait_full{ "warp.rapidfire.wait-full", "true" };
 static settings::Button rapidfire_key{ "warp.rapidfire.key", "<null>" };
 static settings::Int rapidfire_key_mode{ "warp.rapidfire.key-mode", "1" };
 static settings::Int rf_disable_on{ "warp.rapidfire.disable-on", "0" };
+static settings::Int rf_flamethrower_modes{ "warp.rapidfire.flmaethrower-modes", "0" };
 static settings::Float speed{ "warp.speed", "23" };
 static settings::Boolean draw{ "warp.draw", "false" };
 static settings::Boolean draw_bar{ "warp.draw-bar", "false" };
 static settings::Button warp_key{ "warp.key", "<null>" };
 static settings::Button charge_key{ "warp.charge-key", "<null>" };
 static settings::Boolean charge_passively{ "warp.charge-passively", "true" };
-static settings::Boolean charge_if_idle{ "warp.charge-if-idle", "false" };
 static settings::Boolean charge_in_jump{ "warp.charge-passively.jump", "true" };
-static settings::Boolean charge_no_input{ "warp.charge-passively.no-inputs", "false" };
+static settings::Boolean charge_no_input{ "warp.charge-passively.no-inputs", "true" };
 static settings::Int warp_movement_ratio{ "warp.movement-ratio", "6" };
 static settings::Boolean warp_demoknight{ "warp.demoknight", "false" };
 static settings::Boolean warp_peek{ "warp.peek", "false" };
 static settings::Boolean warp_on_damage{ "warp.on-hit", "false" };
 static settings::Boolean warp_forward{ "warp.on-hit.forward", "false" };
 static settings::Boolean warp_backwards{ "warp.on-hit.backwards", "false" };
-static settings::Boolean warp_left{ "warp.on-hit.left", "true" };
-static settings::Boolean warp_right{ "warp.on-hit.right", "true" };
-
-static settings::Boolean debug_seqout{ "debug.warp_seqout", "false" };
+static settings::Boolean warp_left{ "warp.on-hit.left", "false" };
+static settings::Boolean warp_right{ "warp.on-hit.right", "false" };
+static settings::Boolean warp_melee{ "warp.to.enemy", "false" };
 
 // Hidden control rvars for communtiy servers
 static settings::Int maxusrcmdprocessticks("warp.maxusrcmdprocessticks", "24");
@@ -159,7 +158,7 @@ float getFireDelay()
 
 bool canInstaZoom()
 {
-    return in_rapidfire_zoom || (g_pLocalPlayer->holding_sniper_rifle && current_user_cmd->buttons & IN_ATTACK2 && !HasCondition<TFCond_Zoomed>(LOCAL_E) && CE_FLOAT(LOCAL_W, netvar.flNextSecondaryAttack) <= g_GlobalVars->curtime);
+    return in_rapidfire_zoom || (g_pLocalPlayer->holding_sniper_rifle && CE_INT(LOCAL_E, netvar.iFlags) & FL_ONGROUND && current_user_cmd->buttons & IN_ATTACK2 && !HasCondition<TFCond_Zoomed>(LOCAL_E) && CE_FLOAT(LOCAL_W, netvar.flNextSecondaryAttack) <= SERVER_TIME);
 }
 
 // This is needed in order to make zoom/unzoom smooth even with insta zoom
@@ -228,9 +227,34 @@ bool shouldRapidfire()
     // Mouse 1 is held, do it.
     bool buttons_pressed = current_user_cmd && current_user_cmd->buttons & IN_ATTACK;
 
-    // Unless we are on a flamethrower, where we want both m1 and m2.
-    if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
-        buttons_pressed = current_user_cmd && current_user_cmd->buttons & (IN_ATTACK | IN_ATTACK2);
+    switch (*rf_flamethrower_modes)
+    {
+    case 0: // Any mode
+    {
+        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
+            buttons_pressed = current_user_cmd && current_user_cmd->buttons & (IN_ATTACK | IN_ATTACK2);
+        break;
+    }
+    case 1: // "Flame" mode / mouse 1
+    {
+        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
+            buttons_pressed = current_user_cmd && current_user_cmd->buttons & IN_ATTACK;
+        break;
+    }
+    case 2: // Airblast mode / mouse 2
+    {
+        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
+            buttons_pressed = current_user_cmd && current_user_cmd->buttons & IN_ATTACK2;
+        break;
+    }
+    case 3: // Disable all
+    default:
+    {
+        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
+            return false;
+        break;
+    }
+    }
 
     if (g_pLocalPlayer->holding_sniper_rifle)
     {
@@ -243,6 +267,7 @@ bool shouldRapidfire()
 
     switch (*rf_disable_on)
     {
+    default:
     case 0: // Always on
         return buttons_pressed;
     case 1: // Disable on projectile
@@ -265,17 +290,20 @@ bool shouldRapidfire()
 // Should we warp?
 bool shouldWarp(bool check_amount)
 {
+    auto nearest = hacks::NavBot::getNearestPlayerDistance();
     return
         // Ingame?
         g_IEngine->IsInGame() &&
         // Warp key held?
-        (((warp_key && warp_key.isKeyDown())
-          // Hurt warp?
-          || was_hurt
-          // Rapidfire and trying to attack?
-          || shouldRapidfire()) &&
-         // Do we have enough to warp?
-         (!check_amount || warp_amount));
+        ((((warp_key && warp_key.isKeyDown())
+           // Hurt warp?
+           || was_hurt
+           // Rapidfire and trying to attack?
+           || shouldRapidfire())
+           // Option is enabled, in melee range and target is visible to us
+           || (warp_melee && nearest.second < 175 && hacks::NavBot::isVisible))
+        // Do we have enough to warp?
+        && (!check_amount || warp_amount));
 }
 
 // How many ticks of excess we have (for decimal speeds)
@@ -331,13 +359,13 @@ void Warp(float accumulated_extra_samples, bool finalTick)
         return;
     }
 
-    PROF_SECTION(warp_profiler);
+    PROF_SECTION(warp_profiler)
 
     int warp_ticks = warp_amount;
     if (warp_amount_override)
         warp_ticks = warp_amount_override;
 
-    CL_Move_t original = (CL_Move_t) cl_move_detour.GetOriginalFunc();
+    auto original = (CL_Move_t) cl_move_detour.GetOriginalFunc();
 
     // Call CL_Move once for every warp tick
     int warp_amnt = GetWarpAmount(finalTick);
@@ -366,7 +394,7 @@ void Warp(float accumulated_extra_samples, bool finalTick)
                 hooked_methods::UpdatePred();
 
             if (in_rapidfire)
-                hacks::shared::aimbot::last_target_ignore_timer = tickcount + 12;
+                hacks::aimbot::last_target_ignore_timer = tickcount + 12;
             original(accumulated_extra_samples, finalTick);
             // Only decrease ticks for the final CL_Move tick
             if (finalTick)
@@ -527,7 +555,7 @@ void handleMinigun()
 // This is called first, it subsequently calls all the CreateMove functions.
 void CL_Move_hook(float accumulated_extra_samples, bool bFinalTick)
 {
-    CL_Move_t original = (CL_Move_t) cl_move_detour.GetOriginalFunc();
+    auto original = (CL_Move_t) cl_move_detour.GetOriginalFunc();
     original(accumulated_extra_samples, bFinalTick);
     cl_move_detour.RestorePatch();
 
@@ -558,7 +586,7 @@ void CreateMoveEarly()
 {
     // Update key state
     key_valid = UpdateRFKey();
-    if (hacks::tf2::warp::in_rapidfire && current_user_cmd)
+    if (hacks::warp::in_rapidfire && current_user_cmd)
     {
         if (current_user_cmd)
         {
@@ -578,10 +606,10 @@ void CreateMovePrePredict()
         FastStop();
     if (in_rapidfire_zoom)
     {
-        float adjusted_curtime = g_GlobalVars->curtime;
+        float adjusted_curtime = SERVER_TIME;
         // Original curtime we need to use while in here
         if (first_warp_tick)
-            original_curtime = g_GlobalVars->curtime;
+            original_curtime = SERVER_TIME;
 
         // Update the data
         g_pLocalPlayer->bZoomed     = true;
@@ -621,9 +649,7 @@ void warpLogic()
 {
     if (!enabled)
         return;
-    if (CE_BAD(LOCAL_E) || !LOCAL_E->m_bAlivePlayer())
-        return;
-    if (CE_BAD(LOCAL_W))
+    if (CE_BAD(LOCAL_E) || !LOCAL_E->m_bAlivePlayer() || CE_BAD(LOCAL_W))
         return;
 
     // Handle minigun in rapidfire
@@ -665,10 +691,7 @@ void warpLogic()
         if ((ground_ticks > 1 || charge_in_jump) && (charge_no_input || velocity.IsZero()) && !HasCondition<TFCond_Charging>(LOCAL_E) && !current_user_cmd->forwardmove && !current_user_cmd->sidemove && !current_user_cmd->upmove && !(current_user_cmd->buttons & IN_JUMP) && !button_block)
         {
             if (!move_last_tick)
-		{
-            	if (charge_if_idle)
                 should_charge = true;
-		}
             move_last_tick = false;
 
             return;
@@ -1004,9 +1027,8 @@ void Draw()
         if (warp_amount == 0)
             color = colors::FromRGBA8(128.0f, 128.0f, 128.0f, 255.0f);
         else if (GetMaxWarpTicks() == warp_amount)
-	AddWarpString("Change Ready!" , colors::green);
             color = colors::green;
-        AddWarpString("Change Warp/DT Ticks : " + std::to_string(warp_amount), color);
+        AddWarpString("Shiftable ticks: " + std::to_string(warp_amount), color);
     }
 
     if (draw_bar)
@@ -1016,12 +1038,11 @@ void Draw()
         static rgba_t background_color = colors::FromRGBA8(96, 96, 96, 150);
         float bar_bg_x_size            = *size * 2.0f;
         float bar_bg_y_size            = *size / 5.0f;
-        draw::RectangleOutlined(*bar_x - 4.0f, *bar_y - 5.0f, bar_bg_x_size + 10.0f, bar_bg_y_size + 10.0f, colors::blu , 2);
-        draw::Rectangle(*bar_x - 5.0f, *bar_y - 5.0f, bar_bg_x_size + 10.0f, bar_bg_y_size + 10.0f, colors::black);
+        draw::Rectangle(*bar_x - 5.0f, *bar_y - 5.0f, bar_bg_x_size + 10.0f, bar_bg_y_size + 10.0f, background_color);
         // Draw bar
-        rgba_t color_bar = colors::blu;
+        rgba_t color_bar = colors::orange;
         if (GetMaxWarpTicks() == warp_amount)
-            color_bar = colors::blu;
+            color_bar = colors::green;
         color_bar.a = 100 / 255.0f;
         draw::Rectangle(*bar_x, *bar_y, *size * 2.0f * charge_percent, *size / 5.0f, color_bar);
     }
@@ -1095,7 +1116,7 @@ void rvarCallback(settings::VariableBase<bool> &, bool)
 static InitRoutine init(
     []()
     {
-        static auto cl_move_addr = gSignatures.GetEngineSignature("55 89 E5 57 56 53 81 EC 9C 00 00 00 83 3D ? ? ? ? 01");
+        static auto cl_move_addr = CSignature::GetEngineSignature("55 89 E5 57 56 53 81 EC 9C 00 00 00 83 3D ? ? ? ? 01");
         cl_move_detour.Init(cl_move_addr, (void *) CL_Move_hook);
 
         EC::Register(EC::LevelShutdown, LevelShutdown, "warp_levelshutdown");
@@ -1121,4 +1142,4 @@ static InitRoutine init(
         EC::Register(EC::Draw, Draw, "warp_draw");
 #endif
     });
-} // namespace hacks::tf2::warp
+} // namespace hacks::warp

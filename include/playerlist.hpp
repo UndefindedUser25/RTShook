@@ -11,7 +11,6 @@
 
 namespace playerlist
 {
-
 constexpr int SERIALIZE_VERSION = 3;
 
 enum class k_EState
@@ -23,12 +22,14 @@ enum class k_EState
     IPC,
     TEXTMODE,
     CAT,
+    PAZER,
+    ABUSE,
     PARTY,
-    NULLNEXUS,
     STATE_LAST = PARTY
 };
+
 #if ENABLE_VISUALS
-extern std::array<rgba_t, 7> k_Colors;
+extern std::array<rgba_t, 8> k_Colors;
 static_assert(sizeof(rgba_t) == sizeof(float) * 4, "player list is going to be incompatible with no visual version");
 #endif
 extern const std::string k_Names[];
@@ -55,8 +56,9 @@ void Load();
 
 constexpr bool IsFriendly(k_EState state)
 {
-    return state != k_EState::RAGE && state != k_EState::DEFAULT && state != k_EState::CAT && state != k_EState::NULLNEXUS;
+    return state != k_EState::RAGE && state != k_EState::DEFAULT && state != k_EState::CAT && state != k_EState::PAZER && state != k_EState::ABUSE;
 }
+
 #if ENABLE_VISUALS
 rgba_t Color(unsigned steamid);
 rgba_t Color(CachedEntity *player);

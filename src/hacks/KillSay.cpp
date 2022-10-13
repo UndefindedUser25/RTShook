@@ -8,7 +8,7 @@
 #include <settings/Int.hpp>
 #include "common.hpp"
 
-namespace hacks::shared::killsay
+namespace hacks::killsay
 {
 static settings::Int killsay_mode{ "killsay.mode", "0" };
 static settings::String filename{ "killsay.file", "killsays.txt" };
@@ -61,11 +61,15 @@ std::string ComposeKillSay(IGameEvent *event)
         return "";
     if (GetPlayerForUserID(kid) != g_IEngine->GetLocalPlayer())
         return "";
-    std::string msg = source->at(rand() % source->size());
+
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> dist(0.0, source->size());
+    std::string msg = source->at((int) dist(mt));
     //	checks if the killsays.txt file is not 1 line. 100% sure it's going
     // to crash if it is.
     while (msg == lastmsg && source->size() > 1)
-        msg = source->at(rand() % source->size());
+        msg = source->at((int) dist(mt));
     lastmsg = msg;
     player_info_s info{};
     GetPlayerInfo(GetPlayerForUserID(vid), &info);
@@ -90,7 +94,7 @@ class KillSayEventListener : public IGameEventListener2
     {
         if (!killsay_mode)
             return;
-        std::string message = hacks::shared::killsay::ComposeKillSay(event);
+        std::string message = hacks::killsay::ComposeKillSay(event);
         if (!message.empty())
         {
             int vid                    = event->GetInt("userid");
@@ -145,4 +149,4 @@ static InitRoutine runinit(
         init();
     });
 
-} // namespace hacks::shared::killsay
+} // namespace hacks::killsay

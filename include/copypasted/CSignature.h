@@ -50,5 +50,3 @@ public:
     static uintptr_t GetVstdSignature(const char *chPattern);
     static uintptr_t GetServerSignature(const char *chPattern);
 };
-
-extern CSignature gSignatures;

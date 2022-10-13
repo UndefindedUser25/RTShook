@@ -2,10 +2,10 @@
  * OutOfFOVArrows.cpp
  *
  *  Created on: Sep 9, 2021
- *      Author: Unknow
+ *      Author: user
  */
 
-// Unfinished i need some edit for working.
+// UNFINISHED
 
 #include <settings/Bool.hpp>
 #include "common.hpp"

@@ -12,7 +12,7 @@ using namespace re;
 CTFInventoryManager *CTFInventoryManager::GTFInventoryManager()
 {
     typedef CTFInventoryManager *(*GTFInventoryManager_t)();
-    static uintptr_t address                            = (unsigned) e8call((void *) (gSignatures.GetClientSignature("E8 ? ? ? ? 0F B6 55 0C") + 1));
+    static uintptr_t address                            = (unsigned) e8call((void *) (CSignature::GetClientSignature("E8 ? ? ? ? 0F B6 55 0C") + 1));
     static GTFInventoryManager_t GTFInventoryManager_fn = GTFInventoryManager_t(address);
     return GTFInventoryManager_fn();
 }
@@ -60,7 +60,7 @@ std::vector<unsigned long long> CTFPlayerInventory::GetItemsOfItemDef(int id)
 CEconItemView *CTFPlayerInventory::GetFirstItemOfItemDef(int id)
 {
     typedef CEconItemView *(*GetFirstItemOfItemDef_t)(int16_t, void *);
-    static uintptr_t address                                = (unsigned) e8call((void *) (gSignatures.GetClientSignature("E8 ? ? ? ? 85 C0 74 35 8B 55 C0") + 1));
+    static uintptr_t address                                = (unsigned) e8call((void *) (CSignature::GetClientSignature("E8 ? ? ? ? 85 C0 74 35 8B 55 C0") + 1));
     static GetFirstItemOfItemDef_t GetFirstItemOfItemDef_fn = GetFirstItemOfItemDef_t(address);
     return GetFirstItemOfItemDef_fn(id, this);
 }
@@ -78,24 +78,28 @@ unsigned long long CEconItemView::UUID()
     return b | a;
 }
 
-static CatCommand equip_debug("equip_debug", "Debug auto equip stuff", []() {
-    auto invmng    = CTFInventoryManager::GTFInventoryManager();
-    auto inv       = invmng->GTFPlayerInventory();
-    auto item_view = inv->GetFirstItemOfItemDef(56);
-    if (item_view)
-    {
-        logging::Info("%llu", item_view->UUID());
-        logging::Info("Equip item: %d", invmng->EquipItemInLoadout(tf_sniper, 0, item_view->UUID()));
-    }
-});
+static CatCommand equip_debug("equip_debug", "Debug auto equip stuff",
+                              []()
+                              {
+                                  auto invmng    = CTFInventoryManager::GTFInventoryManager();
+                                  auto inv       = invmng->GTFPlayerInventory();
+                                  auto item_view = inv->GetFirstItemOfItemDef(56);
+                                  if (item_view)
+                                  {
+                                      logging::Info("%llu", item_view->UUID());
+                                      logging::Info("Equip item: %d", invmng->EquipItemInLoadout(tf_sniper, 0, item_view->UUID()));
+                                  }
+                              });
 
-static CatCommand list_debug("equip_list_debug", "Debug item def listing", []() {
-    auto invmng = CTFInventoryManager::GTFInventoryManager();
-    auto inv    = invmng->GTFPlayerInventory();
-    auto items  = inv->GetItemsOfItemDef(5000);
-    for (auto item : items)
-        logging::Info("%llu", item);
-});
+static CatCommand list_debug("equip_list_debug", "Debug item def listing",
+                             []()
+                             {
+                                 auto invmng = CTFInventoryManager::GTFInventoryManager();
+                                 auto inv    = invmng->GTFPlayerInventory();
+                                 auto items  = inv->GetItemsOfItemDef(5000);
+                                 for (auto item : items)
+                                     logging::Info("%llu", item);
+                             });
 
 // Crafting slots on crafting page
 #define CRAFTING_SLOTS_INPUT_ROWS 3
@@ -121,7 +125,7 @@ public:
 // Pass the Definition Indexes of the items you want to craft with (https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes)
 bool Craft(std::vector<int> item_ids)
 {
-    static auto craft_func = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 6C C7 45 ? 00 00 00 00 "
+    static auto craft_func = CSignature::GetClientSignature("55 89 E5 57 56 53 83 EC 6C C7 45 ? 00 00 00 00 "
                                                             "8B 45 ? C7 45 ? 00 00 00 00 C7 45 ? 00 00 00 "
                                                             "00 C7 45 ? 00 00 00 00 C7 45 ? 00 00 00 00 83 80 ? ? ? ? 01");
 
@@ -186,7 +190,7 @@ bool Craft(std::vector<int> item_ids)
 bool Rent(int item_id)
 {
     typedef void (*DoPreviewItem_t)(void *, int);
-    static auto DoPreviewItem_addr = gSignatures.GetClientSignature("55 89 E5 56 53 81 EC 50 01 00 00 65 A1 ? ? ? ? 89 45 ? 31 C0 0F B7 75");
+    static auto DoPreviewItem_addr = CSignature::GetClientSignature("55 89 E5 56 53 81 EC 50 01 00 00 65 A1 ? ? ? ? 89 45 ? 31 C0 0F B7 75");
     static auto id                 = (DoPreviewItem_addr + 0xf3);
 
     // Request the item instead of testing if we can request it

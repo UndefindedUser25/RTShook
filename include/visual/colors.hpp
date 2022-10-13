@@ -25,16 +25,24 @@ constexpr unsigned white     = 0xE6E6E6;
 constexpr unsigned purple    = 0x7D4071;
 constexpr unsigned yellowish = 0xF0E68C;
 constexpr unsigned orange    = 0xCF7336;
-constexpr unsigned blue      = 0x00bdff;
-constexpr unsigned green     = 0x8aff9a;
 
 constexpr unsigned team(int team)
 {
-    if (team == 2)
+    switch (team)
+    {
+    case 2:
+    {
         return red;
-    if (team == 3)
+    }
+    case 3:
+    {
         return blu;
-    return white;
+    }
+    default:
+    {
+        return white;
+    }
+    }
 }
 } // namespace chat
 
@@ -119,16 +127,16 @@ constexpr rgba_t black(0, 0, 0, 1);
 
 constexpr rgba_t pink = FromRGBA8(255, 105, 180, 255);
 
-extern rgba_t red; // RED team user controlled
-extern rgba_t blu; // BLU team user controlled
-extern rgba_t red_b; // Background
-extern rgba_t blu_b; // Background
-extern rgba_t red_v; // Vaccinator
-extern rgba_t blu_v; // Vaccinator
-extern rgba_t red_u; // Ubercharge
-extern rgba_t blu_u;  // Ubercharge
-extern rgba_t gui;    // GUI color
-extern rgba_t target; // Aimbot target color
+extern rgba_t red;                                     // RED team user controlled
+extern rgba_t blu;                                     // BLU team user controlled
+extern rgba_t red_b;                                   // Background
+extern rgba_t blu_b;                                   // Background
+extern rgba_t red_v;                                   // Vaccinator
+extern rgba_t blu_v;                                   // Vaccinator
+extern rgba_t red_u;                                   // Ubercharge
+extern rgba_t blu_u;                                   // Ubercharge
+extern rgba_t gui;                                     // GUI color
+extern rgba_t target;                                  // Aimbot target color
 constexpr rgba_t red_s  = FromRGBA8(237, 42, 42, 255); // Not user controlled
 constexpr rgba_t yellow = FromRGBA8(255, 255, 0, 255);
 constexpr rgba_t orange = FromRGBA8(255, 120, 0, 255);

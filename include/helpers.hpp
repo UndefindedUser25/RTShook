@@ -42,6 +42,7 @@ constexpr float RADPI = 57.295779513082f;
 #define TIME_TO_TICKS(dt) ((int) (0.5f + (float) (dt) / TICK_INTERVAL))
 #define TICKS_TO_TIME(t) (TICK_INTERVAL * (t))
 #define ROUND_TO_TICKS(t) (TICK_INTERVAL * TIME_TO_TICKS(t))
+#define SERVER_TIME (TICK_INTERVAL * CE_INT(LOCAL_E, netvar.nTickBase))
 
 // typedef void ( *FnCommandCallback_t )( const CCommand &command );
 
@@ -119,7 +120,7 @@ bool GetProjectileData(CachedEntity *weapon, float &speed, float &gravity, float
 bool IsVectorVisible(Vector a, Vector b, bool enviroment_only = false, CachedEntity *self = LOCAL_E, unsigned int mask = MASK_SHOT_HULL);
 // A Special function for navparser to check if a Vector is visible.
 bool IsVectorVisibleNavigation(Vector a, Vector b, unsigned int mask = MASK_SHOT_HULL);
-bool didProjectileHit(Vector start_point, Vector end_point, CachedEntity *entity, int projectile_size);
+bool didProjectileHit(Vector start_point, Vector end_point, CachedEntity *entity, float projectile_size);
 Vector getShootPos(Vector angle);
 Vector GetForwardVector(Vector origin, Vector viewangles, float distance, CachedEntity *punch_entity = nullptr);
 Vector GetForwardVector(float distance, CachedEntity *punch_entity = nullptr);
@@ -141,11 +142,21 @@ int HandleToIDX(int handle);
 
 inline const char *teamname(int team)
 {
-    if (team == 2)
+    switch (team)
+    {
+    case 2:
+    {
         return "RED";
-    else if (team == 3)
+    }
+    case 3:
+    {
         return "BLU";
-    return "SPEC";
+    }
+    default:
+    {
+        return "SPEC";
+    }
+    }
 }
 extern const std::string classes[10];
 inline const char *classname(int clazz)

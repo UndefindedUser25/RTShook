@@ -1,8 +1,8 @@
-if(EnableGUI)
+if (EnableGUI)
     add_subdirectory(menu)
 endif()
 
-if(EnableImGuiDrawing)
+if (EnableImGuiDrawing)
     add_subdirectory(imgui)
 endif()
 

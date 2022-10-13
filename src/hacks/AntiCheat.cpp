@@ -14,7 +14,7 @@
 #include "hack.hpp"
 #include "angles.hpp"
 
-namespace hacks::shared::anticheat
+namespace hacks::anticheat
 {
 static settings::Boolean enable{ "find-cheaters.enable", "0" };
 static settings::Boolean accuse_chat{ "find-cheaters.accuse-in-chat", "0" };
@@ -23,14 +23,12 @@ static settings::Boolean skip_local{ "find-cheaters.ignore-local", "1" };
 
 void Accuse(int eid, const std::string &hack, const std::string &details)
 {
-    player_info_s info;
+    player_info_s info{};
     if (GetPlayerInfo(eid, &info))
     {
         CachedEntity *ent = ENTITY(eid);
         if (accuse_chat)
-        {
             hack::command_stack().push(format("say \"", info.name, " (", classname(CE_INT(ent, netvar.iClass)), ") suspected ", hack, ": ", details, "\""));
-        }
         else
         {
 #if ENABLE_VISUALS
@@ -89,7 +87,7 @@ void ResetEverything()
 class ACListener : public IGameEventListener
 {
 public:
-    virtual void FireGameEvent(KeyValues *event)
+    void FireGameEvent(KeyValues *event) override
     {
         if (!enable)
             return;
@@ -132,4 +130,4 @@ static InitRoutine EC(
         EC::Register(EC::Shutdown, Shutdown, "shutdown_AntiCheat", EC::average);
         Init();
     });
-} // namespace hacks::shared::anticheat
+} // namespace hacks::anticheat

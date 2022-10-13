@@ -12,7 +12,7 @@
 #include "DetourHook.hpp"
 #include "Backtrack.hpp"
 
-namespace hacks::tf2::misc_aimbot
+namespace hacks::misc_aimbot
 {
 static settings::Boolean sandwichaim_enabled{ "sandwichaim.enable", "false" };
 static settings::Button sandwichaim_aimkey{ "sandwichaim.aimkey", "<null>" };
@@ -123,7 +123,7 @@ std::pair<CachedEntity *, Vector> FindBestEnt(bool teammate, bool Predict, bool 
         }
     }
     prevent = -1;
-    for (int i = 0; i <= g_IEngine->GetMaxClients(); i++)
+    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
     {
         CachedEntity *ent = ENTITY(i);
         if (CE_BAD(ent) || !(ent->m_bAlivePlayer()) || (teammate && ent->m_iTeam() != LOCAL_E->m_iTeam()) || ent == LOCAL_E)
@@ -208,7 +208,7 @@ void DoSlowAim(Vector &input_angle, int speed)
 {
     auto viewangles = current_user_cmd->viewangles;
 
-   // Don't bother if we're already on target
+    // Don't bother if we're already on target
     if (viewangles != input_angle)
     {
         Vector slow_delta = input_angle - viewangles;
@@ -621,10 +621,14 @@ static InitRoutine init(
         EC::Register(EC::CreateMove, CreateMove, "cm_miscaimbot", EC::average);
         EC::Register(EC::CreateMoveWarp, CreateMove, "cmw_miscaimbot", EC::average);
 
-        static auto signature = gSignatures.GetClientSignature("55 89 E5 53 83 EC 14 E8 ? ? ? ? 85 C0 74 ? 8D 98 ? ? ? ? C7 44 24 ? 11 00 00 00");
+        static auto signature = CSignature::GetClientSignature("55 89 E5 53 83 EC 14 E8 ? ? ? ? 85 C0 74 ? 8D 98 ? ? ? ? C7 44 24 ? 11 00 00 00");
 
         CAM_CapYaw_detour.Init(signature, (void *) CAM_CapYaw_Hook);
         EC::Register(
-            EC::Shutdown, []() { CAM_CapYaw_detour.Shutdown(); }, "chargeaim_shutdown");
+            EC::Shutdown, []()
+            {
+                CAM_CapYaw_detour.Shutdown();
+                
+            }, "chargeaim_shutdown");
     });
-} // namespace hacks::tf2::misc_aimbot
+} // namespace hacks::misc_aimbot

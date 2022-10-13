@@ -16,7 +16,11 @@ static settings::Boolean anon("nullnexus.user.anon", "false");
 static settings::String address("nullnexus.host", "nullnexus.cathook.club");
 static settings::String port("nullnexus.port", "3000");
 static settings::String endpoint("nullnexus.endpoint", "/api/v1/client");
+#if ENABLE_TEXTMODE
+static settings::Boolean proxyenabled("nullnexus.proxy.enabled", "true");
+#else
 static settings::Boolean proxyenabled("nullnexus.proxy.enabled", "false");
+#endif
 static settings::String proxysocket("nullnexus.relay.socket", "/tmp/nullnexus.sock");
 static settings::Boolean authenticate("nullnexus.auth", "true");
 #if ENABLE_VISUALS
@@ -25,20 +29,21 @@ static settings::Rgba colour("nullnexus.user.colour");
 
 static NullNexus nexus;
 
-void printmsg(std::string &usr, std::string &msg, int colour = 0xff9340)
+void printmsg(std::string &usr, std::string &msg, int colour = 0xe1ad01)
 {
 #if !ENFORCE_STREAM_SAFETY && ENABLE_VISUALS
     if (msg.size() > 128 || usr.size() > 32)
     {
-        logging::Info("Nullnexus: Message too fucking large.");
+        logging::Info("Nullnexus: Message too large.");
         return;
     }
     if (g_Settings.bInvalid)
         g_ICvar->ConsoleColorPrintf(MENU_COLOR, "[Nullnexus] %s: %s\n", usr.c_str(), msg.c_str());
     else
-        PrintChat("\x07%06X[\x07%06XNullnexus\x07%06X] \x07%06X%s\x01: %s", 0x5e3252, 0xba3d9a, 0x5e3252, colour, usr.c_str(), msg.c_str());
+        PrintChat("\x07%06X[Nullnexus] \x07%06X%s\x01: %s", 0x1434a4, colour, usr.c_str(), msg.c_str());
 #endif
 }
+
 void printmsgcopy(std::string usr, std::string msg)
 {
     printmsg(usr, msg);
@@ -55,14 +60,14 @@ void authedplayers(std::vector<std::string> steamids)
     // Check if we are in a game
     if (g_Settings.bInvalid)
         return;
-    for (int i = 0; i <= g_IEngine->GetMaxClients(); i++)
+    for (unsigned i = 0; i <= g_IEngine->GetMaxClients(); i++)
     {
         player_info_s pinfo{};
         if (GetPlayerInfo(i, &pinfo))
         {
             if (pinfo.friendsID == 0)
                 continue;
-            MD5Value_t result;
+            MD5Value_t result{};
             std::string steamidhash = std::to_string(pinfo.friendsID) + pinfo.name;
             MD5_ProcessSingleBuffer(steamidhash.c_str(), strlen(steamidhash.c_str()), result);
             std::stringstream ss;
@@ -76,8 +81,8 @@ void authedplayers(std::vector<std::string> steamids)
                                if (steamid == steamidhash)
                                {
                                    // Use actual steamid to set cat status
-                                   if (playerlist::ChangeState(pinfo.friendsID, playerlist::k_EState::NULLNEXUS))
-                                       PrintChat("\x07%06X%s\x01 Enable Nullnexus Auto mark stat Nullnexus.", 0xe05938, pinfo.name);
+                                   if (playerlist::ChangeState(pinfo.friendsID, playerlist::k_EState::CAT))
+                                       PrintChat("Detected \x07%06X%s\x01 as a Nullnexus user.", 0xe1ad01, pinfo.name);
                                    return true;
                                }
                                return false;
@@ -87,15 +92,15 @@ void authedplayers(std::vector<std::string> steamids)
 }
 } // namespace handlers
 
-static std::string server_steamid = "";
+static std::string server_steamid;
 
 // Update info about the current server we are on.
 void updateServer(NullNexus::UserSettings &settings)
 {
-    INetChannel *ch = (INetChannel *) g_IEngine->GetNetChannelInfo();
+    auto *ch = (INetChannel *) g_IEngine->GetNetChannelInfo();
     // Additional currently inactive security measure, may be activated at any time
-    static int *gHostSpawnCount = *reinterpret_cast<int **>(gSignatures.GetEngineSignature("A3 ? ? ? ? A1 ? ? ? ? 8B 10 89 04 24 FF 52 ? 83 C4 2C") + sizeof(char));
-    if (ch && *authenticate && server_steamid != "")
+    static int *gHostSpawnCount = *reinterpret_cast<int **>(CSignature::GetEngineSignature("A3 ? ? ? ? A1 ? ? ? ? 8B 10 89 04 24 FF 52 ? 83 C4 2C") + sizeof(char));
+    if (ch && *authenticate && !server_steamid.empty())
     {
         // SDR Makes this unusable :(
         // auto addr = ch->GetRemoteAddress();
@@ -103,7 +108,7 @@ void updateServer(NullNexus::UserSettings &settings)
         player_info_s pinfo{};
         if (GetPlayerInfo(g_pLocalPlayer->entity_idx, &pinfo))
         {
-            MD5Value_t result;
+            MD5Value_t result{};
             std::string steamidhash = std::to_string(pinfo.friendsID) + pinfo.name;
             MD5_ProcessSingleBuffer(steamidhash.c_str(), strlen(steamidhash.c_str()), result);
             std::stringstream ss;
@@ -146,10 +151,10 @@ bool ProcessPrint_detour_fn(void *baseclient, SVC_Print *msg)
             else
             {
                 str = str.substr(10);
-                if (str == "not logged in" || str.rfind("]") == str.npos)
+                if (str == "not logged in" || str.rfind(']') == __gnu_cxx::__alloc_traits<std::allocator<std::basic_string<char>>, std::basic_string<char>>::value_type::npos)
                     str = "";
                 else
-                    str = str.substr(0, str.rfind("]") + 1);
+                    str = str.substr(0, str.rfind(']') + 1);
                 server_steamid = str;
             }
             updateServer();
@@ -172,7 +177,7 @@ void updateSteamID()
 // Update info about the current server we are on.
 void updateServer()
 {
-    if (!g_IEngine->IsInGame() || server_steamid != "")
+    if (!g_IEngine->IsInGame() || !server_steamid.empty())
     {
         NullNexus::UserSettings settings;
         updateServer(settings);
@@ -184,7 +189,7 @@ void updateServer()
 
 void updateData()
 {
-    std::optional<std::string> username = std::nullopt;
+    std::optional<std::string> username;
     std::optional<int> newcolour        = std::nullopt;
     username                            = *anon ? "anon" : g_ISteamFriends->GetPersonaName();
 #if ENABLE_VISUALS
@@ -277,7 +282,7 @@ static InitRoutine init(
                 nexus.connect(*address, *port, *endpoint, true);
         }
 
-        uintptr_t processprint_addr = gSignatures.GetEngineSignature("55 89 E5 56 53 83 EC 50 C7 45 ? 00 00 00 00 A1 ? ? ? ? C7 45 ? 00 00 00 00 85 C0 0F 84 ? ? ? ? 8D 55 ? 89 04 24 89 54 24 ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? 4D 04 00 00");
+        uintptr_t processprint_addr = CSignature::GetEngineSignature("55 89 E5 56 53 83 EC 50 C7 45 ? 00 00 00 00 A1 ? ? ? ? C7 45 ? 00 00 00 00 85 C0 0F 84 ? ? ? ? 8D 55 ? 89 04 24 89 54 24 ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? 4D 04 00 00");
 
         ProcessPrint_detour_hook.Init(processprint_addr, (void *) ProcessPrint_detour_fn);
 

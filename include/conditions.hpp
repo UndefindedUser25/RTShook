@@ -9,7 +9,6 @@
 
 #include <entitycache.hpp>
 #include "core/netvars.hpp"
-#include "gameinfo.hpp"
 
 // So, tf2 actually stores cond netvars sequentionally, that's pretty good.
 // This struct is just used for easy access to 128bit set, you shouldn't make an
@@ -195,7 +194,7 @@ constexpr condition_data_s KDisguisedMask    = CreateConditionMask(TFCond_Disgui
 constexpr condition_data_s KVisibilityMask      = CreateConditionMask(TFCond_OnFire, TFCond_Jarated, TFCond_CloakFlicker, TFCond_Milked, TFCond_Bleeding);
 constexpr condition_data_s KInvulnerabilityMask = CreateConditionMask(TFCond_Ubercharged, TFCond_UberchargedCanteen, TFCond_UberchargedHidden, TFCond_UberchargedOnTakeDamage, TFCond_Bonked, TFCond_DefenseBuffMmmph);
 constexpr condition_data_s KCritBoostMask       = CreateConditionMask(TFCond_Kritzkrieged, TFCond_CritRuneTemp, TFCond_CritCanteen, TFCond_CritMmmph, TFCond_CritOnKill, TFCond_CritOnDamage, TFCond_CritOnFirstBlood, TFCond_CritOnWin, TFCond_CritRuneTemp, TFCond_HalloweenCritCandy);
-constexpr condition_data_s KMiniCritBoostMask = CreateConditionMask(TFCond_Buffed, TFCond_CritCola, TFCond_NoHealingDamageBuff, TFCond_MiniCritOnKill);
+constexpr condition_data_s KMiniCritBoostMask   = CreateConditionMask(TFCond_Buffed, TFCond_CritCola, TFCond_NoHealingDamageBuff, TFCond_MiniCritOnKill);
 
 // Compiler will optimize this to extremely small functions I guess.
 // These functions are never used with dynamic "cond" value anyways.
@@ -229,12 +228,8 @@ template <uint32_t c0, uint32_t c1, uint32_t c2, uint32_t c3> inline bool CondMa
 
 template <uint32_t c0, uint32_t c1, uint32_t c2, uint32_t c3> inline bool HasConditionMask(CachedEntity *ent)
 {
-    IF_GAME(!IsTF()) return false;
-    IF_GAME(IsTF2())
-    {
-        if (CondMaskCheck<c0, c1, c2, c3>(CE_VAR(ent, netvar._condition_bits, condition_data_s)))
-            return true;
-    }
+    if (CondMaskCheck<c0, c1, c2, c3>(CE_VAR(ent, netvar._condition_bits, condition_data_s)))
+        return true;
     return CondMaskCheck<c0, c1, c2, c3>(CE_VAR(ent, netvar.iCond, condition_data_s));
 }
 
@@ -282,8 +277,7 @@ template <condition cond, bool state> inline void CondBitSet(condition_data_s &d
 
 template <condition cond> inline bool HasCondition(CachedEntity *ent)
 {
-    IF_GAME(!IsTF()) return false;
-    IF_GAME(IsTF2() && cond < condition(96))
+    if (cond < condition(96))
     {
         if (CondBitCheck<cond>(CE_VAR(ent, netvar._condition_bits, condition_data_s)))
             return true;
@@ -293,20 +287,12 @@ template <condition cond> inline bool HasCondition(CachedEntity *ent)
 
 template <condition cond> inline void AddCondition(CachedEntity *ent)
 {
-    IF_GAME(!IsTF()) return;
-    IF_GAME(IsTF2())
-    {
-        CondBitSet<cond, true>(CE_VAR(ent, netvar._condition_bits, condition_data_s));
-    }
+    CondBitSet<cond, true>(CE_VAR(ent, netvar._condition_bits, condition_data_s));
     CondBitSet<cond, true>(CE_VAR(ent, netvar.iCond, condition_data_s));
 }
 
 template <condition cond> inline void RemoveCondition(CachedEntity *ent)
 {
-    IF_GAME(!IsTF()) return;
-    IF_GAME(IsTF2())
-    {
-        CondBitSet<cond, false>(CE_VAR(ent, netvar._condition_bits, condition_data_s));
-    }
+    CondBitSet<cond, false>(CE_VAR(ent, netvar._condition_bits, condition_data_s));
     CondBitSet<cond, false>(CE_VAR(ent, netvar.iCond, condition_data_s));
 }

@@ -114,9 +114,8 @@ static bool blacklist_file(const char *&filename)
     if (!std::strncmp(filename, "/decal", 6))
         return true;
 
-    for (int i = 0; i < sizeof(blacklist) / sizeof(blacklist[0]); ++i)
-        if (!std::strcmp(ext_p, blacklist[i]))
-            return true;
+    if (std::ranges::any_of(blacklist, [ext_p](const char *i) { return !std::strcmp(ext_p, i); }))
+        return true;
 
     return false;
 }

@@ -8,7 +8,7 @@ int CTeamRoundTimer::GetSetupTimeLength()
     if (!ent || ent->GetClientClass()->m_ClassID != CL_CLASS(CTeamRoundTimer))
         return -1;
     return NET_INT(ent, netvar.m_nSetupTimeLength);
-};
+}
 
 round_states CTeamRoundTimer::GetRoundState()
 {
@@ -18,12 +18,10 @@ round_states CTeamRoundTimer::GetRoundState()
         return RT_STATE_NORMAL;
     int state = NET_INT(ent, netvar.m_nState);
     return state == 1 ? RT_STATE_NORMAL : RT_STATE_SETUP;
-};
+}
 
 void CTeamRoundTimer::Update()
 {
-    IClientEntity *ent;
-
     entity = 0;
     for (auto &ent : entity_cache::valid_ents)
     {
@@ -35,9 +33,12 @@ void CTeamRoundTimer::Update()
         }
     }
 }
+
 CTeamRoundTimer *g_pTeamRoundTimer{ nullptr };
 
-static InitRoutine init_trt([]() {
-    EC::Register(
-        EC::CreateMove, []() { g_pTeamRoundTimer->Update(); }, "update_teamroundtimer", EC::early);
-});
+static InitRoutine init_trt(
+    []()
+    {
+        EC::Register(
+            EC::CreateMove, []() { g_pTeamRoundTimer->Update(); }, "update_teamroundtimer", EC::early);
+    });

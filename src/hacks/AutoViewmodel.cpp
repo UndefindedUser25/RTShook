@@ -1,8 +1,7 @@
 #include "common.hpp"
 
-namespace hacks::tf2::autoviewmodel
+namespace hacks::autoviewmodel
 {
-
 static settings::Boolean auto_viewmodel_flipper{ "misc.auto-flip-viewmodel", "false" };
 
 void CreateMove()
@@ -62,4 +61,4 @@ void CreateMove()
 }
 
 static InitRoutine init([]() { EC::Register(EC::CreateMove, CreateMove, "viewmodel_flip_cm"); });
-} // namespace hacks::tf2::autoviewmodel
+} // namespace hacks::autoviewmodel

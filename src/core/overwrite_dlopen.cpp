@@ -13,7 +13,7 @@ void *dlopen(const char *__file, int __mode) noexcept(true)
         while (sharedobj::launcher().lmap == nullptr)
             usleep(10);
         logging::Info("Loaded Launcher symbols");
-        static uintptr_t launcher_sig      = gSignatures.GetLauncherSignature("55 89 E5 56 53 8D 9D ? ? ? ? 81 EC A0 00 00 00");
+        static uintptr_t launcher_sig      = CSignature::GetLauncherSignature("55 89 E5 56 53 8D 9D ? ? ? ? 81 EC A0 00 00 00");
         static BytePatch LauncherBytePatch = BytePatch(launcher_sig, { 0xB8, 0x01, 0x00, 0x00, 0x00, 0xC3 });
         LauncherBytePatch.Patch();
         logging::Info("Removed source lock");

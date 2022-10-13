@@ -1,8 +1,7 @@
 #include "common.hpp"
 
-namespace hacks::tf2::antianticheat
+namespace hacks::antianticheat
 {
-
 settings::Boolean enabled("misc.antianticheat.enabled", "false");
 
 // Always a good idea to spoof these
@@ -10,7 +9,7 @@ void SendNetMsg(INetMessage &msg)
 {
     if (msg.GetType() == clc_RespondCvarValue)
     {
-        CLC_RespondCvarValue *cvar_msg = (CLC_RespondCvarValue *) &msg;
+        auto *cvar_msg = (CLC_RespondCvarValue *) &msg;
         if (!cvar_msg->m_szCvarName)
             return;
         // Remove cat_ commands from cvar list
@@ -53,4 +52,4 @@ void CreateMoveLate()
 }
 
 static InitRoutine init([]() { EC::Register(EC::CreateMoveLate, CreateMoveLate, "acb_cml"); });
-} // namespace hacks::tf2::antianticheat
+} // namespace hacks::antianticheat

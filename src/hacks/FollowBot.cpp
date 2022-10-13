@@ -9,12 +9,11 @@
 #include <hacks/FollowBot.hpp>
 #include <settings/Bool.hpp>
 #include "navparser.hpp"
-#include "NavBot.hpp"
 #include "soundcache.hpp"
 #include "playerresource.h"
 #include "PlayerTools.hpp"
 
-namespace hacks::shared::followbot
+namespace hacks::followbot
 {
 static settings::Boolean enable{ "follow-bot.enable", "false" };
 static settings::Boolean roambot{ "follow-bot.roaming", "true" };
@@ -64,7 +63,7 @@ static CatCommand follow_steam("fb_steam", "Follow Steam Id",
 static CatCommand steam_debug("debug_steamid", "Print steamids",
                               []()
                               {
-                                  for (int i = 0; i <= g_IEngine->GetMaxClients(); i++)
+                                  for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
                                   {
                                       auto ent = ENTITY(i);
                                       logging::Info("%u", ent->player_info.friendsID);
@@ -115,29 +114,23 @@ static void checkAFK()
     for (int i = 1; i < g_GlobalVars->maxClients; i++)
     {
         if (soundcache::GetSoundLocation(i))
-        {
             afkTicks[i].update();
-        }
 #if ENABLE_TEXTMODE
         auto entity = ENTITY(i);
         if (CE_BAD(entity))
             continue;
         if (!CE_VECTOR(entity, netvar.vVelocity).IsZero(60.0f))
-        {
             afkTicks[i].update();
-        }
 #endif
     }
 }
 
 static void init()
 {
-    for (size_t i = 0; i < afkTicks.size(); i++)
-    {
-        afkTicks[i].update();
-    }
+    for (auto &afkTick : afkTicks)
+        afkTick.update();
+
     inited = true;
-    return;
 }
 
 // auto add checked crumbs for the walkbot to follow
@@ -149,17 +142,13 @@ static void addCrumbs(CachedEntity *target, Vector corner = g_pLocalPlayer->v_Or
         Vector dist       = corner - g_pLocalPlayer->v_Origin;
         int maxiterations = floor(corner.DistTo(g_pLocalPlayer->v_Origin)) / 40;
         for (int i = 0; i < maxiterations; i++)
-        {
             breadcrumbs.push_back(g_pLocalPlayer->v_Origin + dist / vectorMax(vectorAbs(dist)) * 40.0f * (i + 1));
-        }
     }
 
     Vector dist       = target->m_vecOrigin() - corner;
     int maxiterations = floor(corner.DistTo(target->m_vecOrigin())) / 40;
     for (int i = 0; i < maxiterations; i++)
-    {
         breadcrumbs.push_back(corner + dist / vectorMax(vectorAbs(dist)) * 40.0f * (i + 1));
-    }
 }
 
 static void addCrumbPair(CachedEntity *player1, CachedEntity *player2, std::pair<Vector, Vector> corners)
@@ -171,25 +160,19 @@ static void addCrumbPair(CachedEntity *player1, CachedEntity *player2, std::pair
         Vector dist       = corner1 - player1->m_vecOrigin();
         int maxiterations = floor(corner1.DistTo(player1->m_vecOrigin())) / 40;
         for (int i = 0; i < maxiterations; i++)
-        {
             breadcrumbs.push_back(player1->m_vecOrigin() + dist / vectorMax(vectorAbs(dist)) * 40.0f * (i + 1));
-        }
     }
     {
         Vector dist       = corner2 - corner1;
         int maxiterations = floor(corner2.DistTo(corner1)) / 40;
         for (int i = 0; i < maxiterations; i++)
-        {
             breadcrumbs.push_back(corner1 + dist / vectorMax(vectorAbs(dist)) * 40.0f * (i + 1));
-        }
     }
     {
         Vector dist       = player2->m_vecOrigin() - corner2;
         int maxiterations = floor(corner2.DistTo(player2->m_vecOrigin())) / 40;
         for (int i = 0; i < maxiterations; i++)
-        {
             breadcrumbs.push_back(corner2 + dist / vectorMax(vectorAbs(dist)) * 40.0f * (i + 1));
-        }
     }
 }
 /* Order:
@@ -446,46 +429,74 @@ static void cm()
     if (follow_target)
         isNavBotCM = false;
 
-    // If we dont have a follow target from that, we look again for someone
+    // If we don't have a follow target from that, we look again for someone
     // else who is suitable
     if (roambot && !foundPreferredTarget && (!follow_target || change || ClassPriority(ENTITY(follow_target)) < 6))
     {
         // Try to get a new target
-        auto ent_count = followcart ? HIGHEST_ENTITY : g_IEngine->GetMaxClients();
-        for (int i = 1; i <= ent_count; i++)
+        if (!followcart)
         {
-            auto entity = ENTITY(i);
-            if (!isValidTarget(entity))
-                continue;
-            if (!follow_target)
+            int ent_count = g_IEngine->GetMaxClients();
+            for (int i = 1; i <= ent_count; i++)
             {
-                if (CE_INVALID(entity))
+                auto entity = ENTITY(i);
+                if (!isValidTarget(entity))
                     continue;
-            }
-            else
-            {
-                if (CE_BAD(entity))
+                if (!follow_target)
+                {
+                    if (CE_INVALID(entity))
+                        continue;
+                }
+                else
+                {
+                    if (CE_BAD(entity))
+                        continue;
+                }
+                if (entity->m_bEnemy())
                     continue;
+                // favor closer entitys
+                if (CE_GOOD(entity))
+                {
+                    if (follow_target && ENTITY(follow_target)->m_flDistance() < entity->m_flDistance()) // favor closer entities
+                        continue;
+                    // check if new target has a higher priority than current
+                    // target
+                    if (ClassPriority(ENTITY(follow_target)) >= ClassPriority(ENTITY(i)))
+                        continue;
+                }
+                if (startFollow(entity, isNavBotCM))
+                {
+                    // ooooo, a target
+                    navinactivity.update();
+                    follow_target = i;
+                    afkTicks[i].update(); // set afk time to 03
+                    break;
+                }
             }
-            if (entity->m_bEnemy())
-                continue;
-            // favor closer entitys
-            if (CE_GOOD(entity))
+        }
+        else
+        {
+            for (auto &entity : entity_cache::valid_ents)
             {
-                if (follow_target && ENTITY(follow_target)->m_flDistance() < entity->m_flDistance()) // favor closer entitys
+                if (!isValidTarget(entity))
+                    continue;
+                if (entity->m_bEnemy())
+                    continue;
+                if (follow_target && ENTITY(follow_target)->m_flDistance() < entity->m_flDistance()) // favor closer entities
                     continue;
                 // check if new target has a higher priority than current
                 // target
-                if (ClassPriority(ENTITY(follow_target)) >= ClassPriority(ENTITY(i)))
+                if (ClassPriority(ENTITY(follow_target)) >= ClassPriority(entity))
                     continue;
-            }
-            if (startFollow(entity, isNavBotCM))
-            {
-                // ooooo, a target
-                navinactivity.update();
-                follow_target = i;
-                afkTicks[i].update(); // set afk time to 03
-                break;
+
+                if (startFollow(entity, isNavBotCM))
+                {
+                    // ooooo, a target
+                    navinactivity.update();
+                    follow_target = entity->m_IDX;
+                    afkTicks[follow_target].update(); // set afk time to 03
+                    break;
+                }
             }
         }
     }
@@ -505,7 +516,7 @@ static void cm()
         if (!navparser::NavEngine::isReady())
         {
             follow_target = 0;
-            navtarget     = 0;
+            navtarget     = false;
         }
 
         if (!CE_GOOD(ent) || !startFollow(ent, false))
@@ -516,9 +527,7 @@ static void cm()
             {
                 auto pos = ent->m_vecDormantOrigin();
                 if (!g_pPlayerResource->isAlive(ent->m_IDX))
-                {
                     follow_target = 0;
-                }
                 if (pos && navtimer.test_and_set(800))
                 {
                     if (navparser::NavEngine::navTo(*pos, Priority_list::followbot, true, false))
@@ -526,9 +535,7 @@ static void cm()
                 }
             }
             if (navinactivity.check(5000))
-            {
                 follow_target = 0;
-            }
             return;
         }
     }
@@ -580,13 +587,11 @@ static void cm()
     auto loc_orig       = LOCAL_E->m_vecOrigin();
     auto dist_to_target = loc_orig.DistTo(tar_orig);
 
-    // If the player is close enough, we dont need to follow the path
+    // If the player is close enough, we don't need to follow the path
     if ((dist_to_target < (float) follow_distance) && VisCheckEntFromEnt(LOCAL_E, followtar))
-    {
         idle_time.update();
-    }
 
-    // Prune old and close crumbs that we wont need anymore, update idle
+    // Prune old and close crumbs that we won't need anymore, update idle
     // timer too
     for (size_t i = 0; i < breadcrumbs.size(); i++)
     {
@@ -598,7 +603,7 @@ static void cm()
         }
     }
 
-    // New crumbs, we add one if its empty so we have something to follow
+    // New crumbs, we add one if its empty, so we have something to follow
     if (breadcrumbs.empty() || (tar_orig.DistTo(breadcrumbs.at(breadcrumbs.size() - 1)) > 40.0F && DistanceToGround(ENTITY(follow_target)) < 45))
         breadcrumbs.push_back(tar_orig);
 
@@ -672,15 +677,13 @@ static void cm()
                             g_IEngine->ExecuteClientCmd("slot2");
                         }
 
-                        // Else we attemt to keep our weapon mimiced with
+                        // Else we attempt to keep our weapon mimicked with
                         // our follow target
                     }
                     else
                     {
                         if (my_slot != owner_slot)
-                        {
                             g_IEngine->ExecuteClientCmd(format("slot", owner_slot + 1).c_str());
-                        }
                     }
                 }
             }
@@ -689,7 +692,7 @@ static void cm()
     }
     else
         idle_time.update();
-} // namespace hacks::shared::followbot
+}
 
 #if ENABLE_VISUALS
 static void draw()
@@ -702,9 +705,7 @@ static void draw()
     {
         Vector wts1, wts2;
         if (draw::WorldToScreen(breadcrumbs[i], wts1) && draw::WorldToScreen(breadcrumbs[i + 1], wts2))
-        {
             draw::Line(wts1.x, wts1.y, wts2.x - wts1.x, wts2.y - wts1.y, colors::white, 0.1f);
-        }
     }
     Vector wts;
     if (!draw::WorldToScreen(breadcrumbs[0], wts))
@@ -725,34 +726,30 @@ static CatCommand follow_me("fb_follow_me", "IPC connected bots will follow you"
                             {
                                 if (!ipc::peer)
                                 {
-                                    logging::Info("IPC isnt connected");
+                                    logging::Info("IPC isn't connected");
                                     return;
                                 }
                                 auto local_ent = LOCAL_E;
                                 if (!local_ent)
                                 {
-                                    logging::Info("Cant get a local player");
+                                    logging::Info("Can't get a local player");
                                     return;
                                 }
-                                player_info_s info;
+                                player_info_s info{};
                                 GetPlayerInfo(local_ent->m_IDX, &info);
                                 auto steam_id = info.friendsID;
                                 if (!steam_id)
                                 {
-                                    logging::Info("Cant get steam-id, the game module probably doesnt "
+                                    logging::Info("Can't get steam-id, the game module probably doesnt "
                                                   "support it.");
                                     return;
                                 }
                                 // Construct the command
                                 std::string tmp = CON_PREFIX + follow_steam.name + " " + std::to_string(steam_id);
                                 if (tmp.length() >= 63)
-                                {
-                                    ipc::peer->SendMessage(0, -1, ipc::commands::execute_client_cmd_long, tmp.c_str(), tmp.length() + 1);
-                                }
+                                    ipc::peer->SendMessage(nullptr, -1, ipc::commands::execute_client_cmd_long, tmp.c_str(), tmp.length() + 1);
                                 else
-                                {
-                                    ipc::peer->SendMessage(tmp.c_str(), -1, ipc::commands::execute_client_cmd, 0, 0);
-                                }
+                                    ipc::peer->SendMessage(tmp.c_str(), -1, ipc::commands::execute_client_cmd, nullptr, 0);
                             });
 #endif
 void rvarCallback(settings::VariableBase<int> &var, int after)
@@ -771,4 +768,4 @@ static InitRoutine runinit(
 #endif
         steam_var.installChangeCallback(rvarCallback);
     });
-} // namespace hacks::shared::followbot
+} // namespace hacks::followbot

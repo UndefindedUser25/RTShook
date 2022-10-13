@@ -18,7 +18,7 @@ public:
     inline static void GetProjectileFireSetup(IClientEntity *weapon, IClientEntity *pPlayer, Vector vecOffset, Vector *vecSrc, Vector *angForward, bool bHitTeammates, float flEndDist)
     {
         typedef void (*GetProjectileFireSetup_t)(IClientEntity * weapon, IClientEntity * pPlayer, Vector vecOffset, Vector * vecSrc, Vector * angForward, bool bHitTeammates, float flEndDist);
-        static auto signature                                     = gSignatures.GetClientSignature("55 89 E5 57 56 53 81 EC 9C 01 00 00 8B 75");
+        static auto signature                                     = CSignature::GetClientSignature("55 89 E5 57 56 53 81 EC 9C 01 00 00 8B 75");
         static GetProjectileFireSetup_t GetProjectileFireSetup_fn = (GetProjectileFireSetup_t) signature;
         GetProjectileFireSetup_fn(weapon, pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, flEndDist);
     }
@@ -26,14 +26,14 @@ public:
     inline static void GetProjectileFireSetupHuntsman(IClientEntity *weapon, IClientEntity *pPlayer, Vector vecOffset, Vector *vecSrc, Vector *angForward, bool bHitTeammates, float flEndDist)
     {
         typedef void (*GetProjectileFireSetupHuntsman_t)(IClientEntity * weapon, IClientEntity * pPlayer, Vector vecOffset, Vector * vecSrc, Vector * angForward, bool bHitTeammates, float flEndDist);
-        static auto signature                                                     = gSignatures.GetClientSignature("55 89 E5 56 53 83 EC 30 0F B6 45");
+        static auto signature                                                     = CSignature::GetClientSignature("55 89 E5 56 53 83 EC 30 0F B6 45");
         static GetProjectileFireSetupHuntsman_t GetProjectileFireSetupHuntsman_fn = (GetProjectileFireSetupHuntsman_t) signature;
         GetProjectileFireSetupHuntsman_fn(weapon, pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, flEndDist);
     }
     inline static Vector GetSpreadAngles(IClientEntity *self)
     {
         typedef Vector (*GetSpreadAngles_t)(IClientEntity *);
-        static auto signature                       = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 7C 8B 7D ? 8B 5D ? 89 3C 24");
+        static auto signature                       = CSignature::GetClientSignature("55 89 E5 57 56 53 83 EC 7C 8B 7D ? 8B 5D ? 89 3C 24");
         static GetSpreadAngles_t GetSpreadAngles_fn = (GetSpreadAngles_t) signature;
         return GetSpreadAngles_fn(self);
     }
@@ -85,7 +85,7 @@ public:
     inline static float ApplyFireDelay(IClientEntity *self, float delay)
     {
         typedef float (*ApplyFireDelay_t)(IClientEntity *, float);
-        static auto signature                     = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 6C C7 45 ? 00 00 00 00 A1 ? ? ? ? C7 45 ? 00 00 00 00 8B 5D ? 85 C0 0F 84 ? ? ? ? 8D 55 ? 89 04 24 31 F6 89 54 24 ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? 6B 00 00 00 C7 44 24 ? ? ? ? ? C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 FF 50 ? A1 ? ? ? ? 8B 0D ? ? ? ? 8B 55 ? 89 45 ? 8B 45 ? 85 C9 89 55 ? 89 45 ? 0F 85 ? ? ? ? 85 DB 0F 84 ? ? ? ? 8B 7B ? 85 FF 0F 84 ? ? ? ? C7 04 24 ? ? ? ? E8 ? ? ? ? 89 45 ? 8B 07 89 3C 24 FF 10 8B 7D ? 8B 10 C7 44 24 ? 00 00 00 00 89 5C 24 ? C7 44 24 ? ? ? ? ? 89 7C 24 ? 89 04 24 FF 52 ? D9 5D ? F3 0F 10 45 ? F3 0F 11 04 24 E8 ? ? ? ? D9 5D");
+        static auto signature                     = CSignature::GetClientSignature("55 89 E5 57 56 53 83 EC 6C C7 45 ? 00 00 00 00 A1 ? ? ? ? C7 45 ? 00 00 00 00 8B 5D ? 85 C0 0F 84 ? ? ? ? 8D 55 ? 89 04 24 31 F6 89 54 24 ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? 6B 00 00 00 C7 44 24 ? ? ? ? ? C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 FF 50 ? A1 ? ? ? ? 8B 0D ? ? ? ? 8B 55 ? 89 45 ? 8B 45 ? 85 C9 89 55 ? 89 45 ? 0F 85 ? ? ? ? 85 DB 0F 84 ? ? ? ? 8B 7B ? 85 FF 0F 84 ? ? ? ? C7 04 24 ? ? ? ? E8 ? ? ? ? 89 45 ? 8B 07 89 3C 24 FF 10 8B 7D ? 8B 10 C7 44 24 ? 00 00 00 00 89 5C 24 ? C7 44 24 ? ? ? ? ? 89 7C 24 ? 89 04 24 FF 52 ? D9 5D ? F3 0F 10 45 ? F3 0F 11 04 24 E8 ? ? ? ? D9 5D");
         static ApplyFireDelay_t ApplyFireDelay_fn = (ApplyFireDelay_t) signature;
         return ApplyFireDelay_fn(self, delay);
     }

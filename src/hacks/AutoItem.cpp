@@ -27,7 +27,6 @@ static settings::Int interval{ "auto-item.time", "30000" };
 // stock by default
 static settings::Boolean weapons{ "auto-item.weapons", "false" };
 static settings::Boolean autotestrun{ "auto-item.weapons.testrun", "true" };
->>>>>>> parent of eac61c9 (need still comeback.)
 static settings::String primary{ "auto-item.weapons.primary", "-1" };
 static settings::String secondary{ "auto-item.weapons.secondary", "-1" };
 static settings::String melee{ "auto-item.weapons.melee", "-1" };

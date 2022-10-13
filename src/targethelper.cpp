@@ -6,8 +6,7 @@
  */
 
 #include "common.hpp"
-//#include "hacks/Backtrack.hpp"
-#include "hacks/Aimbot.hpp"
+#include "hacks/Backtrack.hpp"
 
 /*
  * Targeting priorities:
@@ -102,11 +101,12 @@ int GetScoreForEntity(CachedEntity *entity)
     }
     if (total > 99)
         total = 99;
-    if (playerlist::AccessData(entity).state == playerlist::k_EState::RAGE || playerlist::AccessData(entity).state == playerlist::k_EState::PAZER || playerlist::AccessData(entity).state == playerlist::k_EState::ABUSE)
+    if (playerlist::AccessData(entity).state == playerlist::k_EState::RAGE)
         total = 999;
-    if (!hacks::aimbot::aim_sentrybuster && IsSentryBuster(entity))
+    if (IsSentryBuster(entity))
         total = 0;
-    if (g_pGameRules->isPVEMode && clazz == tf_medic)
+    if (clazz == tf_medic && g_pGameRules->isPVEMode)
         total = 999;
     return total;
 }
+Footer

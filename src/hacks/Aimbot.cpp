@@ -429,7 +429,7 @@ static bool allowNoScope(CachedEntity *target)
 	
 void doAutoZoom(bool target_found)
 {
-    bool isIdle = target_found ? false : hacks::shared::followbot::isIdle();
+    bool isIdle = target_found ? false : hacks::followbot::isIdle();
 
     // Keep track of our zoom time
     static Timer zoomTime{};
@@ -561,7 +561,7 @@ static void CreateMove()
 #if ENABLE_VISUALS
     if (target_entity->m_Type() == ENTITY_PLAYER)
     {
-        hacks::shared::esp::SetEntityColor(target_entity, colors::target);
+        hacks::esp::SetEntityColor(target_entity, colors::target);
     }
 #endif
 

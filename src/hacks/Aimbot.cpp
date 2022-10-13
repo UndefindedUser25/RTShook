@@ -20,7 +20,7 @@
 #include "Warp.hpp"
 #include "AntiCheatBypass.hpp"
 
-namespace hacks::shared::aimbot
+namespace hacks::aimbot
 {
 static settings::Boolean normal_enable{ "aimbot.enable", "false" };
 static settings::Button aimkey{ "aimbot.aimkey.button", "<null>" };
@@ -840,7 +840,7 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
         }
     }
     // No last_target found, reset the timer.
-    hacks::shared::aimbot::last_target_ignore_timer = 0;
+    hacks::aimbot::last_target_ignore_timer = 0;
 
     float target_highest_score, scr = 0.0f;
     CachedEntity *ent;
@@ -984,7 +984,7 @@ bool IsTargetStateGood(CachedEntity *entity)
         {
             if (g_pLocalPlayer->weapon_mode != weapon_melee)
             {
-                if (entity->m_flDistance() > EffectiveTargetingRange() && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
+                if (entity->m_flDistance() > EffectiveTargetingRange() && tickcount > hacks::aimbot::last_target_ignore_timer)
                     return false;
             }
             else
@@ -1149,7 +1149,7 @@ bool IsTargetStateGood(CachedEntity *entity)
             if (!IsVectorVisible(pos, entity->hitboxes.GetHitbox(cd.hitbox)->center, false, ENTITY(sentry)))
                 return false;
         }
-        if (fov > 0.0f && cd.fov > fov && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
+        if (fov > 0.0f && cd.fov > fov && tickcount > hacks::aimbot::last_target_ignore_timer)
             return false;
 
         return true;
@@ -1170,7 +1170,7 @@ bool IsTargetStateGood(CachedEntity *entity)
         // Distance
         if (EffectiveTargetingRange())
         {
-            if (entity->m_flDistance() > (int) EffectiveTargetingRange() && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
+            if (entity->m_flDistance() > (int) EffectiveTargetingRange() && tickcount > hacks::aimbot::last_target_ignore_timer)
                 return false;
         }
 
@@ -1206,7 +1206,7 @@ bool IsTargetStateGood(CachedEntity *entity)
             if (!IsVectorVisible(pos, GetBuildingPosition(entity), false, ENTITY(sentry)))
                 return false;
         }
-        if (fov > 0.0f && cd.fov > fov && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
+        if (fov > 0.0f && cd.fov > fov && tickcount > hacks::aimbot::last_target_ignore_timer)
             return false;
 
         return true;
@@ -1229,7 +1229,7 @@ bool IsTargetStateGood(CachedEntity *entity)
         // Distance
         if (EffectiveTargetingRange())
         {
-            if (entity->m_flDistance() > (int) EffectiveTargetingRange() && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
+            if (entity->m_flDistance() > (int) EffectiveTargetingRange() && tickcount > hacks::aimbot::last_target_ignore_timer)
                 return false;
         }
 
@@ -1238,7 +1238,7 @@ bool IsTargetStateGood(CachedEntity *entity)
 
         if (!VischeckPredictedEntity(entity))
             return false;
-        if (fov > 0.0f && cd.fov > fov && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
+        if (fov > 0.0f && cd.fov > fov && tickcount > hacks::aimbot::last_target_ignore_timer)
             return false;
         return true;
     }
@@ -1928,4 +1928,4 @@ static InitRoutine EC(
 #endif
     });
 
-} // namespace hacks::shared::aimbot
+} // namespace hacks::aimbot

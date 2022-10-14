@@ -49,7 +49,6 @@ std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox);
 float projectileHitboxSize(int projectile_size);
 int autoHitbox(CachedEntity *target);
 bool hitscanSpecialCases(CachedEntity *target_entity, int weapon_case);
-bool projectileSpecialCases(CachedEntity *target_entity, int weapon_case);
 int BestHitbox(CachedEntity *target);
 bool isHitboxMedium(int hitbox);
 int ClosestHitbox(CachedEntity *target);

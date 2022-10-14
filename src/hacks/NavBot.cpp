@@ -34,11 +34,6 @@ static settings::Int blacklist_delay("navbot.proximity-blacklist.delay", "500");
 static settings::Boolean blacklist_dormat("navbot.proximity-blacklist.dormant", "false");
 static settings::Int blacklist_delay_dormat("navbot.proximity-blacklist.delay-dormant", "1000");
 static settings::Int blacklist_slightdanger_limit("navbot.proximity-blacklist.slight-danger.amount", "2");
-<<<<<<< HEAD
-//static settings::Boolean engie_mode("navbot.engineer-mode", "true"); didnt use engineer bot anymore.
-static settings::Boolean auto_zoom_distance("aimbot.auto-zoom-distance", "false");
-static settings::Int distance("aimbot.zoom-distance", "1250");
-=======
 static settings::Boolean fat_scout_mode("navbot.fat-scout-mode", "false");
 static settings::Boolean minigun_mode("navbot.minigun-mode", "true");
 static settings::Boolean engie_mode("navbot.engineer-mode", "true");
@@ -48,7 +43,6 @@ static settings::Boolean auto_zoom_prediction{ "aimbot.auto.zoom-prediction", "f
 static settings::Float distance_spinup{ "aimbot.spinup-prediction.distance", "3000" };
 static settings::Boolean auto_spinup_prediction{ "aimbot.spinup-prediction", "false" };
 
->>>>>>> parent of 176e89a (navbot rewhite)
 #if ENABLE_VISUALS
 static settings::Boolean draw_danger("navbot.draw-danger", "false");
 #endif
@@ -1408,8 +1402,6 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
             	    return active_slot;
         	else
             	    return secondary;
-<<<<<<< HEAD
-=======
 	if (auto_spinup_prediction)
 	    if (nearest.second <= *distance_spinup)
 	    	hacks::shared::aimbot::doAutoZoom(true);
@@ -1419,7 +1411,6 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
             return active_slot;
         else
             return secondary;
->>>>>>> parent of 6bd25ee (rename hacks aimbot shared)
 	}
     case tf_medic:
 	{
@@ -1474,7 +1465,6 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
         else
             return primary;
     }
-    /*
     case tf_engineer:
     {
         if (((CE_GOOD(mySentry) && mySentry->m_flDistance() <= 300) || (CE_GOOD(myDispenser) && myDispenser->m_flDistance() <= 500)) || (current_building_spot.IsValid() && current_building_spot.DistTo(g_pLocalPlayer->v_Origin) <= 500.0f))
@@ -1490,7 +1480,7 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
             return primary;
         else
             return secondary;
-    }*/
+    }
     default:
     {
         if (nearest.second <= 400)

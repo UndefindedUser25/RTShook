@@ -74,6 +74,7 @@ static settings::Boolean backtrackVischeckAll{ "aimbot.backtrack.vischeck-all", 
 
 // TODO maybe these should be moved into "Targeting"
 static settings::Float max_range{ "aimbot.target.max-range", "4096" };
+<<<<<<< HEAD
 static settings::Boolean ignore_vaccinator{ "aimbot.target.ignore-vaccinator", "1" };
 static settings::Boolean ignore_deadringer{ "aimbot.target.ignore-deadringer", "1" };
 static settings::Boolean buildings_sentry{ "aimbot.target.sentry", "1" };
@@ -82,6 +83,17 @@ static settings::Boolean npcs{ "aimbot.target.npcs", "1" };
 static settings::Boolean stickybot{ "aimbot.target.stickybomb", "0" };
 static settings::Boolean rageonly{ "aimbot.target.ignore-non-rage", "0" };
 static settings::Boolean catonly{ "aimbot.target.ignore-non-cat", "0" };
+=======
+static settings::Boolean ignore_vaccinator{ "aimbot.target.ignore-vaccinator", "true" };
+static settings::Boolean ignore_deadringer{ "aimbot.target.ignore-deadringer", "true" };
+settings::Boolean aim_sentrybuster{ "aimbot.target.sentrybuster", "false" };
+settings::Boolean ignore_cloak{ "aimbot.target.ignore-cloaked-spies", "true" };
+static settings::Boolean buildings_sentry{ "aimbot.target.sentry", "true" };
+static settings::Boolean buildings_other{ "aimbot.target.other-buildings", "true" };
+static settings::Boolean npcs{ "aimbot.target.npcs", "true" };
+static settings::Boolean stickybot{ "aimbot.target.stickybomb", "false" };
+static settings::Boolean rageonly{ "aimbot.target.ignore-non-rage", "false" };
+>>>>>>> parent of 176e89a (navbot rewhite)
 static settings::Int teammates{ "aimbot.target.teammates", "0" };
 
 /*
@@ -949,6 +961,249 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
     return target_highest_ent;
 }
 
+<<<<<<< HEAD
+=======
+// A second check to determine whether a target is good enough to be aimed at
+bool IsTargetStateGood(CachedEntity *entity)
+{
+    PROF_SECTION(PT_aimbot_targetstatecheck)
+
+    const int current_type = entity->m_Type();
+    bool is_player         = false;
+    switch (current_type)
+    {
+    case (ENTITY_PLAYER):
+    {
+        // Local player check
+        if (entity == LOCAL_E)
+            return false;
+        // Dead
+        else if (!entity->m_bAlivePlayer())
+            return false;
+        // Teammates
+        else if (!playerTeamCheck(entity))
+            return false;
+        else if (!player_tools::shouldTarget(entity))
+            return false;
+        // Invulnerable players, ex: uber, bonk
+        else if (IsPlayerInvulnerable(entity))
+            return false;
+        // Distance
+
+        is_player             = true;
+        float targeting_range = EffectiveTargetingRange();
+        if (entity->m_flDistance() - 40 > targeting_range && tickcount > hacks::aimbot::last_target_ignore_timer) // m_flDistance includes the collision box. You have to subtract it (Should be the same for every model)
+            return false;
+
+        // Rage only check
+        if (rageonly)
+        {
+            if (playerlist::AccessData(entity).state != playerlist::k_EState::RAGE)
+                return false;
+        }
+
+        // Wait for charge
+        if (wait_for_charge && g_pLocalPlayer->holding_sniper_rifle)
+        {
+            float cdmg  = CE_FLOAT(LOCAL_W, netvar.flChargedDamage) * 3;
+            float maxhs = 450.0f;
+            if (CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 230 || HasCondition<TFCond_Jarated>(entity))
+            {
+                cdmg  = int(CE_FLOAT(LOCAL_W, netvar.flChargedDamage) * 1.35f);
+                maxhs = 203.0f;
+            }
+            bool maxCharge = cdmg >= maxhs;
+
+            // Darwins damage correction, Darwins protects against 15% of
+            // damage
+            //                if (HasDarwins(entity))
+            //                    cdmg = (cdmg * .85) - 1;
+            // Vaccinator damage correction, Vac charge protects against 75%
+            // of damage
+            if (IsPlayerInvisible(entity))
+                cdmg = (cdmg * .80) - 1;
+
+            else if (HasCondition<TFCond_UberBulletResist>(entity))
+            {
+                cdmg = (cdmg * .25) - 1;
+                // Passive bullet resist protects against 10% of damage
+            }
+            else if (HasCondition<TFCond_SmallBulletResist>(entity))
+                cdmg = (cdmg * .90) - 1;
+
+            // Invis damage correction, Invis spies get protection from 10%
+            // of damage
+
+            // Check if player will die from headshot or if target has more
+            // than 450 health and sniper has max chage
+            float hsdmg = 150.0f;
+            if (CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 230)
+                hsdmg = int(50.0f * 1.35f);
+
+            int health = entity->m_iHealth();
+            if (!(health <= hsdmg || health <= cdmg || !g_pLocalPlayer->bZoomed || (maxCharge && health > maxhs)))
+                return false;
+        }
+
+        // Some global checks
+
+        // cloaked/deadringed players
+        if (ignore_cloak || ignore_deadringer)
+        {
+            if (IsPlayerInvisible(entity))
+            {
+                // Item id for deadringer is 59 as of time of creation
+                if (HasWeapon(entity, 59))
+                {
+                    if (ignore_deadringer)
+                        return false;
+                }
+                else
+                {
+                    if (ignore_cloak && !(HasCondition<TFCond_OnFire>(entity)) && !(HasCondition<TFCond_CloakFlicker>(entity)))
+                        return false;
+                }
+            }
+        }
+        // Vaccinator
+        if (ignore_vaccinator && IsPlayerResistantToCurrentWeapon(entity))
+            return false;
+
+        AimbotCalculatedData_s &cd = calculated_data_array[entity->m_IDX];
+        cd.hitbox                  = BestHitbox(entity);
+        if (*vischeck_hitboxes && !*multipoint && is_player)
+        {
+            if (*vischeck_hitboxes == 1 && playerlist::AccessData(entity).state != playerlist::k_EState::RAGE)
+                return true;
+            else
+            {
+                int i = 0;
+                trace_t first_tracer;
+                if (IsEntityVectorVisible(entity, entity->hitboxes.GetHitbox(cd.hitbox)->center, true, MASK_SHOT_HULL, &first_tracer))
+                    return true;
+                while (i <= 17) // Prevents returning empty at all costs. Loops through every hitbox
+                {
+                    if (i == cd.hitbox && i != 17)
+                        i++;
+                    trace_t test_trace;
+                    std::vector<Vector> centered_hitbox = getHitpointsVischeck(entity, i);
+
+                    if (IsEntityVectorVisible(entity, centered_hitbox[0], true, MASK_SHOT_HULL, &test_trace))
+                    {
+                        cd.hitbox = i;
+                        return true;
+                    }
+                    i++;
+                }
+                return false; // It looped through every hitbox and found nothing. It isn't visible.
+            }
+        }
+        return true;
+        break;
+    }
+    // Check for buildings
+    case (ENTITY_BUILDING):
+    {
+        // Enabled check
+        if (!(buildings_other || buildings_sentry))
+            return false;
+        // Teammates, Even with friendly fire enabled, buildings can NOT be damaged
+        else if (!entity->m_bEnemy())
+            return false;
+        // Distance
+        else if (EffectiveTargetingRange())
+        {
+            if (entity->m_flDistance() - 40 > EffectiveTargetingRange() && tickcount > hacks::aimbot::last_target_ignore_timer)
+                return false;
+        }
+        // Building type
+        else if (!(buildings_other && buildings_sentry))
+        {
+            // Check if target is a sentrygun
+            if (entity->m_iClassID() == CL_CLASS(CObjectSentrygun))
+            {
+                if (!buildings_sentry)
+                    return false;
+                // Other
+            }
+            else
+            {
+                if (!buildings_other)
+                    return false;
+            }
+        }
+
+        // Grab the prediction var
+
+        // Vis and fov check
+        return true;
+    }
+    case (ENTITY_NPC):
+    {
+        // NPCs (Skeletons, Merasmus, etc)
+
+        // NPC targeting is disabled
+        if (!npcs)
+            return false;
+        // Cannot shoot this
+        else if (entity->m_iTeam() == LOCAL_E->m_iTeam())
+            return false;
+
+        // Distance
+        float targeting_range = EffectiveTargetingRange();
+
+        if (entity->m_flDistance() - 40 > targeting_range && tickcount > hacks::aimbot::last_target_ignore_timer)
+            return false;
+
+        // Grab the prediction var
+
+        return true;
+        break;
+    }
+    default:
+        break;
+    }
+    // Check for stickybombs
+    if (entity->m_iClassID() == CL_CLASS(CTFGrenadePipebombProjectile))
+    {
+        // Enabled
+        if (!stickybot)
+            return false;
+
+        // Only hitscan weapons can break stickys so check for them.
+        else if (!(GetWeaponMode() == weapon_hitscan || GetWeaponMode() == weapon_melee))
+            return false;
+
+        // Distance
+        float targeting_range = EffectiveTargetingRange();
+        if (entity->m_flDistance() > targeting_range)
+            return false;
+
+        // Teammates, Even with friendly fire enabled, stickies can NOT be
+        // destroyed
+        if (!entity->m_bEnemy())
+            return false;
+
+        // Check if target is a pipe bomb
+        if (CE_INT(entity, netvar.iPipeType) != 1)
+            return false;
+
+        // Moving Sticky?
+        Vector velocity;
+        velocity::EstimateAbsVelocity(RAW_ENT(entity), velocity);
+        if (!velocity.IsZero())
+            return false;
+
+        // Grab the prediction var
+
+        // Vis and fov check
+
+        return true;
+    }
+    return false;
+}
+
+>>>>>>> parent of 176e89a (navbot rewhite)
 float projectileHitboxSize(int projectile_size)
 {
     float projectile_hitbox_size = 6.3f;

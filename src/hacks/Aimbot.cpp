@@ -74,7 +74,6 @@ static settings::Boolean backtrackVischeckAll{ "aimbot.backtrack.vischeck-all", 
 
 // TODO maybe these should be moved into "Targeting"
 static settings::Float max_range{ "aimbot.target.max-range", "4096" };
-<<<<<<< HEAD
 static settings::Boolean ignore_vaccinator{ "aimbot.target.ignore-vaccinator", "1" };
 static settings::Boolean ignore_deadringer{ "aimbot.target.ignore-deadringer", "1" };
 static settings::Boolean buildings_sentry{ "aimbot.target.sentry", "1" };
@@ -83,7 +82,6 @@ static settings::Boolean npcs{ "aimbot.target.npcs", "1" };
 static settings::Boolean stickybot{ "aimbot.target.stickybomb", "0" };
 static settings::Boolean rageonly{ "aimbot.target.ignore-non-rage", "0" };
 static settings::Boolean catonly{ "aimbot.target.ignore-non-cat", "0" };
-=======
 static settings::Boolean ignore_vaccinator{ "aimbot.target.ignore-vaccinator", "true" };
 static settings::Boolean ignore_deadringer{ "aimbot.target.ignore-deadringer", "true" };
 settings::Boolean aim_sentrybuster{ "aimbot.target.sentrybuster", "false" };
@@ -93,7 +91,6 @@ static settings::Boolean buildings_other{ "aimbot.target.other-buildings", "true
 static settings::Boolean npcs{ "aimbot.target.npcs", "true" };
 static settings::Boolean stickybot{ "aimbot.target.stickybomb", "false" };
 static settings::Boolean rageonly{ "aimbot.target.ignore-non-rage", "false" };
->>>>>>> parent of 176e89a (navbot rewhite)
 static settings::Int teammates{ "aimbot.target.teammates", "0" };
 
 /*
@@ -781,17 +778,13 @@ bool ShouldAim()
         if (IsPlayerInvisible(g_pLocalPlayer->entity))
             return false;
     }
->>>>>>> parent of cb1937f (Delete reference games on my aimbot)
 #if ENABLE_VISUALS
     if (assistance_only && !MouseMoving())
         return false;
 #endif
 
-<<<<<<< HEAD
-=======
     IF_GAME(IsTF2())
     {
->>>>>>> parent of cb1937f (Delete reference games on my aimbot)
         switch (GetWeaponMode())
         {
         case weapon_hitscan:
@@ -961,8 +954,6 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
     return target_highest_ent;
 }
 
-<<<<<<< HEAD
-=======
 // A second check to determine whether a target is good enough to be aimed at
 bool IsTargetStateGood(CachedEntity *entity)
 {

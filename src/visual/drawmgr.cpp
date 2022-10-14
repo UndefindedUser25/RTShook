@@ -113,16 +113,8 @@ void DrawCheatVisuals()
         IF_GAME(IsTF2())
         {
             PROF_SECTION(DRAW_skinchanger);
-<<<<<<< HEAD
-<<<<<<< HEAD
-            hacks::skinchanger::DrawText();
-=======
             hacks::tf2::skinchanger::DrawText();
         }
->>>>>>> parent of cb1937f (Delete reference games on my aimbot)
-=======
-            hacks::tf2::skinchanger::DrawText();
->>>>>>> parent of 4d66d87 (more)
         Prediction_PaintTraverse();
     }
     {

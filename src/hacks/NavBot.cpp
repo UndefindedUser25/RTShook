@@ -37,7 +37,6 @@ static settings::Int blacklist_slightdanger_limit("navbot.proximity-blacklist.sl
 //static settings::Boolean engie_mode("navbot.engineer-mode", "true"); didnt use engineer bot anymore.
 static settings::Boolean auto_zoom_distance("aimbot.auto-zoom-distance", "false");
 static settings::Int distance("aimbot.zoom-distance", "1250");
-static settings::Boolean blacklist_dormat("navbot.proximity-blacklist.dormant", "false");
 #if ENABLE_VISUALS
 static settings::Boolean draw_danger("navbot.draw-danger", "false");
 #endif

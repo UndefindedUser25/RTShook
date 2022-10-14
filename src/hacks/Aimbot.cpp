@@ -61,6 +61,7 @@ static settings::Boolean aimbot_debug{ "aimbot.debug", "false" };
 
 static settings::Boolean auto_spin_up{ "aimbot.auto.spin-up", "false" };
 static settings::Boolean minigun_tapfire{ "aimbot.auto.tapfire", "false" };
+static settings::Boolean auto_unzoom{ "aimbot.auto.unzoom", "false" };
 static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "false" };
 
 static settings::Boolean backtrackAimbot{ "aimbot.backtrack", "false" };
@@ -543,6 +544,11 @@ static void CreateMove()
         break;
     }
     }
+
+    // Refresh our best target
+    CachedEntity *target_entity = target_last = RetrieveBestTarget(aimkey_status);
+    if (CE_BAD(target_entity))
+        return;
 
     // flNextPrimaryAttack meme
     if (only_can_shoot && g_pLocalPlayer->weapon()->m_iClassID() != CL_CLASS(CTFLaserPointer))

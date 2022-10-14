@@ -13,7 +13,7 @@
 namespace hacks::shared::antiaim
 {
 bool force_fakelag = false;
-float used_yaw     = 0.5f;
+float used_yaw     = 0.0f;
 static settings::Boolean enable{ "antiaim.enable", "false" };
 
 static settings::Boolean no_clamping{ "antiaim.no-clamp", "false" };
@@ -507,7 +507,7 @@ void ProcessUserCmd(CUserCmd *cmd)
 	case 10: // Omega
 		if (!yaw_mode)
         {
-            randyaw += RandFloatRange(-20.0f, 20.0f);
+            randyaw += RandFloatRange(-40.0f, 40.0f);
             y = randyaw;
         }
         else

@@ -79,6 +79,7 @@ static settings::Boolean buildings_other{ "aimbot.target.other-buildings", "true
 static settings::Boolean npcs{ "aimbot.target.npcs", "true" };
 static settings::Boolean stickybot{ "aimbot.target.stickybomb", "false" };
 static settings::Boolean rageonly{ "aimbot.target.ignore-non-rage", "false" };
+static settings::Boolean rageonly{ "aimbot.target.ignore-non-cat", "false" };
 static settings::Int teammates{ "aimbot.target.teammates", "0" };
 
 /*
@@ -546,7 +547,7 @@ static void CreateMove()
     // flNextPrimaryAttack meme
     if (only_can_shoot && g_pLocalPlayer->weapon()->m_iClassID() != CL_CLASS(CTFLaserPointer))
     {
-        if (p_fix && g_pLocalPlayer->weapon()->m_iClassID() != CL_CLASS(CTFMinigun))
+        if (g_pLocalPlayer->weapon()->m_iClassID() != CL_CLASS(CTFMinigun))
             DoAutoshoot();
         // Handle Huntsman
         if (g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFCompoundBow))
@@ -1017,6 +1018,13 @@ bool IsTargetStateGood(CachedEntity *entity)
         if (rageonly)
         {
             if (playerlist::AccessData(entity).state != playerlist::k_EState::RAGE)
+                return false;
+        }
+
+        // Rage only check
+        if (catonly)
+        {
+            if (playerlist::AccessData(entity).state != playerlist::k_EState::CAT)
                 return false;
         }
 

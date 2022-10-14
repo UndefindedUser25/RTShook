@@ -1545,7 +1545,7 @@ int BestHitbox(CachedEntity *target)
     case 0:
     { // AUTO priority
         int preferred = int(hitbox);
-        bool headonly = false; // Var to keep if we can bodyshot\
+        bool headonly = false; // Var to keep if we can bodyshot
             int ci    = g_pLocalPlayer->weapon()->m_iClassID();
             preferred = hitbox_t::spine_3;
 

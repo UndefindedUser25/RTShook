@@ -1489,15 +1489,6 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
             	    return active_slot;
         	else
             	    return secondary;
-	if (auto_spinup_prediction)
-	    if (nearest.second <= *distance_spinup)
-	    	hacks::aimbot::doAutoZoom(true);
-        if (nearest.second <= 150 && nearest.first->m_iHealth() < 65)
-           return melee;
-        else if (nearest.second <= 200 && nearest.first->m_iHealth() < 65)
-            return active_slot;
-        else
-            return secondary;
 	}
     case tf_medic:
 	{

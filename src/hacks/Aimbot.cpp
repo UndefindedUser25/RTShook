@@ -473,7 +473,7 @@ static void CreateMove()
 
     spectatorUpdate();
     // Adjust for AC
-    if (hacks::tf2::antianticheat::enabled)
+    if (hacks::antianticheat::enabled)
         fov = std::min(fov > 0.0f ? fov : FLT_MAX, 10.0f);
 
     if (CE_BAD(LOCAL_E) || !LOCAL_E->m_bAlivePlayer() || CE_BAD(LOCAL_W))
@@ -685,14 +685,14 @@ static void CreateMove()
 // Just hold m1 if we were aiming at something before and are in rapidfire
 static void CreateMoveWarp()
 {
-    if (hacks::tf2::warp::in_rapidfire && aimed_this_tick)
+    if (hacks::warp::in_rapidfire && aimed_this_tick)
     {
         current_user_cmd->viewangles     = viewangles_this_tick;
         g_pLocalPlayer->bUseSilentAngles = *silent;
         current_user_cmd->buttons |= IN_ATTACK;
     }
     // Warp should call aimbot normally
-    else if (!hacks::tf2::warp::in_rapidfire)
+    else if (!hacks::warp::in_rapidfire)
         CreateMove();
 }
 
@@ -733,32 +733,26 @@ bool ShouldAim()
     // Using a forbidden weapon?
     if (g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFKnife) || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 237 || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 265)
         return false;
-
-    IF_GAME(IsTF2())
-    {
-        // Carrying A building?
-        if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bCarryingObject))
+    // Carrying A building?
+    if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bCarryingObject))
+        return false;
+    // Deadringer out?
+    if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bFeignDeathReady))
+        return false;
+    // Is bonked?
+    if (HasCondition<TFCond_Bonked>(g_pLocalPlayer->entity))
+        return false;
+    // Is taunting?
+    if (HasCondition<TFCond_Taunting>(g_pLocalPlayer->entity))
+        return false;
+    // Is cloaked
+    if (IsPlayerInvisible(g_pLocalPlayer->entity))
             return false;
-        // Deadringer out?
-        if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bFeignDeathReady))
-            return false;
-        // Is bonked?
-        if (HasCondition<TFCond_Bonked>(g_pLocalPlayer->entity))
-            return false;
-        // Is taunting?
-        if (HasCondition<TFCond_Taunting>(g_pLocalPlayer->entity))
-            return false;
-        // Is cloaked
-        if (IsPlayerInvisible(g_pLocalPlayer->entity))
-            return false;
-    }
 #if ENABLE_VISUALS
     if (assistance_only && !MouseMoving())
         return false;
 #endif
 
-    IF_GAME(IsTF2())
-    {
         switch (GetWeaponMode())
         {
         case weapon_hitscan:
@@ -774,10 +768,7 @@ bool ShouldAim()
         default:
             return false;
         };
-    }
 
-    IF_GAME(IsTF())
-    {
         // Check if player is zooming
         if (g_pLocalPlayer->bZoomed)
         {
@@ -787,7 +778,6 @@ bool ShouldAim()
                     return false;
             }
         }
-    }
     return true;
 }
 
@@ -1011,8 +1001,6 @@ bool IsTargetStateGood(CachedEntity *entity)
                 return false;
             }
         }
-        IF_GAME(IsTF())
-        {
             // don't aim if holding sapper
             if (g_pLocalPlayer->holding_sapper)
                 return false;
@@ -1087,7 +1075,6 @@ bool IsTargetStateGood(CachedEntity *entity)
             // Vaccinator
             if (ignore_vaccinator && IsPlayerResistantToCurrentWeapon(entity))
                 return false;
-        }
 
         // Preform hitbox prediction
         int hitbox = BestHitbox(entity);
@@ -1425,8 +1412,6 @@ void DoAutoshoot(CachedEntity *target_entity)
     bool attack = true;
 
     // Rifle check
-    IF_GAME(IsTF())
-    {
         if (g_pLocalPlayer->clazz == tf_class::tf_sniper)
         {
             if (g_pLocalPlayer->holding_sniper_rifle)
@@ -1435,18 +1420,14 @@ void DoAutoshoot(CachedEntity *target_entity)
                     attack = false;
             }
         }
-    }
 
     // Ambassador check
-    IF_GAME(IsTF2())
-    {
         if (IsAmbassador(g_pLocalPlayer->weapon()))
         {
             // Check if ambasador can headshot
             if (!AmbassadorCanHeadshot() && wait_for_charge)
                 attack = false;
         }
-    }
 
     // Autoshoot breaks with Slow aimbot, so use a workaround to detect when it
     // can
@@ -1564,10 +1545,7 @@ int BestHitbox(CachedEntity *target)
     case 0:
     { // AUTO priority
         int preferred = int(hitbox);
-        bool headonly = false; // Var to keep if we can bodyshot
-
-        IF_GAME(IsTF())
-        {
+        bool headonly = false; // Var to keep if we can bodyshot\
             int ci    = g_pLocalPlayer->weapon()->m_iClassID();
             preferred = hitbox_t::spine_3;
 
@@ -1648,17 +1626,11 @@ int BestHitbox(CachedEntity *target)
                     headonly  = false;
                 }
             }
-        }
-        // In counter-strike source, headshots are what we want
-        else IF_GAME(IsCSS()) headonly = true;
 
         // Head only
         if (headonly)
         {
-            IF_GAME(IsTF())
             return hitbox_t::head;
-            IF_GAME(IsCSS())
-            return 12;
         }
 
         // preferred hitbox

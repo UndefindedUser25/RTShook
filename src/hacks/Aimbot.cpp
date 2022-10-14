@@ -358,13 +358,13 @@ bool shouldBacktrack(CachedEntity *ent)
         return false;
     if (ent && ent->m_Type() != ENTITY_PLAYER)
         return false;
-    if (!tf2::backtrack::getGoodTicks(ent))
+    if (!hacks::backtrack::getGoodTicks(ent))
         return false;
     return true;
 }
 
 // Reduce Backtrack lag by checking if the ticks hitboxes are within a reasonable FOV range
-bool validateTickFOV(tf2::backtrack::BacktrackData &tick)
+bool validateTickFOV(hacks::backtrack::BacktrackData &tick)
 {
     if (fov)
     {
@@ -848,7 +848,7 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
         static std::optional<hacks::backtrack::BacktrackData> temp_bt_tick = std::nullopt;
         if (shouldBacktrack(ent))
         {
-            auto good_ticks_tmp = tf2::backtrack::getGoodTicks(ent);
+            auto good_ticks_tmp = hacks::backtrack::getGoodTicks(ent);
             if (good_ticks_tmp)
             {
                 auto good_ticks = *good_ticks_tmp;

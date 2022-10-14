@@ -1,14 +1,4 @@
-/*#pragma once
-
-<<<<<<< HEAD
-namespace hacks::NavBot
-{
-extern bool isVisible;
-std::pair<CachedEntity *, float> getNearestPlayerDistance();
-} // namespace hacks::NavBot
-/*
-=======
-#include <array>
+/*#include <array>
 #include <stdint.h>
 
 namespace hacks::tf2::NavBot
@@ -80,4 +70,3 @@ struct bot_class_config
 };
 } // namespace hacks::tf2::NavBot
 */
->>>>>>> parent of 4d66d87 (more)

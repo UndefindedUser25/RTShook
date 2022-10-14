@@ -110,8 +110,15 @@ void DrawCheatVisuals()
     }
     if (CE_GOOD(g_pLocalPlayer->entity) && !g_Settings.bInvalid)
     {
+        IF_GAME(IsTF2())
+        {
             PROF_SECTION(DRAW_skinchanger);
+<<<<<<< HEAD
             hacks::skinchanger::DrawText();
+=======
+            hacks::tf2::skinchanger::DrawText();
+        }
+>>>>>>> parent of cb1937f (Delete reference games on my aimbot)
         Prediction_PaintTraverse();
     }
     {

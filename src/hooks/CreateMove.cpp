@@ -230,7 +230,7 @@ DEFINE_HOOKED_METHOD(CreateMove, bool, void *this_, float input_sample_time, CUs
 
     //	PROF_BEGIN();
     // Do not update if in warp, since the entities will stay identical either way
-    if (!hacks::warp::in_warp)
+    if (!hacks::tf2::warp::in_warp)
     {
         PROF_SECTION(EntityCache);
         entity_cache::Update();
@@ -278,7 +278,11 @@ DEFINE_HOOKED_METHOD(CreateMove, bool, void *this_, float input_sample_time, CUs
             g_pLocalPlayer->isFakeAngleCM = false;
             static int fakelag_queue      = 0;
             if (CE_GOOD(LOCAL_E))
+<<<<<<< HEAD
                 if (!hacks::nospread::is_syncing && (fakelag_amount || (hacks::antiaim::force_fakelag && hacks::antiaim::isEnabled())))
+=======
+                if (!hacks::tf2::nospread::is_syncing && (fakelag_amount || (hacks::shared::antiaim::force_fakelag && hacks::shared::antiaim::isEnabled())))
+>>>>>>> parent of 4d66d87 (more)
                 {
                     // Do not fakelag when trying to attack
                     bool do_fakelag = true;
@@ -332,7 +336,7 @@ DEFINE_HOOKED_METHOD(CreateMove, bool, void *this_, float input_sample_time, CUs
             g_pLocalPlayer->UpdateEye();
         }
 
-        if (hacks::warp::in_warp)
+        if (hacks::tf2::warp::in_warp)
             EC::run(EC::CreateMoveWarp);
         else
             EC::run(EC::CreateMove);

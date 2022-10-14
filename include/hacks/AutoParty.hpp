@@ -1,4 +1,4 @@
-namespace hacks::autoparty
+namespace hacks::tf2::autoparty
 {
 void joinMatch();
 }

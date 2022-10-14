@@ -17,7 +17,7 @@
 #include "common.hpp"
 #include "drawing.hpp"
 
-namespace hacks::explosioncircles
+namespace hacks::tf2::explosioncircles
 {
 static settings::Boolean enabled("explosionspheres.enabled", "false");
 
@@ -73,4 +73,4 @@ void draw()
 }
 
 static InitRoutine init([]() { EC::Register(EC::Draw, draw, "draw_explosioncircles"); });
-} // namespace hacks::explosioncircles
+} // namespace hacks::tf2::explosioncircles

@@ -1196,7 +1196,7 @@ std::optional<Vector> getControlPointGoal(int our_team)
     {
         overwrite_capture = true;
 	// bot need Autozoom on capturing Control points.
-	hacks::aimbot::doAutoZoom(true);
+	hacks::shared::aimbot::doAutoZoom(true);
         return std::nullopt;
     }
     else
@@ -1408,6 +1408,18 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
             	    return active_slot;
         	else
             	    return secondary;
+<<<<<<< HEAD
+=======
+	if (auto_spinup_prediction)
+	    if (nearest.second <= *distance_spinup)
+	    	hacks::shared::aimbot::doAutoZoom(true);
+        if (nearest.second <= 150 && nearest.first->m_iHealth() < 65)
+           return melee;
+        else if (nearest.second <= 200 && nearest.first->m_iHealth() < 65)
+            return active_slot;
+        else
+            return secondary;
+>>>>>>> parent of 6bd25ee (rename hacks aimbot shared)
 	}
     case tf_medic:
 	{
@@ -1429,7 +1441,7 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     {
 	if (auto_zoom_prediction)
 		if (nearest.second <= *distance)
-	    	hacks::aimbot::doAutoZoom(true);
+	    	hacks::shared::aimbot::doAutoZoom(true);
 
         if (nearest.second <= 250)
             return melee;

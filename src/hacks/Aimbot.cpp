@@ -79,7 +79,7 @@ static settings::Boolean buildings_other{ "aimbot.target.other-buildings", "true
 static settings::Boolean npcs{ "aimbot.target.npcs", "true" };
 static settings::Boolean stickybot{ "aimbot.target.stickybomb", "false" };
 static settings::Boolean rageonly{ "aimbot.target.ignore-non-rage", "false" };
-static settings::Boolean rageonly{ "aimbot.target.ignore-non-cat", "false" };
+static settings::Boolean catonly{ "aimbot.target.ignore-non-cat", "false" };
 static settings::Int teammates{ "aimbot.target.teammates", "0" };
 
 /*

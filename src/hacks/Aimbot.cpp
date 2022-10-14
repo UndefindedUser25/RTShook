@@ -533,13 +533,6 @@ static void CreateMove()
                 cur_proj_grav = *proj_gravity;
             if (proj_start_vel)
                 cur_proj_start_vel = *proj_start_vel;
-            target_last = RetrieveBestTarget(aimkey_status);
-            if (target_last)
-            {
-                int weapon_case = g_pLocalPlayer->weapon()->m_iClassID();
-                if (projectileSpecialCases(target_last, weapon_case))
-                    DoAutoshoot(target_last);
-            }
         }
         break;
     }

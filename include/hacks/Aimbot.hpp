@@ -39,6 +39,7 @@ void Reset();
 // Stuff to make storing functions easy
 bool isAiming();
 CachedEntity *CurrentTarget();
+void doAutoZoom(bool target_found, CachedEntity *target)
 bool ShouldAim();
 CachedEntity *RetrieveBestTarget(bool aimkey_state);
 bool IsTargetStateGood(CachedEntity *entity);

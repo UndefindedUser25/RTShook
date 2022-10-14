@@ -583,7 +583,7 @@ static void CreateMove()
                 if (wait_for_charge)
                 {
                     // Shoot when a straight shot would result in only 100ms left on fuse upon target hit
-                    float best_charge = PredictEntity(target_entity, false).DistTo(g_pLocalPlayer->v_Eye) / cur_proj_speed + 0.1;
+                    float best_charge = PredictEntity(target_entity).DistTo(g_pLocalPlayer->v_Eye) / cur_proj_speed + 0.1;
                     if (detonate_time - g_GlobalVars->curtime <= best_charge)
                         release = true;
                 }

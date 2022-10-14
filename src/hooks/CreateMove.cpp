@@ -273,7 +273,7 @@ DEFINE_HOOKED_METHOD(CreateMove, bool, void *this_, float input_sample_time, CUs
             g_pLocalPlayer->isFakeAngleCM = false;
             static int fakelag_queue      = 0;
             if (CE_GOOD(LOCAL_E))
-                if (!hacks::nospread::is_syncing && (fakelag_amount || (hacks::shared::antiaim::force_fakelag && hacks::shared::antiaim::isEnabled())))
+                if (!hacks::nospread::is_syncing && (fakelag_amount || (hacks::antiaim::force_fakelag && hacks::antiaim::isEnabled())))
                 {
                     // Do not fakelag when trying to attack
                     bool do_fakelag = true;
@@ -311,7 +311,7 @@ DEFINE_HOOKED_METHOD(CreateMove, bool, void *this_, float input_sample_time, CUs
                 }
             {
                 PROF_SECTION(CM_antiaim);
-                hacks::shared::antiaim::ProcessUserCmd(cmd);
+                hacks::antiaim::ProcessUserCmd(cmd);
             }
             if (debug_projectiles)
                 projectile_logging::Update();

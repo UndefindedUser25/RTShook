@@ -1510,7 +1510,7 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     {
 	if (auto_zoom_distance)
 		if (nearest.second <= *distance)
-	    	hacks::aimbot::doAutoZoom(true);
+	    	hacks::aimbot::doAutoZoom(true, nullptr);
 
         if (nearest.second <= 250)
             return melee;

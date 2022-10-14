@@ -421,7 +421,6 @@ void doAutoZoom(bool target_found, CachedEntity *target)
         return;
     }
 
-    auto nearest = hacks::NavBot::getNearestPlayerDistance();
     if (!allowNoScope(target) && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle))
     {
         if (target_found)

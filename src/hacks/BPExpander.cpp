@@ -18,7 +18,7 @@ DEFINE_HOOKED_METHOD(GetMaxItemCount, int, int *)
 } // namespace hooked_methods
 
 static Timer hook_cooldown{};
-namespace hacks::backpack_expander
+namespace hacks::tf2::backpack_expander
 {
 
 void Paint()
@@ -41,19 +41,15 @@ void Paint()
     }
 }
 
-static InitRoutine init(
-    []()
-    {
+static InitRoutine init([]() {
 #if !ENFORCE_STREAM_SAFETY
-        EC::Register(EC::Paint, Paint, "bpexpander_paint");
-        EC::Register(
-            EC::Shutdown, []() { hooks::inventory.Release(); }, "backpack_expander_shutdown");
-        enabled.installChangeCallback(
-            [](settings::VariableBase<bool> &, bool after)
-            {
-                if (!after)
-                    hooks::inventory.Release();
-            });
-#endif
+    EC::Register(EC::Paint, Paint, "bpexpander_paint");
+    EC::Register(
+        EC::Shutdown, []() { hooks::inventory.Release(); }, "backpack_expander_shutdown");
+    enabled.installChangeCallback([](settings::VariableBase<bool> &, bool after) {
+        if (!after)
+            hooks::inventory.Release();
     });
-} // namespace hacks::backpack_expander
+#endif
+});
+} // namespace hacks::tf2::backpack_expander

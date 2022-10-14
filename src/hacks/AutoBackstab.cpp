@@ -7,12 +7,13 @@
 
 #include "common.hpp"
 #include "PlayerTools.hpp"
+#include "Trigger.hpp"
 #include "Backtrack.hpp"
 #include "conditions.hpp"
 #include "helpers.hpp"
 #include "DetourHook.hpp"
 
-namespace hacks::autobackstab
+namespace hacks::tf2::autobackstab
 {
 static settings::Boolean enabled("autobackstab.enabled", "false");
 static settings::Boolean decrease_range("autobackstab.decrease-range", "false");
@@ -25,7 +26,7 @@ int GetSwingRange_hook(IClientEntity *_this)
 {
     float return_val = ((GetSwingRange_o) melee_range_hook.GetOriginalFunc())(_this);
     if (decrease_range)
-        return_val *= 0.5f;
+        return_val *= 0.35f;
     melee_range_hook.RestorePatch();
     return return_val;
 }
@@ -75,12 +76,12 @@ bool doMovedSwingTrace(CachedEntity *target, Vector new_target_origin)
     uintptr_t collisionprop = (uintptr_t) RAW_ENT(target) + netvar.m_Collision;
 
     typedef void (*MarkSurroundingBoundsDirty_t)(uintptr_t prop);
-    static auto sig_mark                                              = CSignature::GetClientSignature("55 89 E5 56 53 83 EC 10 8B 5D ? 8B 43 ? 81 88 ? ? ? ? 00 40 00 00");
-    static auto MarkSurroundingBoundsDirty_fn = (MarkSurroundingBoundsDirty_t) sig_mark;
+    static auto sig_mark                                              = gSignatures.GetClientSignature("55 89 E5 56 53 83 EC 10 8B 5D ? 8B 43 ? 81 88 ? ? ? ? 00 40 00 00");
+    static MarkSurroundingBoundsDirty_t MarkSurroundingBoundsDirty_fn = (MarkSurroundingBoundsDirty_t) sig_mark;
 
     typedef void (*UpdateParition_t)(uintptr_t prop);
-    static auto sig_update                     = CSignature::GetClientSignature("55 89 E5 57 56 53 83 EC 3C 8B 5D ? 8B 43 ? 8B 90");
-    static auto UpdatePartition_fn = (UpdateParition_t) sig_update;
+    static auto sig_update                     = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 3C 8B 5D ? 8B 43 ? 8B 90");
+    static UpdateParition_t UpdatePartition_fn = (UpdateParition_t) sig_update;
 
     // Mark for update
     MarkSurroundingBoundsDirty_fn(collisionprop);
@@ -106,7 +107,7 @@ bool doMovedSwingTrace(CachedEntity *target, Vector new_target_origin)
 int ClosestDistanceHitbox(CachedEntity *target)
 {
     int closest        = -1;
-    float closest_dist = FLT_MAX, dist;
+    float closest_dist = FLT_MAX, dist = 0.0f;
     for (int i = pelvis; i < spine_3; i++)
     {
         auto hitbox = target->hitboxes.GetHitbox(i);
@@ -121,10 +122,10 @@ int ClosestDistanceHitbox(CachedEntity *target)
     }
     return closest;
 }
-int ClosestDistanceHitbox(hacks::backtrack::BacktrackData btd)
+int ClosestDistanceHitbox(hacks::tf2::backtrack::BacktrackData btd)
 {
     int closest        = -1;
-    float closest_dist = FLT_MAX, dist;
+    float closest_dist = FLT_MAX, dist = 0.0f;
     for (int i = pelvis; i < spine_3; i++)
     {
         dist = g_pLocalPlayer->v_Eye.DistTo(btd.hitboxes.at(i).center);
@@ -320,7 +321,7 @@ static bool doRageBackstab()
 static bool legit_stab = false;
 static Vector newangle_apply;
 
-bool IsTickGood(const hacks::backtrack::BacktrackData &tick)
+bool IsTickGood(hacks::tf2::backtrack::BacktrackData tick)
 {
     CachedEntity *ent = ENTITY(tick.entidx);
     Vector target_vec = tick.m_vecOrigin;
@@ -335,7 +336,7 @@ bool IsTickGood(const hacks::backtrack::BacktrackData &tick)
     if (!angleCheck(ent, target_worldspace, angle))
         return false;
 
-    trace_t();
+    trace_t trace;
     if (doMovedSwingTrace(ent, target_vec))
     {
         newangle_apply = angle;
@@ -348,7 +349,7 @@ bool IsTickGood(const hacks::backtrack::BacktrackData &tick)
 static bool doBacktrackStab(bool legit = false)
 {
     CachedEntity *stab_ent = nullptr;
-    hacks::backtrack::BacktrackData stab_data;
+    hacks::tf2::backtrack::BacktrackData stab_data;
     // Set for our filter
     legit_stab = legit;
     // Get the Best tick
@@ -362,7 +363,7 @@ static bool doBacktrackStab(bool legit = false)
         if (CE_BAD(ent) || !ent->m_bAlivePlayer() || !ent->m_bEnemy() || !player_tools::shouldTarget(ent) || IsPlayerInvulnerable(ent))
             continue;
 
-        auto good_ticks = hacks::backtrack::getGoodTicks(ent);
+        auto good_ticks = hacks::tf2::backtrack::getGoodTicks(ent);
         if (good_ticks)
             for (auto &bt_tick : *good_ticks)
             {
@@ -379,7 +380,7 @@ static bool doBacktrackStab(bool legit = false)
     // We found a good ent
     if (stab_ent)
     {
-        hacks::backtrack::MoveToTick(stab_data);
+        hacks::tf2::backtrack::MoveToTick(stab_data);
         current_user_cmd->buttons |= IN_ATTACK;
         current_user_cmd->viewangles     = newangle_apply;
         g_pLocalPlayer->bUseSilentAngles = true;
@@ -417,7 +418,7 @@ void CreateMove()
     case 2:
         if (shouldBacktrack)
         {
-            if (*hacks::backtrack::latency <= 190 && doRageBackstab())
+            if (*hacks::tf2::backtrack::latency <= 190 && doRageBackstab())
                 break;
             doBacktrackStab(false);
         }
@@ -429,7 +430,7 @@ void CreateMove()
     case 3:
         if (shouldBacktrack)
         {
-            if (*hacks::backtrack::latency <= 190 && doLegitBackstab())
+            if (*hacks::tf2::backtrack::latency <= 190 && doLegitBackstab())
                 break;
             doBacktrackStab(true);
         }
@@ -449,4 +450,4 @@ static InitRoutine EC(
         EC::Register(EC::CreateMove, CreateMove, "autobackstab", EC::average);
         EC::Register(EC::CreateMoveWarp, CreateMove, "autobackstab_w", EC::average);
     });
-} // namespace hacks::autobackstab
+} // namespace hacks::tf2::autobackstab

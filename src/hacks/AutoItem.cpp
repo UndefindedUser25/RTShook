@@ -1,16 +1,13 @@
 /*
     This file is part of Cathook.
-
     Cathook is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
     Cathook is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with Cathook. If not, see <https://www.gnu.org/licenses/>.
 */
@@ -19,17 +16,21 @@
 
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
-#include <utility>
 #include "common.hpp"
 
-namespace hacks::autoitem
+namespace hacks::tf2::autoitem
 {
+
 static settings::Boolean enable{ "auto-item.enable", "false" };
 static settings::Int interval{ "auto-item.time", "30000" };
 
 // stock by default
 static settings::Boolean weapons{ "auto-item.weapons", "false" };
+<<<<<<< HEAD
 static settings::Boolean autotestrun{ "auto-item.weapons.testrun", "false" };
+=======
+static settings::Boolean autotestrun{ "auto-item.weapons.testrun", "true" };
+>>>>>>> parent of 5c6b7f9 (ReWhite Anythings [based form Bintr])
 static settings::String primary{ "auto-item.weapons.primary", "-1" };
 static settings::String secondary{ "auto-item.weapons.secondary", "-1" };
 static settings::String melee{ "auto-item.weapons.melee", "-1" };
@@ -46,17 +47,20 @@ static settings::Boolean debug{ "auto-item.debug", "false" };
     if (*debug)    \
     logging::Info("AutoItem.cpp: " __VA_ARGS__)
 
+#if ENABLE_TEXTMODE
+static settings::Boolean autoNoisemaker{ "misc.auto-noisemaker", "true" };
+#else
 static settings::Boolean autoNoisemaker{ "misc.auto-noisemaker", "false" };
-
-static const int unequip_id = -1;
+#endif
 
 // 536 is Birthday noisemaker
 // 673 is Christmas noisemaker
+// 542 is vuvuzela noisemaker
 static int noisemaker_id = 536;
 
 struct AchivementItem
 {
-    int achievement_id{};
+    int achievement_id;
     std::string name;
 };
 
@@ -360,9 +364,9 @@ void CreateMove()
             offset = (offset + 1) % 3;
         }
         if (autoNoisemaker && inv->GetFirstItemOfItemDef(noisemaker_id))
+        {
             equipItem(clazz, 9, noisemaker_id, false, false);
-        else // Unequip the noisemaker if we're not using it
-            equipItem(clazz, 9, unequip_id, false, false);
+        }
     }
 }
 
@@ -468,9 +472,9 @@ void rvarCallback(std::string after, int idx)
 static InitRoutine init(
     []()
     {
-        primary.installChangeCallback([](settings::VariableBase<std::string> &, std::string after) { rvarCallback(std::move(after), 0); });
-        secondary.installChangeCallback([](settings::VariableBase<std::string> &, std::string after) { rvarCallback(std::move(after), 1); });
-        melee.installChangeCallback([](settings::VariableBase<std::string> &, std::string after) { rvarCallback(std::move(after), 2); });
+        primary.installChangeCallback([](settings::VariableBase<std::string> &, std::string after) { rvarCallback(after, 0); });
+        secondary.installChangeCallback([](settings::VariableBase<std::string> &, std::string after) { rvarCallback(after, 1); });
+        melee.installChangeCallback([](settings::VariableBase<std::string> &, std::string after) { rvarCallback(after, 2); });
 
         EC::Register(EC::CreateMove, CreateMove, "autoitem_cm");
 
@@ -480,7 +484,7 @@ static InitRoutine init(
         int day   = aTime->tm_mday;
         int month = aTime->tm_mon + 1; // Month is 0 - 11, add 1 to get a jan-dec 1-12 concept
 
-        // We only want to Use the Christmas noisemaker around Christmastime, let's use 12th of december+ til 12th of january
+        // We only want to Use the christmas noisemaker around christmas time, let's use 12th of december+ til 12th of january
         if ((month == 12 && day >= 12) || (month == 1 && day <= 12))
             noisemaker_id = 673;
 
@@ -528,4 +532,4 @@ static InitRoutine init(
         ach_items[1170] = { 166, "TF_PASS_TIME_HAT" };                    // PASS Time Miniature Half JACK - Tune Merasmus's Multi-Dimensional Television
         ach_items[267]  = { 1909, "TF_HALLOWEEN_BOSS_KILL_MELEE" };       // Haunted Metal Scrap - Gored!
     });
-} // namespace hacks::autoitem
+} // namespace hacks::tf2::autoitem

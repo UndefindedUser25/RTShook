@@ -10,6 +10,7 @@
 
 namespace sconvar
 {
+
 std::vector<SpoofedConVar *> convars;
 
 SpoofedConVar::SpoofedConVar(ConVar *var) : original(var)
@@ -21,25 +22,23 @@ SpoofedConVar::SpoofedConVar(ConVar *var) : original(var)
         return;
     var->m_pszName = s_name;
     var->m_nFlags  = 0;
-    auto *svar     = new ConVar(name, var->m_pszDefaultValue, flags, var->m_pszHelpString, var->m_bHasMin, var->m_fMinVal, var->m_bHasMax, var->m_fMaxVal, var->m_fnChangeCallback);
+    ConVar *svar   = new ConVar(name, var->m_pszDefaultValue, flags, var->m_pszHelpString, var->m_bHasMin, var->m_fMinVal, var->m_bHasMax, var->m_fMaxVal, var->m_fnChangeCallback);
     g_ICvar->RegisterConCommand(svar);
     spoof = svar;
 }
 
-CatCommand spoof_convar("spoof", "Spoof ConVar",
-                        [](const CCommand &args)
-                        {
-                            if (args.ArgC() < 2)
-                            {
-                                logging::Info("Invalid call");
-                                return;
-                            }
-                            ConVar *var = g_ICvar->FindVar(args.Arg(1));
-                            if (!var)
-                            {
-                                logging::Info("Not found");
-                                return;
-                            }
-                            convars.push_back(new SpoofedConVar(var));
-                        });
+CatCommand spoof_convar("spoof", "Spoof ConVar", [](const CCommand &args) {
+    if (args.ArgC() < 2)
+    {
+        logging::Info("Invalid call");
+        return;
+    }
+    ConVar *var = g_ICvar->FindVar(args.Arg(1));
+    if (!var)
+    {
+        logging::Info("Not found");
+        return;
+    }
+    convars.push_back(new SpoofedConVar(var));
+});
 } // namespace sconvar

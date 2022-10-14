@@ -22,12 +22,13 @@ static settings::Boolean event_team{ "chat.log-events.team", "true" };
 static settings::Boolean event_death{ "chat.log-events.death", "true" };
 static settings::Boolean event_spawn{ "chat.log-events.spawn", "true" };
 static settings::Boolean event_changeclass{ "chat.log-events.changeclass", "true" };
+static settings::Boolean event_vote{ "chat.log-events.vote", "false" };
 static settings::Boolean debug_events{ "debug.log-events", "false" };
 static settings::String debug_name{ "debug.log-events.name", "" };
 
 static void handlePlayerConnectClient(KeyValues *kv)
 {
-    PrintChat("\x07%06X%s\x01 has joined the game", 0xe1ad01, kv->GetString("name"));
+    PrintChat("Player \x07%06X%s\x01 \x07%06X%s\x01 Joining the server.", 0xa06ba0, kv->GetString("name"), 0x914e65, kv->GetString("networkid"));
 }
 
 static void handlePlayerActivate(KeyValues *kv)
@@ -36,7 +37,7 @@ static void handlePlayerActivate(KeyValues *kv)
     int entity = GetPlayerForUserID(uid);
     player_info_s info{};
     if (GetPlayerInfo(entity, &info))
-        PrintChat("\x07%06X%s\x01 has connected", 0xe1ad01, info.name);
+        PrintChat("Player \x07%06X%s\x01 \x07%06X%s\x01 Connected The server.", 0xa06ba0, info.name, 0x914e65, kv->GetString("networkid"));
 }
 
 static void handlePlayerDisconnect(KeyValues *kv)
@@ -44,7 +45,7 @@ static void handlePlayerDisconnect(KeyValues *kv)
     CachedEntity *player = ENTITY(GetPlayerForUserID(kv->GetInt("userid")));
     if (player == nullptr || RAW_ENT(player) == nullptr)
         return;
-    PrintChat("\x07%06X%s\x01 disconnected", 0xe1ad01, kv->GetString("name"));
+    PrintChat("Player \x07%06X%s\x01 \x07%06X%s\x01 Disconnected", colors::chat::team(player->m_iTeam()), kv->GetString("name"), 0x914e65, kv->GetString("networkid"));
 }
 
 static void handlePlayerTeam(KeyValues *kv)
@@ -56,9 +57,9 @@ static void handlePlayerTeam(KeyValues *kv)
     int nteam           = kv->GetInt("team");
     const char *oteam_s = teamname(oteam);
     const char *nteam_s = teamname(nteam);
-    PrintChat("\x07%06X%s\x01 changed teams from \x07%06X%s\x01 to "
-              "\x07%06X%s\x01",
-              0xe1ad01, kv->GetString("name"), colors::chat::team(oteam), oteam_s, colors::chat::team(nteam), nteam_s);
+    PrintChat("\x07%06X%s\x01 changed team (\x07%06X%s\x01 -> "
+              "\x07%06X%s\x01)",
+              0xa06ba0, kv->GetString("name"), colors::chat::team(oteam), oteam_s, colors::chat::team(nteam), nteam_s);
 }
 
 static void handlePlayerHurt(KeyValues *kv)
@@ -105,21 +106,33 @@ static void handlePlayerSpawn(KeyValues *kv)
     CachedEntity *player = ENTITY(GetPlayerForUserID(id));
     if (player == nullptr || RAW_ENT(player) == nullptr)
         return;
-    PrintChat("\x07%06X%s\x01 (re)spawned", colors::chat::team(player->m_iTeam()), info.name);
+    PrintChat("Player \x07%06X%s\x01 Respawned.", colors::chat::team(player->m_iTeam()), info.name);
 }
 
 static void handlePlayerChangeClass(KeyValues *kv)
 {
     int id = kv->GetInt("userid");
+    if (id > PLAYER_ARRAY_SIZE || id < 0)
+        return;
     player_info_s info{};
     if (!GetPlayerInfo(GetPlayerForUserID(id), &info))
         return;
     CachedEntity *player = ENTITY(GetPlayerForUserID(id));
     if (player == nullptr || RAW_ENT(player) == nullptr)
         return;
-    PrintChat("Player \"\x07%06X%s\x01\" changed class to %s", 0xe1ad01, info.name, classname(kv->GetInt("class")));
+    PrintChat("Player \x07%06X%s\x01 changed class to \x07%06X%s\x01", colors::chat::team(player->m_iTeam()), info.name, 0xa06ba0, classname(kv->GetInt("class")));
 }
 
+static void handleVoteCast(KeyValues *kv)
+{
+    int vote_option = kv->GetInt("vote_option");
+    int team        = kv->GetInt("team");
+    int idx         = kv->GetInt("entityid");
+    player_info_s info{};
+    const char *team_s = teamname(team);
+    if (GetPlayerInfo(idx, &info))
+        PrintChat("Player \x07%06X%s\x01 Voted \x07%06X%d\x01 on team \x07%06X%s\x01", colors::chat::team(team), info.name, colors::chat::team(team), vote_option, colors::chat::team(team), team_s);
+}
 std::vector<KeyValues *> Iterate(KeyValues *event, int depth)
 {
     std::vector<KeyValues *> peer_list = { event };
@@ -218,22 +231,24 @@ public:
         if (!enable)
             return;
         const char *name = event->GetName();
-        if (event_connect && !strcmp(name, "player_connect_client"))
+        if (!strcmp(name, "player_connect_client") && event_connect)
             handlePlayerConnectClient(event);
-        else if (event_activate && !strcmp(name, "player_activate"))
+        else if (!strcmp(name, "player_activate") && event_activate)
             handlePlayerActivate(event);
-        else if (event_disconnect && !strcmp(name, "player_disconnect"))
+        else if (!strcmp(name, "player_disconnect") && event_disconnect)
             handlePlayerDisconnect(event);
-        else if (event_team && !strcmp(name, "player_team"))
+        else if (!strcmp(name, "player_team") && event_team)
             handlePlayerTeam(event);
-        else if (event_hurt && !strcmp(name, "player_hurt"))
+        else if (!strcmp(name, "player_hurt") && event_hurt)
             handlePlayerHurt(event);
-        else if (event_death && !strcmp(name, "player_death"))
+        else if (!strcmp(name, "player_death") && event_death)
             handlePlayerDeath(event);
-        else if (event_spawn && !strcmp(name, "player_spawn"))
+        else if (!strcmp(name, "player_spawn") && event_spawn)
             handlePlayerSpawn(event);
-        else if (event_changeclass && !strcmp(name, "player_changeclass"))
+        else if (!strcmp(name, "player_changeclass") && event_changeclass)
             handlePlayerChangeClass(event);
+        else if (!strcmp(name, "vote_cast") && event_vote)
+            handleVoteCast(event);
     }
 };
 

@@ -8,12 +8,10 @@
 #include "common.hpp"
 #include "AntiAim.hpp"
 
-CatCommand printfov("fov_print", "Dump achievements to file (development)",
-                    []()
-                    {
-                        if (CE_GOOD(LOCAL_E))
-                            logging::Info("%d", CE_INT(LOCAL_E, netvar.iFOV));
-                    });
+CatCommand printfov("fov_print", "Dump achievements to file (development)", []() {
+    if (CE_GOOD(LOCAL_E))
+        logging::Info("%d", CE_INT(LOCAL_E, netvar.iFOV));
+});
 weaponmode GetWeaponModeloc()
 {
     int weapon_handle, slot;
@@ -102,45 +100,19 @@ void LocalPlayer::Update()
     if (CE_GOOD(wep))
     {
         weapon_mode = GetWeaponModeloc();
-        switch (wep->m_iClassID())
-        {
-        case CL_CLASS(CTFSniperRifle):
-        case CL_CLASS(CTFSniperRifleDecap):
-        {
+        if (wep->m_iClassID() == CL_CLASS(CTFSniperRifle) || wep->m_iClassID() == CL_CLASS(CTFSniperRifleDecap))
             holding_sniper_rifle = true;
-            break;
-        }
-        case CL_CLASS(CTFWeaponBuilder):
-        case CL_CLASS(CTFWeaponSapper):
-        {
+        else if (wep->m_iClassID() == CL_CLASS(CTFWeaponBuilder) || wep->m_iClassID() == CL_CLASS(CTFWeaponSapper))
             holding_sapper = true;
-            break;
-        }
-        case CL_CLASS(CTFMinigun):
+        else if (wep->m_iClassID() == CL_CLASS(CTFMinigun))
         {
-            switch (CE_INT(LOCAL_W, netvar.iWeaponState))
-            {
-            case 1:
-            case 2:
-            {
+            if (CE_INT(LOCAL_W, netvar.iWeaponState) == 2 || CE_INT(LOCAL_W, netvar.iWeaponState) == 1)
                 bRevving = true;
-                break;
-            }
-            case 3:
-            {
+            else if (CE_INT(LOCAL_W, netvar.iWeaponState) == 3)
                 bRevved = true;
-                break;
-            }
-            default:
-                break;
-            }
-            break;
-        }
-        default:
-            break;
         }
         // Detect when a melee hit will result in damage, useful for aimbot and antiaim
-        if (weapon_mode == weapon_melee && CE_FLOAT(wep, netvar.flNextPrimaryAttack) > SERVER_TIME)
+        if (CE_FLOAT(wep, netvar.flNextPrimaryAttack) > g_GlobalVars->curtime && weapon_mode == weapon_melee)
         {
             if (melee_damagetick == tickcount)
             {
@@ -181,21 +153,18 @@ void LocalPlayer::Update()
         {
             // Assign the for loops tick number to an ent
             CachedEntity *ent = ENTITY(i);
-            player_info_s info{};
-            if (!CE_BAD(ent) && ent != LOCAL_E && ent->m_Type() == ENTITY_PLAYER && (CE_INT(ent, netvar.hObserverTarget) & 0xFFF) == LOCAL_E->m_IDX && GetPlayerInfo(i, &info))
+            if (!CE_BAD(ent) && (CE_INT(ent, netvar.hObserverTarget) & 0xFFF) == LOCAL_E->m_IDX)
             {
-                switch (CE_INT(ent, netvar.iObserverMode))
-                {
-                default:
-                {
-                    spectator_state = ANY;
-                    break;
-                }
-                case OBS_MODE_IN_EYE:
+                auto mode = CE_INT(ent, netvar.iObserverMode);
+                if (mode == 4)
                 {
                     spectator_state = FIRSTPERSON;
-                    break;
+                    // FIRSTPERSON is the "worst" state, exit
+                    return;
                 }
+                if (mode == 5)
+                {
+                    spectator_state = THIRDPERSON;
                 }
             }
         }
@@ -219,12 +188,12 @@ CachedEntity *LocalPlayer::weapon()
     int handle, eid;
 
     if (CE_BAD(entity))
-        return nullptr;
+        return 0;
     handle = CE_INT(entity, netvar.hActiveWeapon);
     eid    = handle & 0xFFF;
     if (IDX_BAD(eid))
-        return nullptr;
+        return 0;
     return ENTITY(eid);
 }
 
-LocalPlayer *g_pLocalPlayer = nullptr;
+LocalPlayer *g_pLocalPlayer = 0;

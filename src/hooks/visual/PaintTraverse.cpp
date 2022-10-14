@@ -20,22 +20,18 @@ extern settings::Boolean minecraftHP;
 }
 int spamdur = 0;
 Timer joinspam{};
-CatCommand join_spam("join_spam", "Spam joins server for X seconds",
-                     [](const CCommand &args)
-                     {
-                         if (args.ArgC() < 2)
-                             return;
-                         int id = atoi(args.Arg(1));
-                         joinspam.update();
-                         spamdur = id;
-                     });
-CatCommand join("mm_join", "Join mm Match",
-                []()
-                {
-                    auto gc = re::CTFGCClientSystem::GTFGCClientSystem();
-                    if (gc)
-                        gc->JoinMMMatch();
-                });
+CatCommand join_spam("join_spam", "Spam joins server for X seconds", [](const CCommand &args) {
+    if (args.ArgC() < 2)
+        return;
+    int id = atoi(args.Arg(1));
+    joinspam.update();
+    spamdur = id;
+});
+CatCommand join("mm_join", "Join mm Match", []() {
+    auto gc = re::CTFGCClientSystem::GTFGCClientSystem();
+    if (gc)
+        gc->JoinMMMatch();
+});
 
 bool replaced = false;
 namespace hooked_methods
@@ -79,12 +75,12 @@ DEFINE_HOOKED_METHOD(PaintTraverse, void, vgui::IPanel *this_, vgui::VPANEL pane
     switcherido = !switcherido;
     if (no_reportlimit && !replaced)
     {
-        static BytePatch no_report_limit(CSignature::GetClientSignature, "55 89 E5 57 56 53 81 EC ? ? ? ? 8B 5D ? 8B 7D ? 89 D8", 0x75, { 0xB8, 0x01, 0x00, 0x00, 0x00 });
+        static BytePatch no_report_limit(gSignatures.GetClientSignature, "55 89 E5 57 56 53 81 EC ? ? ? ? 8B 5D ? 8B 7D ? 89 D8", 0x75, { 0xB8, 0x01, 0x00, 0x00, 0x00 });
         no_report_limit.Patch();
         replaced = true;
     }
     call_default = true;
-    if (isHackActive() && (health_panel || panel_scope || motd_panel || motd_panel_sd) && ((panel == health_panel && mchealthbar::minecraftHP) || (hacks::catbot::catbotmode && hacks::catbot::anti_motd && (panel == motd_panel || panel == motd_panel_sd))))
+    if (isHackActive() && (health_panel || panel_scope || motd_panel || motd_panel_sd) && ((panel == health_panel && mchealthbar::minecraftHP) || (hacks::shared::catbot::catbotmode && hacks::shared::catbot::anti_motd && (panel == motd_panel || panel == motd_panel_sd))))
         call_default = false;
 
     if (software_cursor_mode)

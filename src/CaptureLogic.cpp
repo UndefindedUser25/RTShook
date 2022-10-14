@@ -1,9 +1,9 @@
 #include "CaptureLogic.hpp"
-#include <utility>
 #include "common.hpp"
 
 namespace flagcontroller
 {
+
 std::array<flag_info, 2> flags;
 bool is_ctf = true;
 
@@ -22,10 +22,11 @@ void Update()
         return;
     // Find flags if missing
     if (!flags[0].ent || !flags[1].ent)
-        for (auto &ent : entity_cache::valid_ents)
+        for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
         {
+            CachedEntity *ent = ENTITY(i);
             // We cannot identify a bad entity as a flag due to the unreliability of it
-            if (ent->m_iClassID() != CL_CLASS(CCaptureFlag))
+            if (CE_BAD(ent) || ent->m_iClassID() != CL_CLASS(CCaptureFlag))
                 continue;
 
             // Store flags
@@ -91,7 +92,7 @@ flag_info getFlag(int team)
             return flag;
     }
     // None found
-    return {};
+    return flag_info();
 }
 
 // Get the Position of a flag on a specific team
@@ -152,7 +153,8 @@ ETFFlagStatus getStatus(int team)
 
 namespace plcontroller
 {
-// Valid_ents that controls all the payloads for each team. Red team is first, then comes blue team.
+
+// Array that controls all the payloads for each team. Red team is first, then comes blue team.
 static std::array<std::vector<CachedEntity *>, 2> payloads;
 static Timer update_payloads{};
 
@@ -165,10 +167,11 @@ void Update()
         for (auto &entry : payloads)
             entry.clear();
 
-        for (auto &ent : entity_cache::valid_ents)
+        for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
         {
+            CachedEntity *ent = ENTITY(i);
             // Not the object we need or invalid (team)
-            if (ent->m_iClassID() != CL_CLASS(CObjectCartDispenser) || ent->m_iTeam() < TEAM_RED || ent->m_iTeam() > TEAM_BLU)
+            if (CE_BAD(ent) || ent->m_iClassID() != CL_CLASS(CObjectCartDispenser) || ent->m_iTeam() < TEAM_RED || ent->m_iTeam() > TEAM_BLU)
                 continue;
             int team = ent->m_iTeam();
 
@@ -212,6 +215,7 @@ void LevelInit()
 
 namespace cpcontroller
 {
+
 std::array<cp_info, MAX_CONTROL_POINTS> controlpoint_data;
 CachedEntity *objective_resource = nullptr;
 
@@ -219,7 +223,7 @@ struct point_ignore
 {
     std::string mapname;
     int point_idx;
-    point_ignore(std::string str, int idx) : mapname{ std::move(str) }, point_idx{ idx } {};
+    point_ignore(std::string str, int idx) : mapname{ str }, point_idx{ idx } {};
 };
 
 // TODO: Find a way to fix these edge-cases.
@@ -237,9 +241,10 @@ void UpdateObjectiveResource()
     if (CE_GOOD(objective_resource) && objective_resource->m_iClassID() == CL_CLASS(CTFObjectiveResource))
         return;
     // Find ObjectiveResource and gamerules
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
     {
-        if (ent->m_iClassID() != CL_CLASS(CTFObjectiveResource))
+        CachedEntity *ent = ENTITY(i);
+        if (CE_BAD(ent) || ent->m_iClassID() != CL_CLASS(CTFObjectiveResource))
             continue;
         // Found it
         objective_resource = ent;
@@ -425,7 +430,7 @@ std::optional<Vector> getClosestControlPoint(Vector source, int team)
     for (auto &ignore : ignore_points)
     {
         // Try to find map name in bad point array
-        if (levelname.find(ignore.mapname) != std::string::npos)
+        if (levelname.find(ignore.mapname) != levelname.npos)
             ignore_index = ignore.point_idx;
     }
 
@@ -481,9 +486,7 @@ void LevelInit()
     cpcontroller::LevelInit();
 }
 
-static InitRoutine init(
-    []()
-    {
-        EC::Register(EC::CreateMove, CreateMove, "capturelogic_update");
-        EC::Register(EC::LevelInit, LevelInit, "capturelogic_levelinit");
-    });
+static InitRoutine init([]() {
+    EC::Register(EC::CreateMove, CreateMove, "capturelogic_update");
+    EC::Register(EC::LevelInit, LevelInit, "capturelogic_levelinit");
+});

@@ -8,7 +8,7 @@
 #include "common.hpp"
 #include <settings/Bool.hpp>
 
-namespace hacks::autoreflect
+namespace hacks::tf::autoreflect
 {
 static settings::Boolean enable{ "autoreflect.enable", "false" };
 static settings::Boolean idle_only{ "autoreflect.idle-only", "false" };
@@ -54,7 +54,7 @@ static bool ShouldReflect(CachedEntity *ent)
 
         float dist = ent->m_flDistance();
 
-        // this isn't the correct distance value, but it works, and looks legit.
+        // this isnt the correct distance value but it works, and looks legit.
         if (dist < 1000.0f)
             return *teammates_fire;
     }
@@ -70,7 +70,7 @@ static bool ShouldReflect(CachedEntity *ent)
             return false;
     }
 
-    // We don't want to do these checks in dodgeball, it breakes if we do
+    // We dont want to do these checks in dodgeball, it breakes if we do
     if (!dodgeball)
     {
         // If projectile is already deflected, don't deflect it again.
@@ -152,8 +152,16 @@ void CreateMove()
     float closest_dist = 0.0f;
     Vector closest_vec;
     // Loop to find the closest entity
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 0; i <= HIGHEST_ENTITY; i++)
     {
+
+        // Find an ent from the for loops current tick
+        CachedEntity *ent = ENTITY(i);
+
+        // Check if null or dormant
+        if (CE_BAD(ent))
+            continue;
+
         // Check if ent should be reflected
         if (!ShouldReflect(ent))
             continue;
@@ -180,8 +188,8 @@ void CreateMove()
         }
 
         /*else {
-           // Stickies are weird, we use a different way to vis check them
-           // Vis checking stickies are wonky, I quit, just ignore the check >_>
+           // Stickys are weird, we use a different way to vis check them
+           // Vis checking stickys are wonky, I quit, just ignore the check >_>
            //if (!VisCheckEntFromEnt(ent, LOCAL_E)) continue;
        }*/
 
@@ -189,15 +197,15 @@ void CreateMove()
         float dist = predicted_proj.DistToSqr(g_pLocalPlayer->v_Origin);
 
         // If legit mode is on, we check to see if reflecting will work if we
-        // don't aim at the projectile
+        // dont aim at the projectile
         if (legit)
         {
             if (GetFov(g_pLocalPlayer->v_OrigViewangles, g_pLocalPlayer->v_Eye, predicted_proj) > (float) fov)
                 continue;
         }
 
-        // Compare our info to the others and determine if it's the best, if we
-        // don't have a projectile already, then we save it here
+        // Compare our info to the others and determine if its the best, if we
+        // dont have a projectile already, then we save it here
         if (dist < closest_dist || closest_dist == 0.0f)
         {
             closest_dist = dist;
@@ -205,12 +213,12 @@ void CreateMove()
         }
     }
 
-    // Determine whether the closest projectile is within our parameters,
+    // Determine whether the closest projectile is whithin our parameters,
     // preferably 185 units should be our limit, sqr is around the number below
     if (closest_dist == 0 || closest_dist > 34400)
         return;
 
-    // We don't want to aim if legit is true
+    // We dont want to aim if legit is true
     if (!legit)
     {
         // Aim at predicted projectile
@@ -226,7 +234,7 @@ void CreateMove()
 void Draw()
 {
 #if ENABLE_VISUALS
-    // Don't draw to screen when reflect is disabled
+    // Dont draw to screen when reflect is disabled
     if (!enable)
         return;
     // Don't draw to screen when legit is disabled
@@ -239,7 +247,7 @@ void Draw()
         // It cant use fovs greater than 180, so we check for that
         if (*fov > 0.0f && *fov < 180)
         {
-            // Don't show ring while player is dead
+            // Dont show ring while player is dead
             if (CE_GOOD(LOCAL_E) && LOCAL_E->m_bAlivePlayer())
             {
                 rgba_t color = colors::gui;
@@ -260,13 +268,11 @@ void Draw()
 #endif
 }
 
-static InitRoutine EC(
-    []()
-    {
-        EC::Register(EC::CreateMove, CreateMove, "cm_auto_reflect", EC::average);
-        EC::Register(EC::CreateMoveWarp, CreateMove, "cmw_auto_reflect", EC::average);
+static InitRoutine EC([]() {
+    EC::Register(EC::CreateMove, CreateMove, "cm_auto_reflect", EC::average);
+    EC::Register(EC::CreateMoveWarp, CreateMove, "cmw_auto_reflect", EC::average);
 #if ENABLE_VISUALS
-        EC::Register(EC::Draw, Draw, "draw_auto_reflect", EC::average);
+    EC::Register(EC::Draw, Draw, "draw_auto_reflect", EC::average);
 #endif
-    });
-} // namespace hacks::autoreflect
+});
+} // namespace hacks::tf::autoreflect

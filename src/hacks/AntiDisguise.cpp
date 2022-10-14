@@ -8,7 +8,7 @@
 #include <settings/Bool.hpp>
 #include "common.hpp"
 
-namespace hacks::antidisguise
+namespace hacks::tf2::antidisguise
 {
 #if ENABLE_TEXTMODE
 static settings::Boolean enable{ "remove.disguise", "true" };
@@ -23,11 +23,13 @@ void cm()
     if (!*enable && !*no_invisibility)
         return;
 
-    for (unsigned i = 1; i <= g_IEngine->GetMaxClients(); i++)
+    for (int i = 0; i <= g_IEngine->GetMaxClients(); i++)
     {
         ent = ENTITY(i);
         if (CE_BAD(ent) || ent == LOCAL_E || ent->m_Type() != ENTITY_PLAYER || CE_INT(ent, netvar.iClass) != tf_class::tf_spy)
+        {
             continue;
+        }
         if (*enable)
             RemoveCondition<TFCond_Disguised>(ent);
         if (*no_invisibility)
@@ -37,10 +39,8 @@ void cm()
         }
     }
 }
-static InitRoutine EC(
-    []()
-    {
-        EC::Register(EC::CreateMove, cm, "antidisguise", EC::average);
-        EC::Register(EC::CreateMoveWarp, cm, "antidisguise_w", EC::average);
-    });
-} // namespace hacks::antidisguise
+static InitRoutine EC([]() {
+    EC::Register(EC::CreateMove, cm, "antidisguise", EC::average);
+    EC::Register(EC::CreateMoveWarp, cm, "antidisguise_w", EC::average);
+});
+} // namespace hacks::tf2::antidisguise

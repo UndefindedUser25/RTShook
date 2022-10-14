@@ -11,8 +11,9 @@
 #include "HookedMethods.hpp"
 #include "CatBot.hpp"
 #include "ChatCommands.hpp"
-#include <iomanip>
+#include "MiscTemporary.hpp"
 #include "nullnexus.hpp"
+#include <iomanip>
 #include "votelogger.hpp"
 #include "nospread.hpp"
 
@@ -34,7 +35,7 @@ const static std::string clear("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n
 std::string lastfilter{};
 std::string lastname{};
 
-namespace hacks::autoheal
+namespace hacks::tf::autoheal
 {
 extern std::vector<int> called_medic;
 }
@@ -63,14 +64,14 @@ template <typename T> void SplitName(std::vector<T> &ret, const T &name, int num
         ret.push_back(tmp);
 }
 static int anti_balance_attempts = 0;
-static std::string previous_name;
+static std::string previous_name = "";
 static Timer reset_it{};
 static Timer wait_timer{};
 void Paint()
 {
     if (!wait_timer.test_and_set(1000))
         return;
-    auto *server = (INetChannel *) g_IEngine->GetNetChannelInfo();
+    INetChannel *server = (INetChannel *) g_IEngine->GetNetChannelInfo();
     if (server)
         reset_it.update();
     if (reset_it.test_and_set(20000))
@@ -98,11 +99,12 @@ DEFINE_HOOKED_METHOD(DispatchUserMessage, bool, void *this_, int type, bf_read &
         retrun = false;
     }
     // We should bail out
-    if (!hacks::nospread::DispatchUserMessage(&buf, type))
+    if (!hacks::tf2::nospread::DispatchUserMessage(&buf, type))
         return true;
     std::string data;
     switch (type)
     {
+
     case 25:
     {
         // DATA = [ 01 01 06  ] For "Charge me Doctor!"
@@ -114,7 +116,7 @@ DEFINE_HOOKED_METHOD(DispatchUserMessage, bool, void *this_, int type, bf_read &
         int command_id = buf.ReadByte();
 
         if (voice_menu == 1 && command_id == 6)
-            hacks::autoheal::called_medic.push_back(ent_id);
+            hacks::tf::autoheal::called_medic.push_back(ent_id);
         // If we don't .Seek(0) the game will have a bad  time reading
         buf.Seek(0);
         break;
@@ -136,10 +138,10 @@ DEFINE_HOOKED_METHOD(DispatchUserMessage, bool, void *this_, int type, bf_read &
         break;
     }
     case 12:
-        if (hacks::catbot::anti_motd && hacks::catbot::catbotmode)
+        if (hacks::shared::catbot::anti_motd && hacks::shared::catbot::catbotmode)
         {
             data = std::string(buf_data);
-            if (data.find("class_") != std::string::npos)
+            if (data.find("class_") != data.npos)
                 return false;
         }
         break;
@@ -147,10 +149,10 @@ DEFINE_HOOKED_METHOD(DispatchUserMessage, bool, void *this_, int type, bf_read &
     {
         if (*anti_votekick && buf.GetNumBytesLeft() > 35)
         {
-            auto *server = (INetChannel *) g_IEngine->GetNetChannelInfo();
+            INetChannel *server = (INetChannel *) g_IEngine->GetNetChannelInfo();
             data                = std::string(buf_data);
             logging::Info("%s", data.c_str());
-            if (data.find("TeamChangeP") != std::string::npos && CE_GOOD(LOCAL_E))
+            if (data.find("TeamChangeP") != data.npos && CE_GOOD(LOCAL_E))
             {
                 std::string server_name(server->GetAddress());
                 if (server_name != previous_name)
@@ -250,7 +252,7 @@ DEFINE_HOOKED_METHOD(DispatchUserMessage, bool, void *this_, int type, bf_read &
             for (int i = 0; i < 7; i++)
                 boost::replace_all(message2, toreplace[i], replacewith[i]);
 
-            for (const auto &filter : res)
+            for (auto filter : res)
                 if (boost::contains(message2, filter))
                 {
                     chat_stack::Say("\e" + clear, true);
@@ -262,7 +264,7 @@ DEFINE_HOOKED_METHOD(DispatchUserMessage, bool, void *this_, int type, bf_read &
                 }
         }
         if (event.find("TF_Chat") == 0)
-            hacks::ChatCommands::handleChatMessage(message, data[0]);
+            hacks::shared::ChatCommands::handleChatMessage(message, data[0]);
         chatlog::LogMessage(data[0], message);
         buf = bf_read(data.c_str(), data.size());
         buf.Seek(0);

@@ -156,6 +156,7 @@ public:
 
     offset_t hOwner;
     offset_t iWeaponState;
+    offset_t iCritMult; // TF2C
 
     offset_t flChargeLevel;
     offset_t bChargeRelease;

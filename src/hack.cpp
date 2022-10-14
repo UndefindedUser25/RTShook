@@ -5,20 +5,25 @@
  *      Author: nullifiedcat
  */
 
-#include <csignal>
-#include <cstdio>
-#include <cstring>
+#define __USE_GNU
+#include <execinfo.h>
+#include <signal.h>
+#include <stdio.h>
+#include <string.h>
 #include <dlfcn.h>
 #include <boost/stacktrace.hpp>
+#include <cxxabi.h>
 #include <visual/SDLHooks.hpp>
 #include "hack.hpp"
 #include "common.hpp"
+#include "MiscTemporary.hpp"
 #if ENABLE_GUI
 #include "menu/GuiInterface.hpp"
 #endif
 #include <link.h>
 #include <pwd.h>
 
+#include <hacks/hacklist.hpp>
 #include "teamroundtimer.hpp"
 #if EXTERNAL_DRAWING
 #include "xoverlay.h"
@@ -28,6 +33,7 @@
 
 #include "copypasted/CDumper.hpp"
 #include "version.h"
+#include <cxxabi.h>
 
 /*
  *  Credits to josh33901 aka F1ssi0N for butifel F1Public and Darkstorm 2015
@@ -59,16 +65,28 @@ const std::string &hack::GetType()
     if (version_set)
         return version;
     version = "";
-#if !ENABLE_IPC
+#if not ENABLE_IPC
     version += " NOIPC";
 #endif
-#if !ENABLE_GUI
+#if not ENABLE_GUI
     version += " NOGUI";
 #else
     version += " GUI";
 #endif
 
-#if !ENABLE_VISUALS
+#ifndef DYNAMIC_CLASSES
+
+#ifdef GAME_SPECIFIC
+    version += " GAME " TO_STRING(GAME);
+#else
+    version += " UNIVERSAL";
+#endif
+
+#else
+    version += " DYNAMIC";
+#endif
+
+#if not ENABLE_VISUALS
     version += " NOVISUALS";
 #endif
 
@@ -138,7 +156,7 @@ static void InitRandom()
     if (!rnd || fread(&rand_seed, sizeof(rand_seed), 1, rnd) < 1)
     {
         logging::Info("Warning!!! Failed read from /dev/urandom (%s). Randomness is going to be weak", strerror(errno));
-        timespec t{};
+        timespec t;
         clock_gettime(CLOCK_MONOTONIC, &t);
         rand_seed = t.tv_nsec ^ (t.tv_sec & getpid());
     }
@@ -149,10 +167,10 @@ static void InitRandom()
 
 void hack::Hook()
 {
-    uintptr_t *clientMode;
+    uintptr_t *clientMode = 0;
     // Bad way to get clientmode.
     // FIXME [MP]?
-    while (!(clientMode = **(uintptr_t ***) ((uintptr_t) ((*(void ***) g_IBaseClient)[10]) + 1)))
+    while (!(clientMode = **(uintptr_t ***) ((uintptr_t)((*(void ***) g_IBaseClient)[10]) + 1)))
     {
         usleep(10000);
     }
@@ -215,10 +233,6 @@ void hack::Hook()
     hooks::engine.Set(g_IEngine);
     hooks::engine.HookMethod(HOOK_ARGS(ServerCmdKeyValues));
     hooks::engine.Apply();
-
-    hooks::cmdclientunrestricted.Set(g_IEngine);
-    hooks::cmdclientunrestricted.HookMethod(HOOK_ARGS(ClientCmd_Unrestricted));
-    hooks::cmdclientunrestricted.Apply();
 
     hooks::demoplayer.Set(demoplayer);
     hooks::demoplayer.HookMethod(HOOK_ARGS(IsPlayingTimeDemo));
@@ -296,14 +310,14 @@ free(logname);*/
     InitRandom();
     sharedobj::LoadLauncher();
 
-    // remove epic source lock (needed for non-preload tf2)
+    // remove epic source lock (needed for non-preload tf2 always crash anytime.)
     std::remove("/tmp/source_engine_2925226592.lock");
 
     sharedobj::LoadEarlyObjects();
 
 // Fix locale issues caused by steam update
 #if ENABLE_TEXTMODE
-    static BytePatch patch(CSignature::GetEngineSignature, "74 ? 89 5C 24 ? 8D 9D ? ? ? ? 89 74 24", 0, { 0x71 });
+    static BytePatch patch(gSignatures.GetEngineSignature, "74 ? 89 5C 24 ? 8D 9D ? ? ? ? 89 74 24", 0, { 0x71 });
     patch.Patch();
 #endif
 
@@ -323,6 +337,11 @@ free(logname);*/
     CreateInterfaces();
     CDumper dumper;
     dumper.SaveDump();
+    logging::Info("Is TF2? %d", IsTF2());
+    logging::Info("Is TF2C? %d", IsTF2C());
+    logging::Info("Is HL2DM? %d", IsHL2DM());
+    logging::Info("Is CSS? %d", IsCSS());
+    logging::Info("Is TF? %d", IsTF());
     InitClassTable();
 
     BeginConVars();
@@ -358,7 +377,6 @@ free(logname);*/
     logging::Info("Initializer stack done");
 #if ENABLE_TEXTMODE
     hack::command_stack().push("exec cat_autoexec_textmode");
-    hack::command_stack().push("exec betrayals");
 #else
     hack::command_stack().push("exec cat_autoexec");
 #endif

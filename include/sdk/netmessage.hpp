@@ -105,7 +105,7 @@ public:
     {
         // Call original to be sure nothing breaks
         typedef bool (*BIncomingMessageForProcessing_t)(CNetMessage *, double, int);
-        static auto addr                                                 = CSignature::GetEngineSignature("55 89 E5 56 53 83 EC 10 8B 5D ? F2 0F 10 45");
+        static auto addr                                                 = gSignatures.GetEngineSignature("55 89 E5 56 53 83 EC 10 8B 5D ? F2 0F 10 45");
         BIncomingMessageForProcessing_t BIncomingMessageForProcessing_fn = (BIncomingMessageForProcessing_t) addr;
         return BIncomingMessageForProcessing_fn(this, param_1, param_2);
     };
@@ -114,7 +114,7 @@ public:
     {
         // Call original to be sure nothing breaks
         typedef bool (*SetRatePolicy_t)(CNetMessage *);
-        static auto addr                 = CSignature::GetEngineSignature("55 89 E5 83 EC 18 C7 04 24 2C 00 00 00");
+        static auto addr                 = gSignatures.GetEngineSignature("55 89 E5 83 EC 18 C7 04 24 2C 00 00 00");
         SetRatePolicy_t SetRatePolicy_fn = (SetRatePolicy_t) addr;
         SetRatePolicy_fn(this);
     };
@@ -297,6 +297,7 @@ public:
 private:
     char m_szTextBuffer[2048]; // buffer for received messages
 };
+
 
 class CLC_Move : public CNetMessage
 {

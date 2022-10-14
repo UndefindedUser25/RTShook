@@ -9,6 +9,7 @@
 
 namespace tfmm
 {
+
 void startQueue();
 void startQueueStandby();
 void leaveQueue();

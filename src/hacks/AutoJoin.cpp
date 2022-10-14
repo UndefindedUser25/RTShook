@@ -13,7 +13,7 @@
 #include "hack.hpp"
 #include "MiscTemporary.hpp"
 
-namespace hacks::autojoin
+namespace hacks::shared::autojoin
 {
 static settings::Boolean autojoin_team{ "autojoin.team", "false" };
 static settings::Int autojoin_class{ "autojoin.class", "0" };
@@ -29,7 +29,7 @@ const std::string classnames[] = { "scout", "sniper", "soldier", "demoman", "med
 
 bool UnassignedTeam()
 {
-    return !g_pLocalPlayer->team || g_pLocalPlayer->team == TEAM_SPEC;
+    return !g_pLocalPlayer->team or (g_pLocalPlayer->team == TEAM_SPEC);
 }
 
 bool UnassignedClass()
@@ -39,40 +39,40 @@ bool UnassignedClass()
 
 static Timer autoteam_timer{};
 static Timer startqueue_timer{};
-#if !ENABLE_VISUALS
+#if not ENABLE_VISUALS
 Timer queue_time{};
 #endif
 void updateSearch()
 {
     if (!auto_queue && !auto_requeue)
     {
-#if !ENABLE_VISUALS
+#if not ENABLE_VISUALS
         queue_time.update();
 #endif
         return;
     }
     if (g_IEngine->IsInGame())
     {
-#if !ENABLE_VISUALS
+#if not ENABLE_VISUALS
         queue_time.update();
 #endif
         return;
     }
 
-    static uintptr_t addr    = CSignature::GetClientSignature("C7 04 24 ? ? ? ? 8D 7D ? 31 F6");
-    static auto offset0      = uintptr_t(*(uintptr_t *) (addr + 0x3));
-    static uintptr_t offset1 = CSignature::GetClientSignature("55 89 E5 83 EC ? 8B 45 ? 8B 80 ? ? ? ? 85 C0 74 ? C7 44 24 ? ? ? ? ? "
+    static uintptr_t addr    = gSignatures.GetClientSignature("C7 04 24 ? ? ? ? 8D 7D ? 31 F6");
+    static uintptr_t offset0 = uintptr_t(*(uintptr_t *) (addr + 0x3));
+    static uintptr_t offset1 = gSignatures.GetClientSignature("55 89 E5 83 EC ? 8B 45 ? 8B 80 ? ? ? ? 85 C0 74 ? C7 44 24 ? ? ? ? ? "
                                                               "89 04 24 E8 ? ? ? ? 85 C0 74 ? 8B 40");
     typedef int (*GetPendingInvites_t)(uintptr_t);
-    auto GetPendingInvites = GetPendingInvites_t(offset1);
-    int invites            = GetPendingInvites(offset0);
+    GetPendingInvites_t GetPendingInvites = GetPendingInvites_t(offset1);
+    int invites                           = GetPendingInvites(offset0);
 
     re::CTFGCClientSystem *gc = re::CTFGCClientSystem::GTFGCClientSystem();
     re::CTFPartyClient *pc    = re::CTFPartyClient::GTFPartyClient();
 
     if (current_user_cmd && gc && gc->BConnectedToMatchServer(false) && gc->BHaveLiveMatch())
     {
-#if !ENABLE_VISUALS
+#if not ENABLE_VISUALS
         queue_time.update();
 #endif
         tfmm::leaveQueue();
@@ -102,18 +102,22 @@ void updateSearch()
             }
     }
     startqueue_timer.test_and_set(5000);
-#if !ENABLE_VISUALS
-    if (queue_time.test_and_set(1200000))
-        g_IEngine->ClientCmd_Unrestricted("quit"); // lol
+#if ENABLE_TEXTMODE
+    if (queue_time.test_and_set(600000))
+    {
+        g_IEngine->ClientCmd_Unrestricted("quit"); // lol yes
+    }
 #endif
 }
 static void update()
 {
     if (autoteam_timer.test_and_set(5000))
     {
-        if (autojoin_team && UnassignedTeam())
+        if (autojoin_team and UnassignedTeam())
+        {
             hack::ExecuteCommand("autoteam");
-        else if (autojoin_class && UnassignedClass())
+        }
+        else if (autojoin_class and UnassignedClass())
         {
             if (int(autojoin_class) < 10)
                 g_IEngine->ExecuteClientCmd(format("join_class ", classnames[int(autojoin_class) - 1]).c_str());
@@ -134,9 +138,9 @@ static InitRoutine init(
     {
         EC::Register(EC::CreateMove, update, "cm_autojoin", EC::average);
         EC::Register(EC::Paint, updateSearch, "paint_autojoin", EC::average);
-        static auto p_sig = CSignature::GetClientSignature("55 89 E5 57 56 53 83 EC 1C 8B 5D ? 8B 75 ? 8B 7D ? 89 1C 24 89 74 24 ? 89 7C 24 ? E8 ? ? ? ? 84 C0") + 29;
+        static auto p_sig = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 1C 8B 5D ? 8B 75 ? 8B 7D ? 89 1C 24 89 74 24 ? 89 7C 24 ? E8 ? ? ? ? 84 C0") + 29;
         static BytePatch p{ e8call_direct(p_sig), { 0x31, 0xC0, 0x40, 0xC3 } };
-        static BytePatch p2{ CSignature::GetClientSignature, "55 89 E5 57 56 53 83 EC ? 8B 45 0C 8B 5D 08 8B 55 10 89 45 ? 8B 43", 0x00, { 0x31, 0xC0, 0x40, 0xC3 } };
+        static BytePatch p2{ gSignatures.GetClientSignature, "55 89 E5 57 56 53 83 EC ? 8B 45 0C 8B 5D 08 8B 55 10 89 45 ? 8B 43", 0x00, { 0x31, 0xC0, 0x40, 0xC3 } };
         if (*partybypass)
         {
             p.Patch();
@@ -165,4 +169,4 @@ static InitRoutine init(
             },
             "shutdown_autojoin");
     });
-} // namespace hacks::autojoin
+} // namespace hacks::shared::autojoin

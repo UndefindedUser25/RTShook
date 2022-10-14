@@ -6,7 +6,9 @@
  */
 
 #include "common.hpp"
+#include <hacks/Aimbot.hpp>
 #include <settings/Bool.hpp>
+#include "MiscTemporary.hpp"
 #include "init.hpp"
 #include "AntiAntiAim.hpp"
 #include "hitrate.hpp"
@@ -20,40 +22,34 @@ int count_hits_sniper{ 0 };
 int count_hits{ 0 };
 int count_hits_head{ 0 };
 
-CatCommand clear_hirate("debug_hitrate_clear", "Clear hitrate",
-                        []()
-                        {
-                            count_shots       = 0;
-                            count_hits        = 0;
-                            count_hits_sniper = 0;
-                            count_hits_head   = 0;
-                        });
+CatCommand clear_hirate("debug_hitrate_clear", "Clear hitrate", []() {
+    count_shots       = 0;
+    count_hits        = 0;
+    count_hits_sniper = 0;
+    count_hits_head   = 0;
+});
 
-CatCommand debug_hitrate("debug_hitrate", "Debug hitrate",
-                         []()
-                         {
-                             int p1 = 0;
-                             int p2 = 0;
-                             if (count_shots)
-                             {
-                                 p1 = float(count_hits) / float(count_shots) * 100.0f;
-                             }
-                             if (count_hits)
-                             {
-                                 p2 = float(count_hits_head) / float(count_hits) * 100.0f;
-                             }
-                             logging::Info("%d / %d (%d%%)", count_hits, count_shots, p1);
-                             logging::Info("%d / %d (%d%%)", count_hits_head, count_hits_sniper, p2);
-                         });
+CatCommand debug_hitrate("debug_hitrate", "Debug hitrate", []() {
+    int p1 = 0;
+    int p2 = 0;
+    if (count_shots)
+    {
+        p1 = float(count_hits) / float(count_shots) * 100.0f;
+    }
+    if (count_hits)
+    {
+        p2 = float(count_hits_head) / float(count_hits) * 100.0f;
+    }
+    logging::Info("%d / %d (%d%%)", count_hits, count_shots, p1);
+    logging::Info("%d / %d (%d%%)", count_hits_head, count_hits_sniper, p2);
+});
 
-CatCommand debug_ammo("debug_ammo", "Debug ammo",
-                      []()
-                      {
-                          for (int i = 0; i < 4; i++)
-                          {
-                              logging::Info("%d %d", i, CE_INT(LOCAL_E, netvar.m_iAmmo + i * 4));
-                          }
-                      });
+CatCommand debug_ammo("debug_ammo", "Debug ammo", []() {
+    for (int i = 0; i < 4; i++)
+    {
+        logging::Info("%d %d", i, CE_INT(LOCAL_E, netvar.m_iAmmo + i * 4));
+    }
+});
 
 // If this is true, Update() will consider increasing the brutenum soon if the shot was a miss
 bool resolve_soon[PLAYER_ARRAY_SIZE];
@@ -85,7 +81,7 @@ void OnHit(bool crit, int idx, bool is_sniper)
             auto ent = ENTITY(idx);
             if (CE_GOOD(ent))
             {
-                hacks::anti_anti_aim::resolver_map[ent->player_info.friendsID].hits_in_a_row++;
+                hacks::shared::anti_anti_aim::resolver_map[ent->player_info.friendsID].hits_in_a_row++;
                 resolve_soon[idx] = false;
             }
         }
@@ -124,7 +120,7 @@ void Update()
                     if (resolve_timer[i].check(delay))
                     {
                         resolve_soon[i] = false;
-                        hacks::anti_anti_aim::increaseBruteNum(i);
+                        hacks::shared::anti_anti_aim::increaseBruteNum(i);
                     }
                 }
         }
@@ -136,7 +132,7 @@ class HurtListener : public IGameEventListener
 public:
     virtual void FireGameEvent(KeyValues *event)
     {
-        if (strcmp("player_hurt", event->GetName()) != 0)
+        if (strcmp("player_hurt", event->GetName()))
             return;
         if (GetPlayerForUserID(event->GetInt("attacker")) == g_IEngine->GetLocalPlayer())
         {
@@ -154,11 +150,9 @@ HurtListener &listener()
     return l;
 }
 
-InitRoutine init(
-    []()
-    {
-        g_IGameEventManager->AddListener(&listener(), false);
-        EC::Register(
-            EC::Shutdown, []() { g_IGameEventManager->RemoveListener(&listener()); }, "shutdown_hitrate");
-    });
+InitRoutine init([]() {
+    g_IGameEventManager->AddListener(&listener(), false);
+    EC::Register(
+        EC::Shutdown, []() { g_IGameEventManager->RemoveListener(&listener()); }, "shutdown_hitrate");
+});
 } // namespace hitrate

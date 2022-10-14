@@ -1,9 +1,8 @@
 #include "common.hpp"
 #include "playerlist.hpp"
 #include <boost/format.hpp>
-#include <random>
 
-namespace hacks::miscplayerinfo
+namespace hacks::tf2::miscplayerinfo
 {
 static settings::Boolean draw_kda{ "misc.playerinfo.draw-kda", "false" };
 static settings::Boolean mafia_city{ "misc.playerinfo.draw-level", "false" };
@@ -16,7 +15,7 @@ struct LevelInfo
     {
         min     = _min;
         max     = _max;
-        content = std::move(_content);
+        content = _content;
     }
 };
 // Source: https://www.youtube.com/watch?v=Yke9BhP1uks
@@ -28,7 +27,7 @@ std::unordered_map<unsigned, int> previous_entry_amount{};
 std::string random_mafia_entry(int level, unsigned steamid)
 {
     std::vector<std::string> store;
-    if (!choosen_entry[steamid].first.empty())
+    if (choosen_entry[steamid].first != "")
     {
         int entry_amt = 0;
         for (auto &i : mafia_levels)
@@ -46,20 +45,14 @@ std::string random_mafia_entry(int level, unsigned steamid)
     if (store.empty())
         return "Crook";
     else
-    {
-        std::random_device rd;
-        std::mt19937 mt(rd());
-        std::uniform_real_distribution<double> dist(0.0, store.size());
-        return store.at((int) dist(mt));
-    }
+        return store.at(rand() % store.size());
 }
-
 static std::array<float, PLAYER_ARRAY_SIZE> death_timer;
 void Paint()
 {
     if (!*draw_kda && !*mafia_city)
         return;
-    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+    for (int i = 0; i <= g_IEngine->GetMaxClients(); i++)
     {
         CachedEntity *ent = ENTITY(i);
         if (CE_BAD(ent))
@@ -130,6 +123,9 @@ void Paint()
             // tint CAT status people's names too
             if (playerlist::AccessData(ent->player_info.friendsID).state == playerlist::k_EState::CAT)
                 color.g = 0.8f;
+            // tint Nullnexus status people's names [unsure.]
+            if (playerlist::AccessData(ent->player_info.friendsID).state == playerlist::k_EState::NULLNEXUS)
+                color.g = 0.7f;
 
             // Calculate Player Level
             int death_score  = g_pPlayerResource->GetDeaths(i) * 7;
@@ -139,7 +135,7 @@ void Paint()
             level            = max(level, 1);
 
             // String to draw, {Level} Cat for cathook users, else gotten from std::vector at random.
-            if (choosen_entry[ent->player_info.friendsID].first.empty() || choosen_entry[ent->player_info.friendsID].second != level)
+            if (choosen_entry[ent->player_info.friendsID].first == "" || choosen_entry[ent->player_info.friendsID].second != level)
                 choosen_entry[ent->player_info.friendsID] = { random_mafia_entry(level, ent->player_info.friendsID), level };
             std::string to_display = (playerlist::AccessData(ent->player_info.friendsID).state == playerlist::k_EState::CAT ? format("Lv.", level, " Cat") : format("Lv.", level, " ", choosen_entry[ent->player_info.friendsID].first));
 
@@ -166,7 +162,6 @@ void Paint()
         }
     }
 }
-
 static InitRoutine init([]() { EC::Register(EC::Draw, Paint, "DRAW_Miscplayerinfo", EC::average); });
 #endif
-} // namespace hacks::miscplayerinfo
+}; // namespace hacks::tf2::miscplayerinfo

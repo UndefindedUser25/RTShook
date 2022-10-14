@@ -10,7 +10,7 @@
 #include "hack.hpp"
 #include "PlayerTools.hpp"
 
-namespace hacks::autotaunt
+namespace hacks::tf::autotaunt
 {
 static settings::Boolean enable{ "autotaunt.enable", "false" };
 static settings::Float chance{ "autotaunt.chance", "100" };
@@ -32,15 +32,18 @@ static Timer taunt_t{};
 class AutoTauntListener : public IGameEventListener2
 {
 public:
-    void FireGameEvent(IGameEvent *event) override
+    virtual void FireGameEvent(IGameEvent *event)
     {
         if (!enable)
+        {
             return;
+        }
         if (GetPlayerForUserID(event->GetInt("attacker")) == g_IEngine->GetLocalPlayer())
         {
             bool nearby = false;
-            for (auto &ent : entity_cache::valid_ents)
+            for (int i = 1; i <= HIGHEST_ENTITY; i++)
             {
+                auto ent = ENTITY(i);
                 if (CE_VALID(ent) && (ent->m_Type() == ENTITY_PLAYER || ent->m_iClassID() == CL_CLASS(CObjectSentrygun)) && ent->m_bEnemy() && ent->m_bAlivePlayer())
                 {
                     if (!player_tools::shouldTarget(ent))
@@ -78,37 +81,34 @@ public:
 
 AutoTauntListener listener;
 
-InitRoutine init(
-    []()
-    {
-        g_IEventManager2->AddListener(&listener, "player_death", false);
-        EC::Register(
-            EC::Shutdown, []() { g_IEventManager2->RemoveListener(&listener); }, "Shutdown_Autotaunt");
-        EC::Register(
-            EC::CreateMove,
-            []()
+InitRoutine init([]() {
+    g_IEventManager2->AddListener(&listener, "player_death", false);
+    EC::Register(
+        EC::Shutdown, []() { g_IEventManager2->RemoveListener(&listener); }, "Shutdown_Autotaunt");
+    EC::Register(
+        EC::CreateMove,
+        []() {
+            if (prev_slot != -1 && CE_GOOD(LOCAL_E) && CE_GOOD(LOCAL_W) && LOCAL_E->m_bAlivePlayer() && taunt_t.test_and_set(100))
             {
-                if (prev_slot != -1 && CE_GOOD(LOCAL_E) && CE_GOOD(LOCAL_W) && LOCAL_E->m_bAlivePlayer() && taunt_t.test_and_set(100))
+                if (in_taunt)
                 {
-                    if (in_taunt)
+                    if (!HasCondition<TFCond_Taunting>(LOCAL_E))
                     {
-                        if (!HasCondition<TFCond_Taunting>(LOCAL_E))
-                        {
-                            hack::ExecuteCommand(format("slot", prev_slot + 1));
-                            prev_slot = -1;
-                            in_taunt  = false;
-                        }
-                        else
-                            taunt_t.update();
+                        hack::ExecuteCommand(format("slot", prev_slot + 1));
+                        prev_slot = -1;
+                        in_taunt  = false;
                     }
                     else
-                    {
-                        hack::ExecuteCommand("taunt");
-                        in_taunt = true;
                         taunt_t.update();
-                    }
                 }
-            },
-            "Autotaunt_CM");
-    });
-} // namespace hacks::autotaunt
+                else
+                {
+                    hack::ExecuteCommand("taunt");
+                    in_taunt = true;
+                    taunt_t.update();
+                }
+            }
+        },
+        "Autotaunt_CM");
+});
+} // namespace hacks::tf::autotaunt

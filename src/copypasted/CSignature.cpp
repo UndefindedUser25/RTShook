@@ -1,5 +1,5 @@
 // Replace darkstorm stuff with my stuff
-// #include "SDK.h"
+//#include "SDK.h"
 
 #include "common.hpp"
 
@@ -11,18 +11,18 @@ Elf32_Shdr *getSectionHeader(void *module, const char *sectionName)
 {
     // we need to get the modules actual address from the handle
 
-    auto *ehdr = (Elf32_Ehdr *) module;
-    auto *shdr = (Elf32_Shdr *) ((unsigned) module + ehdr->e_shoff);
+    Elf32_Ehdr *ehdr = (Elf32_Ehdr *) module;
+    Elf32_Shdr *shdr = (Elf32_Shdr *) ((unsigned) module + ehdr->e_shoff);
 
     Elf32_Shdr *strhdr = &shdr[ehdr->e_shstrndx];
 
-    char *strtab        = nullptr;
+    char *strtab        = NULL;
     unsigned strtabSize = 0;
-    if (strhdr != nullptr && strhdr->sh_type == 3)
+    if (strhdr != NULL && strhdr->sh_type == 3)
     {
         strtab = (char *) ((unsigned) module + strhdr->sh_offset);
 
-        if (strtab == nullptr)
+        if (strtab == NULL)
             // Log::Fatal("String table was NULL!");
             logging::Info("String table was NULL!");
         strtabSize = strhdr->sh_size;
@@ -42,7 +42,7 @@ Elf32_Shdr *getSectionHeader(void *module, const char *sectionName)
                 return hdr;
         }
     }
-    return nullptr;
+    return 0;
 }
 bool InRange(char x, char a, char b)
 {
@@ -52,9 +52,13 @@ bool InRange(char x, char a, char b)
 int GetBits(char x)
 {
     if (InRange((char) (x & (~0x20)), 'A', 'F'))
+    {
         return (x & (~0x20)) - 'A' + 0xa;
+    }
     else if (InRange(x, '0', '9'))
+    {
         return x - '0';
+    }
 
     return 0;
 }
@@ -148,13 +152,13 @@ uintptr_t CSignature::dwFindPattern(uintptr_t dwAddress, uintptr_t dwLength, con
 //===================================================================================
 void *CSignature::GetModuleHandleSafe(const char *pszModuleName)
 {
-    void *moduleHandle;
+    void *moduleHandle = NULL;
 
     do
     {
         moduleHandle = dlopen(pszModuleName, RTLD_NOW);
         usleep(1);
-    } while (moduleHandle == nullptr);
+    } while (moduleHandle == NULL);
 
     return moduleHandle;
 }
@@ -163,7 +167,7 @@ static CSignature_space::SharedObjStorage objects[CSignature_space::entry_count]
 
 uintptr_t CSignature::GetSignature(const char *chPattern, sharedobj::SharedObject &obj, int idx)
 {
-    // we need to do this because (I assume that) under the hood, dlopen only
+    // we need to do this becuase (i assume that) under the hood, dlopen only
     // loads up the sections that it needs into memory, meaning that we cannot
     // get the string table from the module.
 
@@ -171,7 +175,7 @@ uintptr_t CSignature::GetSignature(const char *chPattern, sharedobj::SharedObjec
     if (!object.inited)
     {
         int fd       = open(obj.path.c_str(), O_RDONLY);
-        void *module = mmap(nullptr, lseek(fd, 0, SEEK_END), PROT_READ, MAP_SHARED, fd, 0);
+        void *module = mmap(NULL, lseek(fd, 0, SEEK_END), PROT_READ, MAP_SHARED, fd, 0);
         if ((unsigned) module == 0xffffffff)
             return NULL;
         link_map *moduleMap = obj.lmap;
@@ -194,7 +198,7 @@ uintptr_t CSignature::GetSignature(const char *chPattern, sharedobj::SharedObjec
     uintptr_t patr = dwFindPattern(((uintptr_t) object.module) + object.textOffset, ((uintptr_t) object.module) + object.textOffset + object.textSize, chPattern);
     if (!patr)
         return NULL;
-    return patr - (uintptr_t) (object.module) + object.moduleMap->l_addr;
+    return patr - (uintptr_t)(object.module) + object.moduleMap->l_addr;
 }
 //===================================================================================
 uintptr_t CSignature::GetClientSignature(const char *chPattern)
@@ -226,3 +230,5 @@ uintptr_t CSignature::GetServerSignature(const char *chPattern)
 {
     return GetSignature(chPattern, sharedobj::server(), CSignature_space::server);
 }
+
+CSignature gSignatures;

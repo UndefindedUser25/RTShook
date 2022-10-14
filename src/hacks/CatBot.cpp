@@ -5,22 +5,22 @@
  *      Author: nullifiedcat
  */
 
-#include <random>
 #include <settings/Bool.hpp>
-#include <utility>
 #include "CatBot.hpp"
 #include "common.hpp"
 #include "hack.hpp"
 #include "PlayerTools.hpp"
 #include "e8call.hpp"
+#include "NavBot.hpp"
+#include "navparser.hpp"
 #include "SettingCommands.hpp"
 #include "glob.h"
 
-namespace hacks::catbot
+namespace hacks::shared::catbot
 {
 static settings::Boolean auto_disguise{ "misc.autodisguise", "true" };
 
-settings::Int abandon_if_ipc_bots_gte{ "cat-bot.abandon-if.ipc-bots-gte", "0" };
+static settings::Int abandon_if_ipc_bots_gte{ "cat-bot.abandon-if.ipc-bots-gte", "0" };
 static settings::Int abandon_if_humans_lte{ "cat-bot.abandon-if.humans-lte", "0" };
 static settings::Int abandon_if_players_lte{ "cat-bot.abandon-if.players-lte", "0" };
 
@@ -32,7 +32,8 @@ static settings::Boolean auto_crouch{ "cat-bot.auto-crouch", "false" };
 static settings::Boolean always_crouch{ "cat-bot.always-crouch", "false" };
 static settings::Boolean random_votekicks{ "cat-bot.votekicks", "false" };
 static settings::Boolean votekick_rage_only{ "cat-bot.votekicks.rage-only", "false" };
-static settings::Boolean autoReport{ "cat-bot.autoreport", "true" };
+static settings::Boolean autoReport{ "cat-bot.autoreport", "false" };
+
 static settings::Boolean autovote_map{ "cat-bot.autovote-map", "true" };
 
 static settings::Boolean mvm_autoupgrade{ "mvm.autoupgrade", "false" };
@@ -82,7 +83,7 @@ bool hasEnding(std::string const &fullString, std::string const &ending)
         return false;
 }
 
-std::vector<std::string> config_list(const std::string &in)
+std::vector<std::string> config_list(std::string in)
 {
     std::string complete_in = paths::getConfigPath() + "/" + in;
     if (!hasEnding(complete_in, ".conf"))
@@ -196,13 +197,13 @@ void on_killed_by(int userid)
 void do_random_votekick()
 {
     std::vector<int> targets;
-    player_info_s local_info{};
+    player_info_s local_info;
 
     if (CE_BAD(LOCAL_E) || !GetPlayerInfo(LOCAL_E->m_IDX, &local_info))
         return;
     for (int i = 1; i < g_GlobalVars->maxClients; ++i)
     {
-        player_info_s info{};
+        player_info_s info;
         if (!GetPlayerInfo(i, &info) || !info.friendsID)
             continue;
         if (g_pPlayerResource->GetTeam(i) != g_pLocalPlayer->team)
@@ -221,13 +222,11 @@ void do_random_votekick()
     if (targets.empty())
         return;
 
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(0.0, targets.size());
-    int target = targets[(int) dist(mt)];
-    player_info_s info{};
+    int target = targets[rand() % targets.size()];
+    player_info_s info;
     if (!GetPlayerInfo(GetPlayerForUserID(target), &info))
         return;
+    hack::ExecuteCommand("callvote kick \"" + std::to_string(target) + " cheating\"");
     hack::ExecuteCommand("callvote kick \"" + std::to_string(target) + " cheating\"");
 }
 
@@ -243,18 +242,18 @@ static CatCommand debug_money("debug_mvmmoney", "Print MVM Money", []() { loggin
 // Store information
 struct Posinfo
 {
-    float x{};
-    float y{};
-    float z{};
+    float x;
+    float y;
+    float z;
     std::string lvlname;
     Posinfo(float _x, float _y, float _z, std::string _lvlname)
     {
         x       = _x;
         y       = _y;
         z       = _z;
-        lvlname = std::move(_lvlname);
+        lvlname = _lvlname;
     }
-    Posinfo() = default;
+    Posinfo(){};
 };
 struct Upgradeinfo
 {
@@ -264,7 +263,7 @@ struct Upgradeinfo
     // Higher = better
     int priority;
     int priority_falloff;
-    Upgradeinfo() = default;
+    Upgradeinfo(){};
     Upgradeinfo(int _id, int _cost, int _clazz, int _priority, int _priority_falloff)
     {
         id               = _id;
@@ -283,19 +282,19 @@ Upgradeinfo PickUpgrade()
     if (!inited_upgrades)
     {
         // Damage ( Important )
-        upgrade_list.emplace_back(0, 400, tf_sniper, 4, 1);
+        upgrade_list.push_back({ 0, 400, tf_sniper, 4, 1 });
         // Projectile Penetration ( Good )
-        upgrade_list.emplace_back(12, 400, tf_sniper, 5, 500);
+        upgrade_list.push_back({ 12, 400, tf_sniper, 5, 500 });
         // Explosive Headshot
-        upgrade_list.emplace_back(40, 350, tf_sniper, 6, 2);
+        upgrade_list.push_back({ 40, 350, tf_sniper, 6, 2 });
         // +50% Ammo ( Basically least valuable upgrade for primary )
-        upgrade_list.emplace_back(6, 250, tf_sniper, 3, 1);
+        upgrade_list.push_back({ 6, 250, tf_sniper, 3, 1 });
         // +20% Reload Speed ( Pretty important )
-        upgrade_list.emplace_back(35, 250, tf_sniper, 6, 1);
+        upgrade_list.push_back({ 35, 250, tf_sniper, 6, 1 });
         // +25 Health on kill ( It's meh yet you need it to not die )
-        upgrade_list.emplace_back(11, 200, tf_sniper, 3, 2);
+        upgrade_list.push_back({ 11, 200, tf_sniper, 3, 2 });
         // +25% Faster charge ( Good for "Wait for charge" catbots )
-        upgrade_list.emplace_back(17, 200, tf_sniper, 4, 1);
+        upgrade_list.push_back({ 17, 200, tf_sniper, 4, 1 });
         inited_upgrades = true;
     }
     int highest_priority = INT_MIN;
@@ -322,10 +321,7 @@ Upgradeinfo PickUpgrade()
         return { -1, -1, -1, -1, -1 };
     else
     {
-        std::random_device rd;
-        std::mt19937 mt(rd());
-        std::uniform_real_distribution<double> dist(0.0, vec_size);
-        auto choosen_element = potential_upgrades[(int) dist(mt)];
+        auto choosen_element = potential_upgrades[rand() % vec_size];
         // Less important after an upgrade
         choosen_element->priority -= choosen_element->priority_falloff;
         return *choosen_element;
@@ -356,12 +352,12 @@ static std::vector<Posinfo> spot_list;
         }
     }
     Posinfo to_path                        = best_spot;
-    hacks::NavBot::task::current_task = hacks::NavBot::task::outofbounds;
+    hacks::tf2::NavBot::task::current_task = hacks::tf2::NavBot::task::outofbounds;
     bool success                           = nav::navTo(Vector{ to_path.x, to_path.y, to_path.z }, 8, true, true);
     if (!success)
     {
         logging::Info("No valid spots found!");
-        hacks::NavBot::task::current_task = hacks::NavBot::task::none;
+        hacks::tf2::NavBot::task::current_task = hacks::tf2::NavBot::task::none;
         return;
     }
 }
@@ -378,7 +374,7 @@ static InitRoutine init_routine([]() {
                 run                = false;
                 auto upgrade_panel = g_CHUD->FindElement("CHudUpgradePanel");
                 typedef int (*CancelUpgrade_t)(CHudElement *);
-                static uintptr_t addr = (unsigned) e8call((void *) (CSignature::GetClientSignature("E8 ? ? ? ? 8B 3D ? ? ? ? 8D 4B 28 ") + 1));
+                static uintptr_t addr = (unsigned) e8call((void *) (gSignatures.GetClientSignature("E8 ? ? ? ? 8B 3D ? ? ? ? 8D 4B 28 ") + 1));
                 if (upgrade_panel)
                 {
                     static CancelUpgrade_t CancelUpgrade_fn = CancelUpgrade_t(addr);
@@ -395,10 +391,10 @@ static InitRoutine init_routine([]() {
             std::string lvlname = g_IEngine->GetLevelName();
             if (lvlname.find("mvm_") == lvlname.npos)
                 return;
-            if (hacks::NavBot::task::current_task == hacks::NavBot::task::outofbounds)
+            if (hacks::tf2::NavBot::task::current_task == hacks::tf2::NavBot::task::outofbounds)
             {
                 if (nav::ReadyForCommands)
-                    hacks::NavBot::task::current_task = hacks::NavBot::task::none;
+                    hacks::tf2::NavBot::task::current_task = hacks::tf2::NavBot::task::none;
                 else
                     return;
             }
@@ -563,9 +559,10 @@ static std::atomic_bool can_report = false;
 static std::vector<unsigned> to_report;
 void reportall()
 {
+    can_report = false;
     if (!patched_report)
     {
-        static BytePatch patch(CSignature::GetClientSignature, "73 ? 80 7D ? ? 74 ? F3 0F 10 0D", 0x2F, { 0x89, 0xe0 });
+        static BytePatch patch(gSignatures.GetClientSignature, "73 ? 80 7D ? ? 74 ? F3 0F 10 0D", 0x2F, { 0x89, 0xe0 });
         patch.Patch();
         patched_report = true;
     }
@@ -580,7 +577,7 @@ void reportall()
         // Pointer comparison is fine
         if (ent == LOCAL_E)
             continue;
-        player_info_s info{};
+        player_info_s info;
         if (GetPlayerInfo(i, &info) && info.friendsID)
         {
             if (!player_tools::shouldTargetSteamId(info.friendsID))
@@ -597,7 +594,7 @@ CatCommand report_uid("report_steamid", "Report with steamid",
                       {
                           if (args.ArgC() < 2)
                               return;
-                          unsigned steamid;
+                          unsigned steamid = 0;
                           try
                           {
                               steamid = std::stoi(args.Arg(1));
@@ -613,8 +610,8 @@ CatCommand report_uid("report_steamid", "Report with steamid",
                               return;
                           }
                           typedef uint64_t (*ReportPlayer_t)(uint64_t, int);
-                          static uintptr_t addr1      = CSignature::GetClientSignature("55 89 E5 57 56 53 81 EC ? ? ? ? 8B 5D ? 8B 7D ? 89 D8");
-                          static auto ReportPlayer_fn = ReportPlayer_t(addr1);
+                          static uintptr_t addr1                = gSignatures.GetClientSignature("55 89 E5 57 56 53 81 EC ? ? ? ? 8B 5D ? 8B 7D ? 89 D8");
+                          static ReportPlayer_t ReportPlayer_fn = ReportPlayer_t(addr1);
                           if (!addr1)
                               return;
                           CSteamID id(steamid, EUniverse::k_EUniversePublic, EAccountType::k_EAccountTypeIndividual);
@@ -639,7 +636,7 @@ void smart_crouch()
     static bool crouch = false;
     if (crouchcdr.test_and_set(2000))
     {
-        for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+        for (int i = 0; i <= g_IEngine->GetMaxClients(); i++)
         {
             auto ent = ENTITY(i);
             if (CE_BAD(ent) || ent->m_Type() != ENTITY_PLAYER || ent->m_iTeam() == LOCAL_E->m_iTeam() || !(ent->hitboxes.GetHitbox(0)) || !(ent->m_bAlivePlayer()) || !player_tools::shouldTarget(ent))
@@ -679,8 +676,8 @@ CatCommand print_ammo("debug_print_ammo", "debug",
                       });
 static Timer disguise{};
 static Timer report_timer{};
-/*static std::string health = "Health: 0/0";
-static std::string ammo   = "Ammo: 0/0";*/
+static std::string health = "Health: 0/0";
+static std::string ammo   = "Ammo: 0/0";
 static int max_ammo;
 static CachedEntity *local_w;
 // TODO: add more stuffs
@@ -696,14 +693,14 @@ static void cm()
             local_w  = LOCAL_W;
             max_ammo = 0;
         }
-        /*float max_hp  = g_pPlayerResource->GetMaxHealth(LOCAL_E);
-        float curr_hp = CE_INT(LOCAL_E, netvar.iHealth);*/
+        float max_hp  = g_pPlayerResource->GetMaxHealth(LOCAL_E);
+        float curr_hp = CE_INT(LOCAL_E, netvar.iHealth);
         int ammo0     = CE_INT(LOCAL_E, netvar.m_iClip2);
         int ammo2     = CE_INT(LOCAL_E, netvar.m_iClip1);
         if (ammo0 + ammo2 > max_ammo)
             max_ammo = ammo0 + ammo2;
-        /*health = format("Health: ", curr_hp, "/", max_hp);
-        ammo   = format("Ammo: ", ammo0 + ammo2, "/", max_ammo);*/
+        health = format("Health: ", curr_hp, "/", max_hp);
+        ammo   = format("Ammo: ", ammo0 + ammo2, "/", max_ammo);
     }
     if (g_Settings.bInvalid)
         return;
@@ -719,10 +716,7 @@ static void cm()
     if (*auto_disguise && g_pPlayerResource->GetClass(LOCAL_E) == tf_spy && !IsPlayerDisguised(LOCAL_E) && disguise.test_and_set(3000))
     {
         int teamtodisguise = (LOCAL_E->m_iTeam() == TEAM_RED) ? TEAM_RED - 1 : TEAM_BLU - 1;
-        std::random_device rd;
-        std::mt19937 mt(rd());
-        std::uniform_real_distribution<double> dist(0.0, 3.0);
-        int classtojoin = classes[(int) dist(mt)];
+        int classtojoin    = classes[rand() % 3];
         g_IEngine->ClientCmd_Unrestricted(format("disguise ", classtojoin, " ", teamtodisguise).c_str());
     }
     if (*autoReport && report_timer.test_and_set(60000))
@@ -740,8 +734,8 @@ void update()
     if (can_report)
     {
         typedef uint64_t (*ReportPlayer_t)(uint64_t, int);
-        static uintptr_t addr1      = CSignature::GetClientSignature("55 89 E5 57 56 53 81 EC ? ? ? ? 8B 5D ? 8B 7D ? 89 D8");
-        static auto ReportPlayer_fn = ReportPlayer_t(addr1);
+        static uintptr_t addr1                = gSignatures.GetClientSignature("55 89 E5 57 56 53 81 EC ? ? ? ? 8B 5D ? 8B 7D ? 89 D8");
+        static ReportPlayer_t ReportPlayer_fn = ReportPlayer_t(addr1);
         if (!addr1)
             return;
         if (report_timer2.test_and_set(400))
@@ -796,9 +790,6 @@ void update()
 
         for (int i = 1; i <= g_IEngine->GetMaxClients(); ++i)
         {
-            if (g_IEngine->GetLocalPlayer() == i)
-                continue;
-
             if (g_IEntityList->GetClientEntity(i))
                 ++count_total;
             else
@@ -937,7 +928,7 @@ void shutdown()
     g_IEventManager2->RemoveListener(&listener2());
 }
 
-/*#if ENABLE_VISUALS
+#if ENABLE_VISUALS
 static void draw()
 {
     if (!catbotmode || !anti_motd)
@@ -947,7 +938,7 @@ static void draw()
     AddCenterString(health, colors::green);
     AddCenterString(ammo, colors::yellow);
 }
-#endif*/
+#endif
 
 static InitRoutine runinit(
     []()
@@ -956,9 +947,9 @@ static InitRoutine runinit(
         EC::Register(EC::CreateMove, update, "cm2_catbot", EC::average);
         EC::Register(EC::LevelInit, level_init, "levelinit_catbot", EC::average);
         EC::Register(EC::Shutdown, shutdown, "shutdown_catbot", EC::average);
-/*#if ENABLE_VISUALS
+#if ENABLE_VISUALS
         EC::Register(EC::Draw, draw, "draw_catbot", EC::average);
-#endif*/
+#endif
         init();
     });
-} // namespace hacks::catbot
+} // namespace hacks::shared::catbot

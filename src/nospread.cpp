@@ -28,7 +28,7 @@
 #include "AntiAim.hpp"
 #include "WeaponData.hpp"
 
-namespace hacks::nospread
+namespace hacks::tf2::nospread
 {
 static settings::Boolean projectile("nospread.projectile", "false");
 /*
@@ -62,10 +62,9 @@ bool shouldNoSpread(bool _projectile)
         break;
     // Disable if being spectated
     case 2:
-        if (g_pLocalPlayer->spectator_state == g_pLocalPlayer->ANY)
+        if (g_pLocalPlayer->spectator_state != g_pLocalPlayer->NONE)
             return false;
-        break;
-    }
+    };
     return _projectile ? *projectile : *bullet;
 }
 
@@ -194,15 +193,22 @@ static float CalculateMantissaStep(float flValue)
     return powf(2, iExponent - (127 + 23));
 }
 
+float GetServerCurTime()
+{
+    // Calculate on our own accord
+    float server_time = g_GlobalVars->interval_per_tick * CE_INT(LOCAL_E, netvar.nTickBase);
+    return server_time;
+}
+
 // Does the shot have any spread in general?
 bool IsPerfectShot(IClientEntity *weapon, float provided_time = 0.0 /*used for optimization*/)
 {
-    float server_time       = provided_time == 0.0 ? SERVER_TIME : provided_time;
+    float server_time       = provided_time == 0.0 ? GetServerCurTime() : provided_time;
     float time_since_attack = server_time - NET_FLOAT(weapon, netvar.flLastFireTime);
 
     int nBulletsPerShot = GetWeaponData(weapon)->m_nBulletsPerShot;
     if (nBulletsPerShot >= 1)
-        nBulletsPerShot = ATTRIB_HOOK_FLOAT(nBulletsPerShot, "mult_bullets_per_shot", weapon, nullptr, true);
+        nBulletsPerShot = ATTRIB_HOOK_FLOAT(nBulletsPerShot, "mult_bullets_per_shot", weapon, 0x0, true);
     else
         nBulletsPerShot = 1;
     if ((nBulletsPerShot == 1 && time_since_attack > 1.25) || (nBulletsPerShot > 1 && time_since_attack > 0.25))
@@ -222,7 +228,7 @@ void ApplySpreadCorrection(Vector &angles, int seed, float spread)
     // Size of one WeaponMode_t is 0x40, 0x6fc is the offset to bullets per shot
     int nBulletsPerShot = GetWeaponData(weapon)->m_nBulletsPerShot;
     if (nBulletsPerShot >= 1)
-        nBulletsPerShot = ATTRIB_HOOK_FLOAT(nBulletsPerShot, "mult_bullets_per_shot", RAW_ENT(LOCAL_W), nullptr, true);
+        nBulletsPerShot = ATTRIB_HOOK_FLOAT(nBulletsPerShot, "mult_bullets_per_shot", RAW_ENT(LOCAL_W), 0x0, true);
     else
         nBulletsPerShot = 1;
 
@@ -445,13 +451,13 @@ bool DispatchUserMessage(bf_read *buf, int type)
 
     std::vector<double> vData;
 
-    for (const auto &sStr : lines)
+    for (auto sStr : lines)
     {
         std::smatch sMatch;
 
         if (!std::regex_match(sStr, sMatch, primary_regex) || sMatch.size() != 5)
         {
-            static std::regex backup_regex(R"(^(([0-9]+\.[0-9]+) ([0-9]{1,2}) ([0-9]{1,2}) ([0-9]+\.[0-9]+) ([0-9]+\.[0-9]+) vel ([0-9]+\.[0-9]+))$)");
+            static std::regex backup_regex("^(([0-9]+\\.[0-9]+) ([0-9]{1,2}) ([0-9]{1,2}) ([0-9]+\\.[0-9]+) ([0-9]+\\.[0-9]+) vel ([0-9]+\\.[0-9]+))$");
             std::smatch sMatch2;
             if (std::regex_match(sStr, sMatch2, backup_regex) && sMatch2.size() > 5)
             {
@@ -476,7 +482,7 @@ bool DispatchUserMessage(bf_read *buf, int type)
 
     if (vData.size() < 2)
     {
-        if (vData.empty())
+        if (!vData.size())
             last_was_player_perf = false;
         // Still do not call original, we don't want the playerperf spewing everywhere
         else
@@ -574,7 +580,7 @@ bool DispatchUserMessage(bf_read *buf, int type)
         waiting_perf_data = false;
     }
     return should_call_original;
-}
+};
 
 void CL_SendMove_hook()
 {
@@ -583,7 +589,7 @@ void CL_SendMove_hook()
 
     if (!no_spread_synced || !shouldNoSpread(false))
     {
-        auto original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
+        CL_SendMove_t original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
         original();
         cl_nospread_sendmovedetour.RestorePatch();
         return;
@@ -596,7 +602,7 @@ void CL_SendMove_hook()
     if (!RAW_ENT(LOCAL_E) || HasCondition<TFCond_HalloweenGhostMode>(LOCAL_E))
     {
         // don't set called_from_sendmove here cuz we don't care
-        auto original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
+        CL_SendMove_t original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
         original();
         cl_nospread_sendmovedetour.RestorePatch();
         return;
@@ -649,7 +655,7 @@ void CL_SendMove_hook()
 
     if (correct_ping)
         // Ping changed, adjust (Provided we are not fakelagging)
-        if (!(fakelag_amount || (hacks::antiaim::isEnabled() && hacks::antiaim::force_fakelag)) && (int) (ping * 1000.0) != (int) (ping_at_send * 1000.0))
+        if (!(fakelag_amount || (hacks::shared::antiaim::isEnabled() && hacks::shared::antiaim::force_fakelag)) && (int) (ping * 1000.0) != (int) (ping_at_send * 1000.0))
             predicted_time += ping - ping_at_send;
 
     // Check if we need to sync
@@ -658,7 +664,7 @@ void CL_SendMove_hook()
     // If we're dead just return original
     if (!LOCAL_E->m_bAlivePlayer())
     {
-        auto original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
+        CL_SendMove_t original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
         original();
         cl_nospread_sendmovedetour.RestorePatch();
         return;
@@ -683,18 +689,18 @@ void CL_SendMove_hook()
     // Bad weapon
     if ((g_pLocalPlayer->weapon_mode != weapon_hitscan && LOCAL_W->m_iClassID() != CL_CLASS(CTFCompoundBow)))
     {
-        auto original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
+        CL_SendMove_t original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
         original();
         cl_nospread_sendmovedetour.RestorePatch();
         return;
     }
 
-    float current_time = SERVER_TIME;
+    float current_time = GetServerCurTime();
 
     // Check if we are attacking, if not then no point in adjusting
     if (!current_user_cmd || !(current_user_cmd->buttons & IN_ATTACK))
     {
-        auto original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
+        CL_SendMove_t original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
         original();
         cl_nospread_sendmovedetour.RestorePatch();
         return;
@@ -703,7 +709,7 @@ void CL_SendMove_hook()
     // If we have a perfect shot and we don#t want to center the whole cone, returne too
     if (IsPerfectShot(RAW_ENT(LOCAL_W), current_time) && !center_cone)
     {
-        auto original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
+        CL_SendMove_t original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
         original();
         cl_nospread_sendmovedetour.RestorePatch();
         return;
@@ -714,7 +720,7 @@ void CL_SendMove_hook()
     // Bad spread
     if (!IsFinite(current_weapon_spread))
     {
-        auto original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
+        CL_SendMove_t original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
         original();
         cl_nospread_sendmovedetour.RestorePatch();
         return;
@@ -734,7 +740,7 @@ void CL_SendMove_hook()
     called_from_sendmove = true;
     double time_start    = Plat_FloatTime();
 
-    auto original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
+    CL_SendMove_t original = (CL_SendMove_t) cl_nospread_sendmovedetour.GetOriginalFunc();
     original();
     cl_nospread_sendmovedetour.RestorePatch();
 
@@ -755,7 +761,7 @@ void WriteUserCmd_hook(bf_write *buf, CUserCmd *to, CUserCmd *from)
     // Called by a demo recorder or we shouldn't compensate it.
     if ((no_spread_synced != SYNCED && !resync_needed) || !shouldNoSpread(false) || current_weapon_spread == 0.0)
     {
-        auto original = (WriteUserCmd_t) cl_writeusercmd_detour.GetOriginalFunc();
+        WriteUserCmd_t original = (WriteUserCmd_t) cl_writeusercmd_detour.GetOriginalFunc();
         original(buf, to, from);
         cl_writeusercmd_detour.RestorePatch();
         return;
@@ -766,9 +772,9 @@ void WriteUserCmd_hook(bf_write *buf, CUserCmd *to, CUserCmd *from)
 
     if (!(to->buttons & IN_ATTACK))
     {
-        user_cmd_backup = *to;
-        first_usercmd   = false;
-        auto original   = (WriteUserCmd_t) cl_writeusercmd_detour.GetOriginalFunc();
+        user_cmd_backup         = *to;
+        first_usercmd           = false;
+        WriteUserCmd_t original = (WriteUserCmd_t) cl_writeusercmd_detour.GetOriginalFunc();
         original(buf, to, from);
         cl_writeusercmd_detour.RestorePatch();
         return;
@@ -787,7 +793,7 @@ void WriteUserCmd_hook(bf_write *buf, CUserCmd *to, CUserCmd *from)
     user_cmd_backup = *to;
     first_usercmd   = false;
 
-    auto original = (WriteUserCmd_t) cl_writeusercmd_detour.GetOriginalFunc();
+    WriteUserCmd_t original = (WriteUserCmd_t) cl_writeusercmd_detour.GetOriginalFunc();
     original(buf, to, from);
     cl_writeusercmd_detour.RestorePatch();
 
@@ -802,7 +808,7 @@ void FX_FireBullets_hook(IClientEntity *weapon, int player, Vector *origin, Vect
     // Not synced/weapon bad
     if (!weapon || (no_spread_synced != SYNCED && !resync_needed) || !bullet || (IsPerfectShot(weapon) && !center_cone))
     {
-        auto original = (FX_FireBullets_t) fx_firebullets_detour.GetOriginalFunc();
+        FX_FireBullets_t original = (FX_FireBullets_t) fx_firebullets_detour.GetOriginalFunc();
         original(weapon, player, origin, angles, weapon_idx, bullet_mode, seed, spread, damage, is_critical);
         fx_firebullets_detour.RestorePatch();
         return;
@@ -811,7 +817,7 @@ void FX_FireBullets_hook(IClientEntity *weapon, int player, Vector *origin, Vect
     Vector corrected_angles = *angles;
     ApplySpreadCorrection(corrected_angles, seed, spread);
 
-    auto original = (FX_FireBullets_t) fx_firebullets_detour.GetOriginalFunc();
+    FX_FireBullets_t original = (FX_FireBullets_t) fx_firebullets_detour.GetOriginalFunc();
     original(weapon, player, origin, &corrected_angles, weapon_idx, bullet_mode, seed, spread, damage, is_critical);
     fx_firebullets_detour.RestorePatch();
 }
@@ -865,11 +871,11 @@ static InitRoutine init_bulletnospread(
     []()
     {
         // Get our detour hooks running
-        static auto writeusercmd_addr = CSignature::GetClientSignature("55 89 E5 57 56 53 83 EC 2C 8B 45 ? 8B 7D ? 8B 5D ? 89 45 ? 8B 40");
+        static auto writeusercmd_addr = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 2C 8B 45 ? 8B 7D ? 8B 5D ? 89 45 ? 8B 40");
         cl_writeusercmd_detour.Init(writeusercmd_addr, (void *) WriteUserCmd_hook);
-        static auto fx_firebullets_addr = CSignature::GetClientSignature("55 89 E5 57 56 53 81 EC 0C 01 00 00 8B 45 ? 8B 7D ? 89 85");
+        static auto fx_firebullets_addr = gSignatures.GetClientSignature("55 89 E5 57 56 53 81 EC 0C 01 00 00 8B 45 ? 8B 7D ? 89 85");
         fx_firebullets_detour.Init(fx_firebullets_addr, (void *) FX_FireBullets_hook);
-        /*static auto net_sendpacket_addr = CSignature::GetEngineSignature("55 89 E5 57 56 53 81 EC EC 20 00 00 C7 85 ? ? ? ? 00 00 00 00 8B 45");
+        /*static auto net_sendpacket_addr = gSignatures.GetEngineSignature("55 89 E5 57 56 53 81 EC EC 20 00 00 C7 85 ? ? ? ? 00 00 00 00 8B 45");
         net_sendpacket_detour.Init(net_sendpacket_addr, (void *) NET_SendPacket_hook);*/
 
         // Register Event callbacks
@@ -892,8 +898,8 @@ static InitRoutine init_bulletnospread(
             {
                 if (bullet && (draw || draw_mantissa) && CE_GOOD(LOCAL_E) && LOCAL_E->m_bAlivePlayer())
                 {
-                    std::string draw_string;
-                    rgba_t draw_color = colors::white;
+                    std::string draw_string = "";
+                    rgba_t draw_color       = colors::white;
                     switch (no_spread_synced)
                     {
                     case NOT_SYNCED:
@@ -966,4 +972,4 @@ static InitRoutine init_bulletnospread(
             "nospread_shutdown");
     });
 
-} // namespace hacks::nospread
+} // namespace hacks::tf2::nospread

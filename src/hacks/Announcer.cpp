@@ -8,7 +8,7 @@
 #include <settings/Registered.hpp>
 #include "common.hpp"
 
-namespace hacks::announcer
+namespace hacks::shared::announcer
 {
 static settings::Boolean enable{ "announcer", "false" };
 
@@ -33,8 +33,10 @@ Timer last_headshot{};
 const announcer_entry_s *find_entry(const std::vector<announcer_entry_s> &vector, int count)
 {
     for (auto it = vector.rbegin(); it != vector.rend(); ++it)
+    {
         if ((*it).count <= count)
             return &*it;
+    }
     return nullptr;
 }
 
@@ -130,7 +132,7 @@ void on_spawn(IGameEvent *event)
 
 class AnnouncerEventListener : public IGameEventListener2
 {
-    void FireGameEvent(IGameEvent *event) override
+    virtual void FireGameEvent(IGameEvent *event)
     {
         if (!enable)
             return;
@@ -164,4 +166,4 @@ static InitRoutine EC(
         EC::Register(EC::Shutdown, shutdown, "shutdown_announcer", EC::average);
         init();
     });
-} // namespace hacks::announcer
+} // namespace hacks::shared::announcer

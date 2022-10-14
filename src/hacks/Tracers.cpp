@@ -3,8 +3,9 @@
 #include "playerresource.h"
 #include "soundcache.hpp"
 
-namespace hacks::tracers
+namespace hacks::shared::tracers
 {
+
 static settings::Boolean enabled("tracers.enabled", "false");
 static settings::Boolean teammates("tracers.teammates", "false");
 static settings::Int coloring_mode("tracers.coloring-mode", "0");
@@ -79,7 +80,9 @@ inline std::optional<rgba_t> getColor(CachedEntity *ent)
             return color;
         }
         else if (*coloring_mode == 1)
+        {
             return colors::EntityF(ent);
+        }
     }
     else
     {
@@ -223,7 +226,7 @@ void draw()
             Vector out;
             if (!draw::WorldToScreen(origin, out))
             {
-                // We need to flip on both x and y-axis in case m_vecOrigin it's not actually on screen
+                // We need to flip on both x and y axis in case m_vecOrigin its not actually on screen
                 out.x = draw::width - out.x;
                 out.y = draw::height - out.y;
 
@@ -236,9 +239,5 @@ void draw()
     }
 }
 
-static InitRoutine init(
-    []()
-    {
-        EC::Register(EC::Draw, draw, "DRAW_tracers");
-    });
-} // namespace hacks::tracers
+static InitRoutine init([]() { EC::Register(EC::Draw, draw, "DRAW_tracers"); });
+} // namespace hacks::shared::tracers

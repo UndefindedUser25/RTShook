@@ -7,7 +7,7 @@
 #include <settings/Int.hpp>
 #include "common.hpp"
 
-namespace hacks::dominatesay
+namespace hacks::shared::dominatesay
 {
 static settings::Int dominatesay_mode{ "dominatesay.mode", "0" };
 static settings::String filename{ "dominatesay.file", "dominatesay.txt" };
@@ -49,13 +49,10 @@ std::string ComposeDominateSay(IGameEvent *event)
     if (GetPlayerForUserID(kid) != g_IEngine->GetLocalPlayer())
         return "";
 
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(0.0, source->size());
-    std::string msg = source->at((int) dist(mt));
+    std::string msg = source->at(rand() % source->size());
 
     while (msg == lastmsg && source->size() > 1)
-        msg = source->at((int) dist(mt));
+        msg = source->at(rand() % source->size());
     lastmsg = msg;
     player_info_s info{};
 
@@ -84,7 +81,7 @@ class DominateSayEventListener : public IGameEventListener2
     {
         if (!dominatesay_mode)
             return;
-        std::string message = hacks::dominatesay::ComposeDominateSay(event);
+        std::string message = hacks::shared::dominatesay::ComposeDominateSay(event);
         if (!message.empty())
             chat_stack::Say(message, false);
     }
@@ -116,4 +113,4 @@ static InitRoutine EC(
         init();
     });
 
-} // namespace hacks::dominatesay
+} // namespace hacks::shared::dominatesay

@@ -7,6 +7,6 @@
 
 #pragma once
 
-namespace hacks::autotaunt
+namespace hacks::tf::autotaunt
 {
-} // namespace hacks::autotaunt
+}

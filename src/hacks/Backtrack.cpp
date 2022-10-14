@@ -2,7 +2,7 @@
 #include "Backtrack.hpp"
 #include "AntiCheatBypass.hpp"
 
-namespace hacks::backtrack
+namespace hacks::tf2::backtrack
 {
 static settings::Boolean enabled("backtrack.enabled", "false");
 settings::Float latency("backtrack.latency", "0");
@@ -72,7 +72,7 @@ std::vector<std::vector<BacktrackData>> bt_data;
 // Update our sequences
 void updateDatagram()
 {
-    auto *ch = (INetChannel *) g_IEngine->GetNetChannelInfo();
+    INetChannel *ch = (INetChannel *) g_IEngine->GetNetChannelInfo();
     if (ch)
     {
         int m_nInSequenceNr = ch->m_nInSequenceNr;
@@ -90,7 +90,7 @@ void updateDatagram()
 // Latency to add for backtrack
 float getLatency()
 {
-    auto *ch = (INetChannel *) g_IEngine->GetNetChannelInfo();
+    INetChannel *ch = (INetChannel *) g_IEngine->GetNetChannelInfo();
     // Track what actual latency we have
     float real_latency = 0.0f;
 
@@ -107,7 +107,7 @@ float getLatency()
 bool isTickInRange(int tickcount)
 {
     int delta_tickcount = abs(tickcount - current_user_cmd->tick_count + TIME_TO_TICKS(getLatency() / 1000.0f));
-    if (!hacks::antianticheat::enabled)
+    if (!hacks::tf2::antianticheat::enabled)
         return TICKS_TO_TIME(delta_tickcount) <= 0.2f - TICKS_TO_TIME(2);
     else
         return delta_tickcount <= TICKS_TO_TIME(1);
@@ -121,7 +121,7 @@ bool isEnabled()
     CachedEntity *wep = LOCAL_W;
     if (CE_BAD(wep))
     {
-        if (hacks::antianticheat::enabled)
+        if (hacks::tf2::antianticheat::enabled)
             return true;
         return false;
     }
@@ -213,9 +213,9 @@ void MoveToTick(BacktrackData data)
 
     typedef BoneCache *(*GetBoneCache_t)(unsigned);
     typedef void (*BoneCacheUpdateBones_t)(BoneCache *, matrix3x4_t * bones, unsigned, float time);
-    static auto hitbox_bone_cache_handle_offset = *(unsigned *) (CSignature::GetClientSignature("8B 86 ? ? ? ? 89 04 24 E8 ? ? ? ? 85 C0 89 C3 74 48") + 2);
-    static auto studio_get_bone_cache           = (GetBoneCache_t) CSignature::GetClientSignature("55 89 E5 56 53 BB ? ? ? ? 83 EC 50 C7 45 D8");
-    static auto bone_cache_update_bones         = (BoneCacheUpdateBones_t) CSignature::GetClientSignature("55 89 E5 57 31 FF 56 53 83 EC 1C 8B 5D 08 0F B7 53 10");
+    static auto hitbox_bone_cache_handle_offset = *(unsigned *) (gSignatures.GetClientSignature("8B 86 ? ? ? ? 89 04 24 E8 ? ? ? ? 85 C0 89 C3 74 48") + 2);
+    static auto studio_get_bone_cache           = (GetBoneCache_t) gSignatures.GetClientSignature("55 89 E5 56 53 BB ? ? ? ? 83 EC 50 C7 45 D8");
+    static auto bone_cache_update_bones         = (BoneCacheUpdateBones_t) gSignatures.GetClientSignature("55 89 E5 57 31 FF 56 53 83 EC 1C 8B 5D 08 0F B7 53 10");
 
     auto hitbox_bone_cache_handle = CE_VAR(target, hitbox_bone_cache_handle_offset, unsigned);
     if (hitbox_bone_cache_handle)
@@ -233,8 +233,8 @@ void MoveToTick(BacktrackData data)
     uintptr_t collisionprop = (uintptr_t) RAW_ENT(target) + netvar.m_Collision;
 
     typedef void (*UpdateParition_t)(uintptr_t prop);
-    static auto sig_update         = CSignature::GetClientSignature("55 89 E5 57 56 53 83 EC 3C 8B 5D ? 8B 43 ? 8B 90");
-    static auto UpdatePartition_fn = (UpdateParition_t) sig_update;
+    static auto sig_update                     = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 3C 8B 5D ? 8B 43 ? 8B 90");
+    static UpdateParition_t UpdatePartition_fn = (UpdateParition_t) sig_update;
 
     // Mark for update
     int *entity_flags = (int *) ((uintptr_t) RAW_ENT(target) + 400);
@@ -258,7 +258,7 @@ void RestoreEntity(int entidx)
 
 void CreateMoveEarly()
 {
-    if (hacks::antianticheat::enabled && *latency > 200.0f)
+    if (hacks::tf2::antianticheat::enabled && *latency > 200.0f)
         latency = 200.0f;
     draw_positions.clear();
     isBacktrackEnabled = isEnabled();
@@ -417,4 +417,4 @@ static InitRoutine init(
 #endif
     });
 
-} // namespace hacks::backtrack
+} // namespace hacks::tf2::backtrack

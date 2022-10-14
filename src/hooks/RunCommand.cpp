@@ -1,3 +1,4 @@
+
 #include "HookedMethods.hpp"
 #include "WeaponData.hpp"
 
@@ -83,4 +84,5 @@ static InitRoutine minigun_check(
             },
             "cm_runcommand");
     });
+
 } // namespace hooked_methods

@@ -62,9 +62,7 @@ void __attribute__((destructor)) deconstruct()
     detach();
 }
 
-CatCommand cat_detach("detach", "Detach cathook from TF2",
-                      []()
-                      {
-                          hack::game_shutdown = false;
-                          detach();
-                      });
+CatCommand cat_detach("detach", "Detach cathook from TF2", []() {
+    hack::game_shutdown = false;
+    detach();
+});

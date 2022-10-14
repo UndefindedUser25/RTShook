@@ -9,7 +9,7 @@
 #include "common.hpp"
 #include "PlayerTools.hpp"
 
-namespace hacks::spyalert
+namespace hacks::tf::spyalert
 {
 static settings::Boolean enable{ "spy-alert.enable", "false" };
 static settings::Float distance_warning{ "spy-alert.distance.warning", "500" };
@@ -50,7 +50,7 @@ void Draw()
             continue;
         if (CE_INT(ent, netvar.iTeamNum) == g_pLocalPlayer->team)
             continue;
-        if (!invisible && IsPlayerInvisible(ent))
+        if (IsPlayerInvisible(ent) && !invisible)
             continue;
         if (!player_tools::shouldTarget(ent))
             continue;
@@ -73,11 +73,8 @@ void Draw()
             {
                 if (sound_alert && (g_GlobalVars->curtime - last_say) > (float) sound_alert_interval)
                 {
-                    for (int i = 0; i < 40000; i++)
-                    {
-                        g_ISurface->PlaySound("vo/demoman_cloakedspy03.mp3");
-                        last_say = g_GlobalVars->curtime;
-                    }
+                    g_ISurface->PlaySound("vo/demoman_cloakedspy03.mp3");
+                    last_say = g_GlobalVars->curtime;
                 }
                 backstab_triggered = true;
             }
@@ -92,11 +89,8 @@ void Draw()
             {
                 if (sound_alert && (g_GlobalVars->curtime - last_say) > (float) sound_alert_interval)
                 {
-                    for (int i = 0; i < 40000; i++)
-                    {
-                        g_ISurface->PlaySound("vo/demoman_cloakedspy01.mp3");
-                        last_say = g_GlobalVars->curtime;
-                    }
+                    g_ISurface->PlaySound("vo/demoman_cloakedspy01.mp3");
+                    last_say = g_GlobalVars->curtime;
                 }
                 warning_triggered = true;
             }
@@ -114,4 +108,4 @@ void Draw()
 #if ENABLE_VISUALS
 static InitRoutine EC([]() { EC::Register(EC::Draw, Draw, "spyalert", EC::average); });
 #endif
-} // namespace hacks::spyalert
+} // namespace hacks::tf::spyalert

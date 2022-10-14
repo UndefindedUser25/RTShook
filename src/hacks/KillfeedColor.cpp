@@ -1,7 +1,6 @@
 /*
  *  Credits to UNKN0WN
  */
-
 #include "common.hpp"
 #include "DetourHook.hpp"
 #include "PlayerTools.hpp"
@@ -12,7 +11,7 @@
 #include <string>
 
 #if !ENFORCE_STREAM_SAFETY
-namespace hacks::killfeed
+namespace hacks::tf2::killfeed
 {
 static settings::Boolean enable{ "visual.killfeedcolor.enable", "true" };
 static settings::Boolean sort_names{ "visual.killfeedcolor.sort-names", "false" };
@@ -50,7 +49,7 @@ void DrawText_hook(int *_this, int x, int y, vgui::HFont hFont, Color clr, const
             player_names.clear();
             for (int i = 1; i < g_IEngine->GetMaxClients(); i++)
             {
-                player_info_s player_info{};
+                player_info_s player_info;
                 if (GetPlayerInfo(i, &player_info))
                     player_names[player_info.name] = i;
             }
@@ -62,7 +61,7 @@ void DrawText_hook(int *_this, int x, int y, vgui::HFont hFont, Color clr, const
         // Get entities by name
         for (auto &name : names_array)
         {
-            player_info_s pinfo{};
+            player_info_s pinfo;
             if (player_names[name] != 0 && GetPlayerInfo(player_names[name], &pinfo))
                 displayed_players.push_back(pinfo);
         }
@@ -84,11 +83,10 @@ void DrawText_hook(int *_this, int x, int y, vgui::HFont hFont, Color clr, const
                               case playerlist::k_EState::DEFAULT:
                                   return 0;
                               case playerlist::k_EState::CAT:
+                              case playerlist::k_EState::NULLNEXUS:
                               case playerlist::k_EState::FRIEND:
                                   return 2;
                               case playerlist::k_EState::RAGE:
-                              case playerlist::k_EState::PAZER:
-                              case playerlist::k_EState::ABUSE:
                                   return 3;
                               default:
                                   return 1;
@@ -146,11 +144,11 @@ void DrawText_hook(int *_this, int x, int y, vgui::HFont hFont, Color clr, const
 static InitRoutine init(
     []
     {
-        auto drawtext_addr = CSignature::GetClientSignature("55 89 E5 57 56 53 83 EC 1C A1 ? ? ? ? 8B 4D");
+        auto drawtext_addr = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 1C A1 ? ? ? ? 8B 4D");
         drawtext_detour.Init(drawtext_addr, (void *) DrawText_hook);
 
         EC::Register(
             EC::Shutdown, []() { drawtext_detour.Shutdown(); }, "shutdown_kf");
     });
-} // namespace hacks::killfeed
+} // namespace hacks::tf2::killfeed
 #endif

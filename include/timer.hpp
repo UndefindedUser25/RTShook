@@ -14,7 +14,7 @@ class Timer
 public:
     typedef std::chrono::system_clock clock;
 
-    inline Timer() = default;
+    inline Timer(){};
 
     inline bool check(unsigned ms) const
     {

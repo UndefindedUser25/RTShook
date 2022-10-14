@@ -4,6 +4,7 @@
 
 #include "common.hpp"
 #include <unordered_map>
+#include <hoovy.hpp>
 #include <playerlist.hpp>
 #include "PlayerTools.hpp"
 #include "entitycache.hpp"
@@ -12,11 +13,15 @@
 
 namespace player_tools
 {
+
 static settings::Int betrayal_limit{ "player-tools.betrayal-limit", "2" };
 static settings::Boolean betrayal_sync{ "player-tools.betrayal-ipc-sync", "true" };
 
 static settings::Boolean taunting{ "player-tools.ignore.taunting", "true" };
+static settings::Boolean hoovy{ "player-tools.ignore.hoovy", "true" };
 static settings::Boolean ignoreCathook{ "player-tools.ignore.cathook", "true" };
+static settings::Boolean ignoreLegit{ "player-tools.ignore.legit", "false" };
+static settings::Boolean ignoreNullnexus{ "player-tools.ignore.nullnexus", "true" };
 
 static std::unordered_map<unsigned, unsigned> betrayal_list{};
 
@@ -31,7 +36,9 @@ bool shouldTargetSteamId(unsigned id)
     }
 
     auto &pl = playerlist::AccessData(id);
-    if (playerlist::IsFriendly(pl.state) || (pl.state == playerlist::k_EState::CAT && *ignoreCathook))
+    if (playerlist::IsFriendly(pl.state) || (pl.state == playerlist::k_EState::CAT && *ignoreCathook) || (pl.state == playerlist::k_EState::NULLNEXUS && *ignoreNullnexus))
+        return false;
+    if (pl.state == playerlist::k_EState::DEFAULT && *ignoreLegit)
         return false;
     return true;
 }
@@ -40,6 +47,8 @@ bool shouldTarget(CachedEntity *entity)
 {
     if (entity->m_Type() == ENTITY_PLAYER)
     {
+        if (hoovy && IsHoovy(entity))
+            return false;
         if (taunting && HasCondition<TFCond_Taunting>(entity) && CE_INT(entity, netvar.m_iTauntIndex) == 3)
             return false;
         if (HasCondition<TFCond_HalloweenGhostMode>(entity))
@@ -115,17 +124,9 @@ void onKilledBy(unsigned id)
             {
                 std::string command = "cat_ipc_exec_all cat_pl_mark_betrayal " + std::to_string(id);
                 if (command.length() >= 63)
-                    ipc::peer->SendMessage(nullptr, -1, ipc::commands::execute_client_cmd_long, command.c_str(), command.length() + 1);
+                    ipc::peer->SendMessage(0, -1, ipc::commands::execute_client_cmd_long, command.c_str(), command.length() + 1);
                 else
-                    ipc::peer->SendMessage(command.c_str(), -1, ipc::commands::execute_client_cmd, nullptr, 0);
-
-                if (std::ifstream("tf/cfg/betrayals.cfg"))
-                {
-                    std::ofstream cfg_betrayal;
-                    cfg_betrayal.open("tf/cfg/betrayals.cfg", std::ios::app);
-                    cfg_betrayal << "cat_pl_add_id " + std::to_string(id) + " ABUSE\n";
-                    cfg_betrayal.close();
-                }
+                    ipc::peer->SendMessage(command.c_str(), -1, ipc::commands::execute_client_cmd, 0, 0);
             }
         }
     }

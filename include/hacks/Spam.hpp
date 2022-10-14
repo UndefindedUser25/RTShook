@@ -11,8 +11,9 @@
 
 class CatCommand;
 
-namespace hacks::spam
+namespace hacks::shared::spam
 {
+
 extern const std::vector<std::string> builtin_default;
 extern const std::vector<std::string> builtin_lennyfaces;
 extern const std::vector<std::string> builtin_blanks;
@@ -24,4 +25,4 @@ bool isActive();
 void init();
 void createMove();
 void reload();
-} // namespace hacks::spam
+} // namespace hacks::shared::spam

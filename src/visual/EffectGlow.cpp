@@ -28,6 +28,7 @@ CScreenSpaceEffectRegistration::CScreenSpaceEffectRegistration(const char *pName
 
 namespace effect_glow
 {
+
 static settings::Boolean health{ "glow.health", "false" };
 static settings::Boolean aimbot_color{ "glow.aimbot.color", "true" };
 static settings::Boolean teammates{ "glow.show.teammates", "false" };
@@ -92,7 +93,9 @@ ITexture *GetBuffer(int i)
     if (!buffers[i])
     {
         ITexture *fullframe;
-        fullframe = g_IMaterialSystem->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
+        IF_GAME(IsTF2())
+        fullframe      = g_IMaterialSystem->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
+        else fullframe = g_IMaterialSystemHL->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
         // char *newname    = new char[32];
         std::unique_ptr<char[]> newname(new char[32]);
         std::string name = format("_cathook_buff", i);
@@ -103,7 +106,14 @@ ITexture *GetBuffer(int i)
         int renderTargetFlags = CREATERENDERTARGETFLAGS_HDR;
 
         ITexture *texture;
-        texture = g_IMaterialSystem->CreateNamedRenderTargetTextureEx(newname.get(), fullframe->GetActualWidth(), fullframe->GetActualHeight(), RT_SIZE_LITERAL, IMAGE_FORMAT_RGBA8888, MATERIAL_RT_DEPTH_SEPARATE, textureFlags, renderTargetFlags);
+        IF_GAME(IsTF2())
+        {
+            texture = g_IMaterialSystem->CreateNamedRenderTargetTextureEx(newname.get(), fullframe->GetActualWidth(), fullframe->GetActualHeight(), RT_SIZE_LITERAL, IMAGE_FORMAT_RGBA8888, MATERIAL_RT_DEPTH_SEPARATE, textureFlags, renderTargetFlags);
+        }
+        else
+        {
+            texture = g_IMaterialSystemHL->CreateNamedRenderTargetTextureEx(newname.get(), fullframe->GetActualWidth(), fullframe->GetActualHeight(), RT_SIZE_LITERAL, IMAGE_FORMAT_RGBA8888, MATERIAL_RT_DEPTH_SEPARATE, textureFlags, renderTargetFlags);
+        }
         buffers[i].Init(texture);
     }
     return buffers[i];
@@ -222,7 +232,7 @@ rgba_t EffectGlow::GlowColor(IClientEntity *entity)
     ent = ENTITY(entity->entindex());
     if (CE_BAD(ent))
         return colors::white;
-    if (ent == hacks::aimbot::CurrentTarget() && aimbot_color)
+    if (ent == hacks::shared::aimbot::CurrentTarget() && aimbot_color)
         return colors::target;
     if (re::C_BaseCombatWeapon::IsBaseCombatWeapon(entity))
     {
@@ -297,16 +307,18 @@ bool EffectGlow::ShouldRenderGlow(IClientEntity *entity)
         }
         break;
     case ENTITY_GENERIC:
-        const model_t *model = RAW_ENT(ent)->GetModel();
-        if (model)
+        const auto &type = ent->m_ItemType();
+        if (type >= ITEM_HEALTH_SMALL && type <= ITEM_HEALTH_LARGE)
         {
-            const auto szName = g_IModelInfo->GetModelName(model);
-            if (Hash::IsHealth(szName))
-                return *medkits;
-            else if (Hash::IsAmmo(szName))
-                return *ammobox;
-            else if (Hash::IsPowerup(szName))
-                return *show_powerups;
+            return *medkits;
+        }
+        else if (type >= ITEM_AMMO_SMALL && type <= ITEM_AMMO_LARGE)
+        {
+            return *ammobox;
+        }
+        else if (type >= ITEM_POWERUP_FIRST && type <= ITEM_POWERUP_LAST)
+        {
+            return *show_powerups;
         }
         break;
     }
@@ -446,28 +458,33 @@ void EffectGlow::Render(int x, int y, int w, int h)
     if (!isHackActive() || (clean_screenshots && g_IEngine->IsTakingScreenshot()) || g_Settings.bInvalid || disable_visuals)
         return;
     static ITexture *orig;
+    static IClientEntity *ent;
     static IMaterialVar *blury_bloomamount;
     if (!init)
         Init();
     CMatRenderContextPtr ptr(GET_RENDER_CONTEXT);
     orig = ptr->GetRenderTarget();
     BeginRenderGlow();
-    for (auto &ent_non_raw : entity_cache::valid_ents)
+    for (int i = 1; i <= HIGHEST_ENTITY; i++)
     {
-        auto ent = RAW_ENT(ent_non_raw);
-        if (ent && ShouldRenderGlow(ent))
+        ent = g_IEntityList->GetClientEntity(i);
+        if (ent && !ent->IsDormant() && ShouldRenderGlow(ent))
+        {
             RenderGlow(ent);
+        }
     }
     EndRenderGlow();
     if (*solid_when != 1)
     {
         ptr->ClearStencilBufferRectangle(x, y, w, h, 0);
         StartStenciling();
-        for (auto &non_raw : entity_cache::valid_ents)
+        for (int i = 1; i <= HIGHEST_ENTITY; i++)
         {
-            auto ent = RAW_ENT(non_raw);
-            if (ent && ShouldRenderGlow(ent))
+            ent = g_IEntityList->GetClientEntity(i);
+            if (ent && !ent->IsDormant() && ShouldRenderGlow(ent))
+            {
                 DrawToStencil(ent);
+            }
         }
         EndStenciling();
     }
@@ -483,10 +500,14 @@ void EffectGlow::Render(int x, int y, int w, int h)
     ptr->SetRenderTarget(orig);
     g_IVRenderView->SetBlend(0.0f);
     if (*solid_when != 1)
+    {
         SS_Drawing.SetStencilState(ptr);
+    }
     ptr->DrawScreenSpaceRectangle(mat_blit, x, y, w, h, 0, 0, w - 1, h - 1, w, h);
     if (*solid_when != -1)
+    {
         SS_Null.SetStencilState(ptr);
+    }
 #endif
 }
 
@@ -503,5 +524,6 @@ static InitRoutine init(
             effect_glow::g_pEffectGlow = new CScreenSpaceEffectRegistration("_cathook_glow", &effect_glow::g_EffectGlow);
             g_pScreenSpaceEffects->EnableScreenSpaceEffect("_cathook_glow");
         }
-    });
+    } // namespace effect_glow
+);
 } // namespace effect_glow

@@ -10,16 +10,16 @@
 #include "common.hpp"
 #include "Backtrack.hpp"
 
-namespace hacks::triggerbot
+namespace hacks::shared::triggerbot
 {
 
 void CreateMove();
 bool ShouldShoot();
-bool IsTargetStateGood(CachedEntity *entity, std::optional<backtrack::BacktrackData> bt_data = std::nullopt);
+bool IsTargetStateGood(CachedEntity *entity, std::optional<tf2::backtrack::BacktrackData> bt_data = std::nullopt);
 CachedEntity *FindEntInSight(float range, bool no_players = false);
 bool HeadPreferable(CachedEntity *target);
 bool UpdateAimkey();
 float EffectiveTargetingRange();
 void Draw();
 bool CheckLineBox(Vector B1, Vector B2, Vector L1, Vector L2, Vector &Hit);
-} // namespace hacks::triggerbot
+} // namespace hacks::shared::triggerbot

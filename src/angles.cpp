@@ -9,16 +9,19 @@
 
 namespace angles
 {
+
 angle_data_s data_[PLAYER_ARRAY_SIZE];
 
 void angle_data_s::push(const Vector &angle)
 {
-    if (!angle.x && !angle.y)
+    if (not angle.x and not angle.y)
         return;
     good                = true;
     angles[angle_index] = angle;
     if (++angle_index >= count)
+    {
         angle_index = 0;
+    }
     /*if (angle_count > 0) {
         int ai = angle_index - 2;
         if (ai < 0) ai = count - 1;
@@ -30,7 +33,9 @@ void angle_data_s::push(const Vector &angle)
         }
     }*/
     if (angle_count < count)
+    {
         angle_count++;
+    }
 }
 
 float angle_data_s::deviation(int steps) const
@@ -87,15 +92,22 @@ void Update()
         if (CE_GOOD(ent) && !CE_BYTE(ent, netvar.iLifeState))
         {
             if (!d.good)
+            {
                 memset(&d, 0, sizeof(angle_data_s));
-
+            }
             if (i == g_IEngine->GetLocalPlayer())
+            {
                 d.push(current_user_cmd->viewangles);
+            }
             else
+            {
                 d.push(CE_VECTOR(ent, netvar.m_angEyeAngles));
+            }
         }
         else
+        {
             d.good = false;
+        }
     }
 }
 } // namespace angles

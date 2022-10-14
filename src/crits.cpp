@@ -39,6 +39,7 @@ static bool is_out_of_sync = false;
 // Optimization
 static int shots_to_fill_bucket = 0;
 
+    
 bool calling_crithelper = false;
 static float getBucketCap()
 {
@@ -147,7 +148,7 @@ static float getCritCap(IClientEntity *wep)
     float chance = 0.02f;
     if (g_pLocalPlayer->weapon_mode == weapon_melee)
         chance = 0.15f;
-    float flMultCritChance = ATTRIB_HOOK_FLOAT(crit_mult * chance, "mult_crit_chance", wep, nullptr, true);
+    float flMultCritChance = ATTRIB_HOOK_FLOAT(crit_mult * chance, "mult_crit_chance", wep, 0, 1);
 
     if (isRapidFire(wep))
     {
@@ -159,7 +160,7 @@ static float getCritCap(IClientEntity *wep)
         float flNonCritDuration = (flCritDuration / flTotalCritChance) - flCritDuration;
         // calculate the chance per second of non-crit fire that we should transition into critting such that on average we achieve the total crit chance we want
         float flStartCritChance = 1 / flNonCritDuration;
-        flMultCritChance        = ATTRIB_HOOK_FLOAT(flStartCritChance, "mult_crit_chance", wep, nullptr, true);
+        flMultCritChance        = ATTRIB_HOOK_FLOAT(flStartCritChance, "mult_crit_chance", wep, 0, 1);
     }
 
     return flMultCritChance;
@@ -181,7 +182,7 @@ static std::pair<float, float> critMultInfo(IClientEntity *wep)
     float cur_crit        = getCritCap(wep);
     float observed_chance = CE_FLOAT(LOCAL_W, netvar.flObservedCritChance);
     float needed_chance   = cur_crit + 0.1f;
-    return { observed_chance, needed_chance };
+    return std::pair<float, float>(observed_chance, needed_chance);
 }
 
 // How much damage we need until we can crit
@@ -266,19 +267,19 @@ bool shouldMeleeCrit()
 {
     if (!melee || g_pLocalPlayer->weapon_mode != weapon_melee)
         return false;
-    if (hacks::backtrack::backtrackEnabled())
+    if (hacks::tf2::backtrack::backtrackEnabled())
     {
         // Closest tick for melee
-        std::optional<hacks::backtrack::BacktrackData> closest_tick = std::nullopt;
-        float best_distance                                         = FLT_MAX;
+        std::optional<hacks::tf2::backtrack::BacktrackData> closest_tick = std::nullopt;
+        float best_distance                                              = FLT_MAX;
 
-        if (hacks::backtrack::hasData())
+        if (hacks::tf2::backtrack::hasData())
         {
-            closest_tick = hacks::backtrack::getData();
+            closest_tick = hacks::tf2::backtrack::getData();
         }
         else
         {
-            for (auto &ent_data : hacks::backtrack::bt_data)
+            for (auto &ent_data : hacks::tf2::backtrack::bt_data)
             {
                 for (auto &tick : ent_data)
                 {
@@ -426,7 +427,7 @@ bool prevent_crit()
 void force_crit()
 {
     // Can't use normal methods here
-    if (hacks::antianticheat::enabled)
+    if (hacks::tf2::antianticheat::enabled)
     {
         // We have to ignore these sadly
         if (CE_GOOD(LOCAL_W) && (LOCAL_W->m_iClassID() == CL_CLASS(CTFCannon) || LOCAL_W->m_iClassID() == CL_CLASS(CTFPipebombLauncher) || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 730))
@@ -450,7 +451,7 @@ void force_crit()
     else if (g_pLocalPlayer->weapon_mode != weapon_melee && LOCAL_W->m_iClassID() != CL_CLASS(CTFPipebombLauncher))
     {
         // We have valid crit command numbers
-        if (!crit_cmds.empty() && crit_cmds.find(LOCAL_W->m_IDX) != crit_cmds.end() && !crit_cmds.find(LOCAL_W->m_IDX)->second.empty())
+        if (crit_cmds.size() && crit_cmds.find(LOCAL_W->m_IDX) != crit_cmds.end() && crit_cmds.find(LOCAL_W->m_IDX)->second.size())
         {
             if (current_index >= crit_cmds.at(LOCAL_W->m_IDX).size())
                 current_index = 0;
@@ -565,12 +566,12 @@ static void updateCmds()
         weapon_info info(weapon);
         int nProjectilesPerShot = GetWeaponData(weapon)->m_nBulletsPerShot;
         if (nProjectilesPerShot >= 1)
-            nProjectilesPerShot = ATTRIB_HOOK_FLOAT(nProjectilesPerShot, "mult_bullets_per_shot", weapon, nullptr, true);
+            nProjectilesPerShot = ATTRIB_HOOK_FLOAT(nProjectilesPerShot, "mult_bullets_per_shot", weapon, 0x0, true);
         else
             nProjectilesPerShot = 1;
 
         added_per_shot = GetWeaponData(weapon)->m_nDamage;
-        added_per_shot = ATTRIB_HOOK_FLOAT(added_per_shot, "mult_dmg", weapon, nullptr, true);
+        added_per_shot = ATTRIB_HOOK_FLOAT(added_per_shot, "mult_dmg", weapon, 0x0, true);
         added_per_shot *= nProjectilesPerShot;
         shots_to_fill_bucket = getBucketCap() / added_per_shot;
         // Special boi
@@ -603,7 +604,7 @@ static weapon_info last_weapon_info;
 // Fix bucket on non-local servers
 void fixBucket(IClientEntity *weapon, CUserCmd *cmd)
 {
-    auto *ch = (INetChannel *) g_IEngine->GetNetChannelInfo();
+    INetChannel *ch = (INetChannel *) g_IEngine->GetNetChannelInfo();
     if (!ch)
         return;
 
@@ -777,7 +778,7 @@ static std::array<std::string, 32> crit_strings;
 static size_t crit_strings_count{ 0 };
 static std::array<rgba_t, 32> crit_strings_colors{ colors::empty };
 
-static std::string bar_string;
+static std::string bar_string = "";
 
 void AddCritString(const std::string &string, const rgba_t &color)
 {
@@ -792,7 +793,7 @@ void DrawCritStrings()
     float x = *bar_x + *size;
     float y = *bar_y + *size / 5.0f;
 
-    if (!bar_string.empty())
+    if (bar_string != "")
     {
         float sx, sy;
         fonts::center_screen->stringSize(bar_string, &sx, &sy);
@@ -856,50 +857,51 @@ void Draw()
             if (shouldCrit())
             {
                 if (can_crit)
-                    AddCritString("Forcing crits", colors::red_s);
+                    AddCritString("Binding crits", colors::red_s);
                 else
-                    AddCritString("Crit banned", colors::red_s);
+                    AddCritString("Crits Banned.", colors::red_s);
             }
 
             // Weapon can't randomly crit
             if (!re::C_TFWeaponBase::CanFireCriticalShot(RAW_ENT(LOCAL_W), false, nullptr) || !added_per_shot)
             {
-                AddCritString("Weapon cannot randomly crit", colors::red_s);
+                AddCritString("No Random crits on weapons.", colors::red_s);
                 DrawCritStrings();
                 return;
             }
 
             // We are out of sync. RIP
             if (is_out_of_sync)
-                AddCritString("Out of sync", colors::red_s);
+                AddCritString("Error sync. Cant Predicting weapons", colors::red_s);
             // Observed crit chance is not low enough, display how much damage is needed until we can crit again
             else if (crit_mult_info.first > crit_mult_info.second && g_pLocalPlayer->weapon_mode != weapon_melee)
-                AddCritString(std::to_string(int(damageUntilToCrit(wep))) + " damage required", colors::yellow);
+                AddCritString("Need Damage : " + std::to_string(damageUntilToCrit(wep)), colors::orange);
             else if (!can_crit)
             {
                 if (isRapidFire(wep))
                 {
-                    std::string crit_string = "Shots until crit: ";
+                    std::string crit_string = "Shots until : ";
                     weapon_info info(wep);
-                    crit_string += std::to_string(int((info.crit_count + 1) * 10.0f - info.crit_attempts - 1));
+                    crit_string += std::to_string((info.crit_count + 1) * 10.0f - info.crit_attempts - 1);
                     if (info.m_flCritTime + 1.0f >= g_GlobalVars->curtime)
                     {
                         crit_string += ", ";
-                        crit_string += std::to_string(int(info.m_flCritTime + 1.0f - g_GlobalVars->curtime)) + "s";
+                        crit_string += std::to_string(info.m_flCritTime + 1.0f - g_GlobalVars->curtime) + "s";
                         AddCritString(crit_string, colors::red);
                     }
                     else
                         AddCritString(crit_string, colors::orange);
                 }
                 else
-                    AddCritString("Shots until crit: " + std::to_string(int(shots_until_crit)), colors::orange);
+                    AddCritString("Shots until : " + std::to_string(shots_until_crit), colors::orange);
             }
 
             // Mark bucket as ready/not ready
             auto color = colors::red_s;
             if (can_crit && (crit_mult_info.first <= crit_mult_info.second || g_pLocalPlayer->weapon_mode != weapon_melee))
+                AddCritString("Crits Ready!", colors::green);
                 color = colors::green;
-            AddCritString("Crit bucket: " + std::to_string(int(bucket)), color);
+            AddCritString("Crit Bucket : " + std::to_string(bucket), color);
         }
 
         // Draw Bar
@@ -953,23 +955,23 @@ void Draw()
                     draw::Rectangle(*bar_x, *bar_y, bar_bg_x_size * bucket_percentage, bar_bg_y_size, bucket_color);
 
                     if (is_out_of_sync)
-                        bar_string = "Out of sync";
+                        bar_string = "Out of sync.";
                     else if (crit_mult_info.first > crit_mult_info.second && g_pLocalPlayer->weapon_mode != weapon_melee)
-                        bar_string = std::to_string(int(damageUntilToCrit(wep))) + " damage required";
+                        bar_string =  "Need Damage : " + std::to_string(damageUntilToCrit(wep)) + "To crits.";
                     else
                     {
                         if (!isRapidFire(wep))
                         {
-                            bar_string = std::to_string(int(shots_until_crit)) + " Shots until crit";
+                            bar_string = "Shots until : " + std::to_string(shots_until_crit) + "To crits.";
                         }
                         else
                         {
 
                             weapon_info info(wep);
-                            std::string crit_string = std::to_string(int((info.crit_count + 1) * 10.0f - info.crit_attempts - 1));
-                            crit_string += " Shots until crit ";
+                            std::string crit_string = std::to_string((info.crit_count + 1) * 10.0f - info.crit_attempts - 1);
+                            crit_string += " Shots until Crits. ";
                             if (info.m_flCritTime + 1.0f >= g_GlobalVars->curtime)
-                                crit_string += std::to_string(int(info.m_flCritTime + 1.0f - g_GlobalVars->curtime)) + "s";
+                                crit_string += std::to_string(info.m_flCritTime + 1.0f - g_GlobalVars->curtime) + "s";
 
                             bar_string = crit_string;
                         }

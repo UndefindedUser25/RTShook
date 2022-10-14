@@ -9,6 +9,7 @@
 
 namespace chat_stack
 {
+
 void Say(const std::string &message, bool team)
 {
     stack.push({ message, team });
@@ -24,7 +25,7 @@ void OnCreateMove()
     {
         const msg_t &msg = stack.top();
         stack.pop();
-        if (!msg.text.empty())
+        if (msg.text.size())
         {
             // logging::Info("Saying %s %i", msg.text.c_str(), msg.text.size());
             if (msg.team)

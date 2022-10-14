@@ -9,10 +9,10 @@
 #include <settings/Bool.hpp>
 #include "common.hpp"
 
-namespace hacks::autodetonator
+namespace hacks::tf::autodetonator
 {
-static settings::Boolean enable{ "auto-detonator.enable", "false" };
-static settings::Boolean legit{ "auto-detonator.ignore-cloaked", "false" };
+static settings::Boolean enable{ "auto-detonator.enable", "0" };
+static settings::Boolean legit{ "auto-detonator.ignore-cloaked", "0" };
 
 // A storage array for ents
 std::vector<CachedEntity *> flares;
@@ -54,19 +54,21 @@ bool IsTarget(CachedEntity *ent)
         // Global checks
         if (!player_tools::shouldTarget(ent))
             return false;
+        IF_GAME(IsTF())
+        {
+            // Dont target invulnerable players, ex: uber, bonk
+            if (IsPlayerInvulnerable(ent))
+                return false;
 
-        // Don't target invulnerable players, ex: uber, bonk
-        if (IsPlayerInvulnerable(ent))
-            return false;
-
-        // If settings allow, don't target cloaked players
-        if (legit && IsPlayerInvisible(ent))
-            return false;
+            // If settings allow, dont target cloaked players
+            if (legit && IsPlayerInvisible(ent))
+                return false;
+        }
 
         // Target is good
         return true;
     }
-    // Target isn't a good type
+    // Target isnt a good type
     return false;
 }
 
@@ -83,13 +85,23 @@ void CreateMove()
     targets.clear();
 
     // Cycle through the ents and search for valid ents
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 0; i <= HIGHEST_ENTITY; i++)
     {
-        // Check if ent is a flare or suitable target and push to respective arrays
+        // Assign the for loops tick number to an ent
+        CachedEntity *ent = ENTITY(i);
+        // Check for dormancy and if valid
+        if (CE_BAD(ent))
+            continue;
+        // Check if ent is a flare or suitable target and push to respective
+        // arrays
         if (IsFlare(ent))
+        {
             flares.push_back(ent);
+        }
         else if (IsTarget(ent))
+        {
             targets.push_back(ent);
+        }
     }
     for (auto flare : flares)
     {
@@ -110,7 +122,9 @@ void CreateMove()
             }
         }
     }
+    // End of function, just return
+    return;
 }
 
 static InitRoutine EC([]() { EC::Register(EC::CreateMove, CreateMove, "auto_detonator", EC::average); });
-} // namespace hacks::autodetonator
+} // namespace hacks::tf::autodetonator

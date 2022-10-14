@@ -7,23 +7,25 @@
 #include <settings/Bool.hpp>
 #include "common.hpp"
 
-namespace hacks::deadringer
+namespace hacks::shared::deadringer
 {
-static settings::Boolean enable{ "auto-deadringer.enable", "false" };
+static settings::Boolean enable{ "auto-deadringer.enable", "0" };
 static settings::Int trigger_health{ "auto-deadringer.health", "30" };
 
 bool IsProjectile(CachedEntity *ent)
 {
     return (ent->m_iClassID() == CL_CLASS(CTFProjectile_Rocket) || ent->m_iClassID() == CL_CLASS(CTFProjectile_Flare) || ent->m_iClassID() == CL_CLASS(CTFProjectile_EnergyBall) || ent->m_iClassID() == CL_CLASS(CTFProjectile_HealingBolt) || ent->m_iClassID() == CL_CLASS(CTFProjectile_Arrow) || ent->m_iClassID() == CL_CLASS(CTFProjectile_SentryRocket) || ent->m_iClassID() == CL_CLASS(CTFProjectile_Cleaver) || ent->m_iClassID() == CL_CLASS(CTFGrenadePipebombProjectile) || ent->m_iClassID() == CL_CLASS(CTFProjectile_EnergyRing));
 }
-
 int NearbyEntities()
 {
     int ret = 0;
     if (CE_BAD(LOCAL_E) || CE_BAD(LOCAL_W))
         return ret;
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 0; i <= HIGHEST_ENTITY; i++)
     {
+        CachedEntity *ent = ENTITY(i);
+        if (CE_BAD(ent))
+            continue;
         if (ent == LOCAL_E)
             continue;
         if (!ent->m_bAlivePlayer())
@@ -33,7 +35,6 @@ int NearbyEntities()
     }
     return ret;
 }
-
 static Timer deadringer{};
 static bool previouslyringered;
 static void CreateMove()
@@ -44,6 +45,7 @@ static void CreateMove()
         return;
     if (g_pLocalPlayer->clazz != tf_spy)
         return;
+    previouslyringered = false;
     if (HasCondition<TFCond_Cloaked>(LOCAL_E) || HasCondition<TFCond_CloakFlicker>(LOCAL_E))
         return;
     bool shouldm2 = true;
@@ -52,8 +54,11 @@ static void CreateMove()
     else
         shouldm2 = false;
 
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 0; i <= HIGHEST_ENTITY; i++)
     {
+        CachedEntity *ent = ENTITY(i);
+        if (CE_BAD(ent))
+            continue;
         if (!IsProjectile(ent) && !ent->m_bGrenadeProjectile())
             continue;
         if (!ent->m_bEnemy())
@@ -87,6 +92,5 @@ static void CreateMove()
     if (shouldm2 && CE_BYTE(LOCAL_E, netvar.m_bFeignDeathReady))
         current_user_cmd->buttons |= IN_ATTACK2;
 }
-
 static InitRoutine EC([]() { EC::Register(EC::CreateMove, CreateMove, "AutoDeadringer", EC::average); });
-} // namespace hacks::deadringer
+} // namespace hacks::shared::deadringer

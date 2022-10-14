@@ -15,14 +15,12 @@ static settings::Float size("mc_health.size", "32");
 static std::vector<textures::sprite> absorption;
 static std::vector<textures::sprite> hearts;
 
-static InitRoutine init_textures(
-    []()
-    {
-        for (int i = 0; i < 2; i++)
-            absorption.push_back(textures::atlas().create_sprite(320 + 64 * i, 64, 64, 64));
-        for (int i = 0; i < 3; i++)
-            hearts.push_back(textures::atlas().create_sprite(256 + 64 * i, 192, 64, 64));
-    });
+static InitRoutine init_textures([]() {
+    for (int i = 0; i < 2; i++)
+        absorption.push_back(textures::atlas().create_sprite(320 + 64 * i, 64, 64, 64));
+    for (int i = 0; i < 3; i++)
+        hearts.push_back(textures::atlas().create_sprite(256 + 64 * i, 192, 64, 64));
+});
 
 void draw_func()
 {
@@ -49,7 +47,7 @@ void draw_func()
         if (i + 1 <= fullHearts)
             hearts[2].draw(startPosX + (iconSize - iconPixel) * i, startPosY, iconSize, iconSize,
                            colors::white); // full heart
-        else if (fullHearts + 1 == i + 1 && (int) halfHearts % 2 != 0)
+        else if (fullHearts + 1 == i + 1 && !((int) halfHearts % 2 == 0))
             hearts[1].draw(startPosX + (iconSize - iconPixel) * i, startPosY, iconSize, iconSize,
                            colors::white); // last half heart
         else

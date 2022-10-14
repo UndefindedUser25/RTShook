@@ -9,7 +9,7 @@
 #include "common.hpp"
 #include "hooks.hpp"
 
-namespace hacks::killstreak
+namespace hacks::tf2::killstreak
 {
 static settings::Boolean enable{ "killstreak.enable", "false" };
 
@@ -118,7 +118,7 @@ hooks::VMTHook hook;
 typedef bool (*FireEvent_t)(IGameEventManager2 *, IGameEvent *, bool);
 bool FireEvent_hook(IGameEventManager2 *manager, IGameEvent *event, bool bDontBroadcast)
 {
-    static auto original = (FireEvent_t) hook.GetMethod(offsets::FireEvent());
+    static FireEvent_t original = (FireEvent_t) hook.GetMethod(offsets::FireEvent());
     fire_event(event);
     return original(manager, event, bDontBroadcast);
 }
@@ -126,7 +126,7 @@ bool FireEvent_hook(IGameEventManager2 *manager, IGameEvent *event, bool bDontBr
 typedef bool (*FireEventClientSide_t)(IGameEventManager2 *, IGameEvent *);
 bool FireEventClientSide(IGameEventManager2 *manager, IGameEvent *event)
 {
-    static auto original = (FireEventClientSide_t) hook.GetMethod(offsets::FireEventClientSide());
+    static FireEventClientSide_t original = (FireEventClientSide_t) hook.GetMethod(offsets::FireEventClientSide());
     fire_event(event);
     return original(manager, event);
 }
@@ -136,4 +136,4 @@ void init()
 }
 
 static InitRoutine EC([]() { EC::Register(EC::Paint, apply_killstreaks, "killstreak", EC::average); });
-} // namespace hacks::killstreak
+} // namespace hacks::tf2::killstreak

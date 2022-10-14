@@ -11,6 +11,8 @@
 
 void TFPlayerResource::Update()
 {
+    IClientEntity *ent;
+
     entity = 0;
     for (auto &ent_not_raw : entity_cache::valid_ents)
     {
@@ -27,6 +29,8 @@ int TFPlayerResource::GetHealth(CachedEntity *player)
 {
     IClientEntity *ent;
     int idx;
+    /* :thinking */
+    IF_GAME(!IsTF()) return 100;
     ent = g_IEntityList->GetClientEntity(entity);
     if (!ent || ent->GetClientClass()->m_ClassID != RCC_PLAYERRESOURCE)
         return 0;
@@ -40,6 +44,8 @@ int TFPlayerResource::GetMaxHealth(CachedEntity *player)
 {
     IClientEntity *ent;
     int idx;
+    /* :thinking */
+    IF_GAME(!IsTF()) return 100;
     ent = g_IEntityList->GetClientEntity(entity);
     if (!ent || ent->GetClientClass()->m_ClassID != RCC_PLAYERRESOURCE)
         return 0;
@@ -54,6 +60,7 @@ int TFPlayerResource::GetMaxBuffedHealth(CachedEntity *player)
     IClientEntity *ent;
     int idx;
 
+    IF_GAME(!IsTF()) return GetMaxHealth(player);
     ent = g_IEntityList->GetClientEntity(entity);
     if (!ent || ent->GetClientClass()->m_ClassID != RCC_PLAYERRESOURCE)
         return 0;
@@ -177,7 +184,7 @@ bool TFPlayerResource::isAlive(int idx)
 {
     IClientEntity *ent = g_IEntityList->GetClientEntity(entity);
     if (!ent || ent->GetClientClass()->m_ClassID != RCC_PLAYERRESOURCE)
-        return false;
+        return 0;
     if (idx >= MAX_PLAYERS || idx < 0)
         return false;
     return *(bool *) ((unsigned) ent + netvar.res_bAlive + idx);
@@ -187,7 +194,7 @@ bool TFPlayerResource::isValid(int idx)
 {
     IClientEntity *ent = g_IEntityList->GetClientEntity(entity);
     if (!ent || ent->GetClientClass()->m_ClassID != RCC_PLAYERRESOURCE)
-        return false;
+        return 0;
     if (idx >= MAX_PLAYERS || idx < 0)
         return false;
     return *(bool *) ((unsigned) ent + netvar.res_bValid + idx);

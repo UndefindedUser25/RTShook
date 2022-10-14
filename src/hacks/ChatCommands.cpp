@@ -17,25 +17,28 @@
 #include "common.hpp"
 #include "ChatCommands.hpp"
 #include "MiscTemporary.hpp"
+#include <iostream>
 
-namespace hacks::ChatCommands
+namespace hacks::shared::ChatCommands
 {
+
 static settings::Boolean enabled("chatcommands.enabled", "false");
 
 struct ChatCommand
 {
-    void addcommand(const std::string &cmd)
+    void addcommand(std::string cmd)
     {
         commands.push_back(cmd);
     }
-    bool readFile(const std::string &filename)
+    bool readFile(std::string filename)
     {
         auto stream = std::ifstream(paths::getDataPath("/chatcommands/" + filename));
         if (!stream)
             return false;
         for (std::string line; getline(stream, line);)
+        {
             commands.push_back(line);
-
+        }
         return true;
     }
     const std::vector<std::string> &getCommands()
@@ -49,7 +52,7 @@ private:
 
 static std::unordered_map<std::string, ChatCommand> commands;
 
-void handleChatMessage(const std::string &message, int senderid)
+void handleChatMessage(std::string message, int senderid)
 {
     if (!enabled)
         return;
@@ -57,8 +60,8 @@ void handleChatMessage(const std::string &message, int senderid)
 
     std::string prefix;
     std::string all_params;
-    std::string::size_type space_pos = message.find_first_of(' ');
-    if (space_pos == std::string::npos)
+    std::string::size_type space_pos = message.find_first_of(" ");
+    if (space_pos == message.npos)
     {
         prefix     = message;
         all_params = "";
@@ -74,7 +77,7 @@ void handleChatMessage(const std::string &message, int senderid)
     logging::Info("Prefix: %s", prefix.c_str());
 
     auto ccmd = commands.find(prefix);
-    // Check if it's a registered command
+    // Check if its a registered command
     if (ccmd == commands.end())
         return;
     for (auto cmd : ccmd->second.getCommands())
@@ -103,7 +106,7 @@ static CatCommand chatcommands_add("chatcommands_add", "chatcommands_add <chat c
                                            return;
                                        }
                                        std::string prefix = args.Arg(1);
-                                       if (prefix.find(' ') != std::string::npos)
+                                       if (prefix.find(' ') != prefix.npos)
                                        {
                                            g_ICvar->ConsoleColorPrintf(MENU_COLOR, "The chat command mustn't contain spaces!\n");
                                            return;
@@ -125,7 +128,7 @@ static CatCommand chatcommands_file("chatcommands_file", "chatcommands_add <chat
                                             return;
                                         }
                                         std::string prefix = args.Arg(1);
-                                        if (prefix.find(' ') != std::string::npos)
+                                        if (prefix.find(' ') != prefix.npos)
                                         {
                                             g_ICvar->ConsoleColorPrintf(MENU_COLOR, "The chat command mustn't contain spaces!\n");
                                             return;
@@ -149,4 +152,4 @@ static CatCommand chatcommands_reset_all("chatcommands_reset_all", "Clears all c
                                              g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Chat commands cleared!\n");
                                          });
 
-} // namespace hacks::ChatCommands
+} // namespace hacks::shared::ChatCommands

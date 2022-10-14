@@ -12,6 +12,7 @@ class bf_read;
 
 namespace votelogger
 {
+
 void dispatchUserMessage(bf_read &buffer, int type);
-void onShutdown(const std::string &message);
+void onShutdown(std::string message);
 } // namespace votelogger

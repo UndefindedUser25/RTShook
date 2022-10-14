@@ -21,128 +21,117 @@ settings::Rgba col_blu_u{ "colors.team-blu.ubercharge", "003399ff" };
 settings::Rgba col_guicolor{ "colors.guicolor", "ffffffff" };
 settings::Rgba col_target{ "colors.target", "00ff00ff" };
 
-rgba_t red    = *col_red;
-rgba_t blu    = *col_blu;
-rgba_t red_b  = *col_red_b;
-rgba_t blu_b  = *col_blu_b;
-rgba_t red_v  = *col_red_v;
-rgba_t blu_v  = *col_blu_v;
-rgba_t red_u  = *col_red_u;
-rgba_t blu_u  = *col_blu_u;
-rgba_t gui    = *col_guicolor;
+rgba_t red   = *col_red;
+rgba_t blu   = *col_blu;
+rgba_t red_b = *col_red_b;
+rgba_t blu_b = *col_blu_b;
+rgba_t red_v = *col_red_v;
+rgba_t blu_v = *col_blu_v;
+rgba_t red_u = *col_red_u;
+rgba_t blu_u = *col_blu_u;
+rgba_t gui = *col_guicolor;
 rgba_t target = *col_target;
 
-static InitRoutine init(
-    []()
-    {
-        col_red.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { red = after; });
-        col_blu.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { blu = after; });
-        col_red_b.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { red_b = after; });
-        col_blu_b.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { blu_b = after; });
-        col_red_v.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { red_v = after; });
-        col_blu_v.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { blu_v = after; });
-        col_red_u.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { red_u = after; });
-        col_blu_u.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { blu_u = after; });
-        col_guicolor.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { gui = after; });
-        col_target.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { target = after; });
-    });
-} // namespace colors
+static InitRoutine init([]() {
+  col_red.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { red = after; });
+  col_blu.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { blu = after; });
+  col_red_b.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { red_b = after; });
+  col_blu_b.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { blu_b = after; });
+  col_red_v.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { red_v = after; });
+  col_blu_v.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { blu_v = after; });
+  col_red_u.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { red_u = after; });
+  col_blu_u.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { blu_u = after; });
+  col_guicolor.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { gui = after; });
+  col_target.installChangeCallback([](settings::VariableBase<rgba_t> &var, rgba_t after) { target = after; });
+});
+}
 
 rgba_t colors::EntityF(CachedEntity *ent)
 {
     rgba_t result, plclr;
     int skin;
-    const model_t *model = RAW_ENT(ent)->GetModel();
+    k_EItemType type;
 
     using namespace colors;
     result = white;
-    if (model)
+    type   = ent->m_ItemType();
+    if (type)
     {
-        if (Hash::IsHealth(g_IModelInfo->GetModelName(model)))
+        if ((type >= ITEM_HEALTH_SMALL && type <= ITEM_HEALTH_LARGE) || type == ITEM_TF2C_PILL)
             result = green;
-        else if (Hash::IsPowerup(g_IModelInfo->GetModelName(model)))
+        else if (type >= ITEM_POWERUP_FIRST && type <= ITEM_POWERUP_LAST)
         {
             skin = RAW_ENT(ent)->GetSkin();
-            switch (skin)
-            {
-            case 1:
+            if (skin == 1)
                 result = red;
-                break;
-            case 2:
+            else if (skin == 2)
                 result = blu;
-                break;
-            default:
+            else
                 result = yellow;
-                break;
+        }
+        else if (type >= ITEM_TF2C_W_FIRST && type <= ITEM_TF2C_W_LAST)
+        {
+            if (CE_BYTE(ent, netvar.bRespawning))
+            {
+                result = red;
             }
+            else
+            {
+                result = yellow;
+            }
+        }
+        else if (type == ITEM_HL_BATTERY)
+        {
+            result = yellow;
         }
     }
 
-    if (ent->m_iClassID() == CL_CLASS(CCurrencyPack) && !CE_BYTE(ent, netvar.bDistributed))
-        result = green;
+    if (ent->m_iClassID() == CL_CLASS(CCurrencyPack))
+    {
+        if (CE_BYTE(ent, netvar.bDistributed))
+            result = red;
+        else
+            result = green;
+    }
 
     if (ent->m_Type() == ENTITY_PROJECTILE)
     {
-        switch (ent->m_iTeam())
-        {
-        case TEAM_BLU:
+        if (ent->m_iTeam() == TEAM_BLU)
             result = blu;
-            break;
-        case TEAM_RED:
+        else if (ent->m_iTeam() == TEAM_RED)
             result = red;
-            break;
-        }
         if (ent->m_bCritProjectile())
         {
-            switch (ent->m_iTeam())
-            {
-            case TEAM_BLU:
+            if (ent->m_iTeam() == TEAM_BLU)
                 result = blu_u;
-                break;
-            case TEAM_RED:
+            else if (ent->m_iTeam() == TEAM_RED)
                 result = red_u;
-                break;
-            }
         }
     }
 
     if (ent->m_Type() == ENTITY_PLAYER || ent->m_Type() == ENTITY_BUILDING)
     {
-        switch (ent->m_iTeam())
-        {
-        case TEAM_BLU:
+        if (ent->m_iTeam() == TEAM_BLU)
             result = blu;
-            break;
-        case TEAM_RED:
+        else if (ent->m_iTeam() == TEAM_RED)
             result = red;
-            break;
-        }
         if (ent->m_Type() == ENTITY_PLAYER)
         {
             if (IsPlayerInvulnerable(ent))
             {
-                switch (ent->m_iTeam())
-                {
-                case TEAM_BLU:
+                if (ent->m_iTeam() == TEAM_BLU)
                     result = blu_u;
-                    break;
-                case TEAM_RED:
+                else if (ent->m_iTeam() == TEAM_RED)
                     result = red_u;
-                    break;
-                }
             }
             if (HasCondition<TFCond_UberBulletResist>(ent))
             {
-                switch (ent->m_iTeam())
-                {
-                case TEAM_BLU:
+                if (ent->m_iTeam() == TEAM_BLU)
                     result = blu_v;
-                    break;
-                case TEAM_RED:
+                else if (ent->m_iTeam() == TEAM_RED)
                     result = red_v;
-                    break;
-                }
             }
+
             auto o = player_tools::forceEspColor(ent);
             if (o.has_value())
                 return *o;

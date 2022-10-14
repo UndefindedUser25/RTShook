@@ -10,10 +10,11 @@
 #include <string>
 #include <vector>
 
-namespace hacks::uberspam
+namespace hacks::tf::uberspam
 {
+
 // Ready, Used, Ended, %...
 
 extern const std::vector<std::string> builtin_cathook;
 extern const std::vector<std::string> builtin_nonecore;
-} // namespace hacks::uberspam
+} // namespace hacks::tf::uberspam

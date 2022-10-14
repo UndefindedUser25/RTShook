@@ -41,7 +41,7 @@ public:
         logging::Info("csvstream: Trying to open log file");
         uid_t uid         = geteuid();
         struct passwd *pw = getpwuid(uid);
-        std::string uname;
+        std::string uname = "";
         if (pw)
         {
             uname = std::string(pw->pw_name);
@@ -109,12 +109,12 @@ void LogMessage(int eid, std::string message)
     {
         return;
     }
-    if (no_spam && hacks::spam::isActive() and eid == g_IEngine->GetLocalPlayer())
+    if (no_spam && hacks::shared::spam::isActive() and eid == g_IEngine->GetLocalPlayer())
         return;
     player_info_s info{};
     if (not GetPlayerInfo(eid, &info))
         return;
-    if (no_ipc && (playerlist::AccessData(info.friendsID).state == playerlist::k_EState::IPC || playerlist::AccessData(info.friendsID).state == playerlist::k_EState::CAT))
+    if (no_ipc && (playerlist::AccessData(info.friendsID).state == playerlist::k_EState::IPC || playerlist::AccessData(info.friendsID).state == playerlist::k_EState::CAT || playerlist::AccessData(info.friendsID).state == playerlist::k_EState::TEXTMODE))
         return;
 
     std::string name(info.name);

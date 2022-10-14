@@ -9,7 +9,7 @@
 #include <settings/Bool.hpp>
 #include <boost/circular_buffer.hpp>
 
-namespace hacks::aimbot
+namespace hacks::shared::aimbot
 {
 extern settings::Boolean engine_projpred;
 }
@@ -373,7 +373,6 @@ void Prediction_PaintTraverse()
                     continue;
                 auto pos  = ProjectilePrediction_Engine(ent, hitbox_t::spine_3, 1980.0f, 0.0f, 1.0f, 0.0f);
                 auto pos2 = ProjectilePrediction(ent, hitbox_t::spine_3, 1980.0f, 0.0f, 1.0f, 0.0f);
-
                 Vector aaa;
                 if (draw::WorldToScreen(pos.first, aaa))
                     draw::Rectangle(aaa.x, aaa.y, 5, 5, colors::yellow);
@@ -406,7 +405,6 @@ void Prediction_PaintTraverse()
                 /*if (!ent->m_bEnemy())
                     continue;
                 auto pos = ProjectilePrediction(ent, hitbox_t::spine_3, 1980.0f, 0.0f, 1.0f, 0.0f);
-
                 Vector aaa;
                 if (draw::WorldToScreen(pos, aaa))
                     draw::Rectangle(aaa.x, aaa.y, 5, 5, colors::yellow);*/
@@ -523,14 +521,12 @@ std::pair<Vector, Vector> ProjectilePrediction_Engine(CachedEntity *ent, int hb,
     
     float besttime          = currenttime;
     float mindelta          = 65536.0f;
+    float no_regression     = 66534.0f;
     Vector bestpos          = origin;
     Vector current          = origin;
     Vector current_velocity = velocity;
     int maxsteps            = (int) debug_pp_steps;
     float steplength        = g_GlobalVars->interval_per_tick;
-
-    Vector ent_mins = RAW_ENT(ent)->GetCollideable()->OBBMins();
-    Vector ent_maxs = RAW_ENT(ent)->GetCollideable()->OBBMaxs();
 
     for (int steps = 0; steps < maxsteps; steps++, currenttime += steplength)
     {
@@ -546,12 +542,16 @@ std::pair<Vector, Vector> ProjectilePrediction_Engine(CachedEntity *ent, int hb,
         float rockettime = g_pLocalPlayer->v_Eye.DistTo(current) / speed;
         // Compensate for ping
         rockettime += g_IEngine->GetNetChannelInfo()->GetLatency(FLOW_OUTGOING) + cl_interp->GetFloat();
-        float timedelta = fabs(currenttime > rockettime ? currenttime - rockettime : rockettime - currenttime);
+	float timedelta = fabs(currenttime > rockettime ? currenttime - rockettime : rockettime - currenttime);
         if (timedelta < mindelta)
         {
             besttime = currenttime;
             bestpos  = current;
             mindelta = timedelta;
+        }
+        else if (mindelta < no_regression)
+        {
+            break;
         }
     }
     // logging::Info("besttime: %f, currenttime: %f, old currenttime: %f", besttime, currenttime, currenttime - steplength * maxsteps);
@@ -650,7 +650,7 @@ std::pair<Vector, Vector> ProjectilePrediction(CachedEntity *ent, int hb, float 
         float rockettime = g_pLocalPlayer->v_Eye.DistTo(current) / speed;
         // Compensate for ping
         rockettime += g_IEngine->GetNetChannelInfo()->GetLatency(FLOW_OUTGOING) + cl_interp->GetFloat();
-        if (fabs(currenttime > rockettime ? currenttime - rockettime : rockettime - currenttime) < mindelta)
+	if (fabs(currenttime > rockettime ? currenttime - rockettime : rockettime - currenttime) < mindelta)
         {
             besttime = currenttime;
             bestpos  = current;
@@ -729,7 +729,7 @@ static InitRoutine init(
             []()
             {
                 // Don't run if we don't use it
-                if (!hacks::aimbot::engine_projpred && !debug_pp_draw)
+                if (!hacks::shared::aimbot::engine_projpred && !debug_pp_draw)
                     return;
                 for (int i = 1; i < g_GlobalVars->maxClients; i++)
                 {

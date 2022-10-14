@@ -7,10 +7,12 @@
 
 #include <settings/Int.hpp>
 #include "common.hpp"
+#include "MiscTemporary.hpp"
 #include "SetupBonesReconst.hpp"
 
 namespace hitbox_cache
 {
+
 EntityHitboxCache::EntityHitboxCache() : parent_ref(&entity_cache::Get(((unsigned) this - (unsigned) &hitbox_cache::array) / sizeof(EntityHitboxCache)))
 {
     Reset();
@@ -119,9 +121,9 @@ void EntityHitboxCache::UpdateBones()
 
     typedef BoneCache *(*GetBoneCache_t)(unsigned);
     typedef void (*BoneCacheUpdateBones_t)(BoneCache *, matrix3x4_t * bones, unsigned, float time);
-    static auto hitbox_bone_cache_handle_offset = *(unsigned *) (CSignature::GetClientSignature("8B 86 ? ? ? ? 89 04 24 E8 ? ? ? ? 85 C0 89 C3 74 48") + 2);
-    static auto studio_get_bone_cache           = (GetBoneCache_t) CSignature::GetClientSignature("55 89 E5 56 53 BB ? ? ? ? 83 EC 50 C7 45 D8");
-    static auto bone_cache_update_bones         = (BoneCacheUpdateBones_t) CSignature::GetClientSignature("55 89 E5 57 31 FF 56 53 83 EC 1C 8B 5D 08 0F B7 53 10");
+    static auto hitbox_bone_cache_handle_offset = *(unsigned *) (gSignatures.GetClientSignature("8B 86 ? ? ? ? 89 04 24 E8 ? ? ? ? 85 C0 89 C3 74 48") + 2);
+    static auto studio_get_bone_cache           = (GetBoneCache_t) gSignatures.GetClientSignature("55 89 E5 56 53 BB ? ? ? ? 83 EC 50 C7 45 D8");
+    static auto bone_cache_update_bones         = (BoneCacheUpdateBones_t) gSignatures.GetClientSignature("55 89 E5 57 31 FF 56 53 83 EC 1C 8B 5D 08 0F B7 53 10");
 
     auto hitbox_bone_cache_handle = CE_VAR(parent_ref, hitbox_bone_cache_handle_offset, unsigned);
     if (hitbox_bone_cache_handle)
@@ -150,7 +152,7 @@ matrix3x4_t *EntityHitboxCache::GetBones(int numbones)
         break;
     case 2:
         if (CE_GOOD(LOCAL_E))
-            bones_setup_time = SERVER_TIME;
+            bones_setup_time = g_GlobalVars->interval_per_tick * CE_INT(LOCAL_E, netvar.nTickBase);
         break;
     case 3:
         if (CE_GOOD(parent_ref))
@@ -171,7 +173,7 @@ matrix3x4_t *EntityHitboxCache::GetBones(int numbones)
             bones.resize(numbones);
         if (g_Settings.is_create_move)
         {
-            PROF_SECTION(bone_setup)
+            PROF_SECTION(bone_setup);
 
             // Only use reconstructed setupbones on players
             if (parent_ref->m_Type() == ENTITY_PLAYER)

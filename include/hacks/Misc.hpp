@@ -9,9 +9,8 @@
 
 #include "config.h"
 
-namespace hacks::misc
+namespace hacks::shared::misc
 {
-extern settings::Boolean tauntslide;
 void generate_schema();
 void Schema_Reload();
 void CreateMove();
@@ -22,4 +21,4 @@ int getCarriedBuilding();
 extern int last_number;
 
 extern float last_bucket;
-} // namespace hacks::misc
+} // namespace hacks::shared::misc

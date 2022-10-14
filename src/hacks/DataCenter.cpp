@@ -15,7 +15,6 @@
 #include <map>
 /* Splitting strings nicely */
 #include <boost/algorithm/string.hpp>
-#include <utility>
 
 /* Global switch for DataCenter hooks */
 static settings::Boolean enable{ "dc.enable", "false" };
@@ -37,7 +36,7 @@ struct SteamNetworkingPOPID_decl
 {
     unsigned v;
     /* 'out' must point to array with capacity at least 5 */
-    void ToString(char *out) const
+    void ToString(char *out)
     {
         out[0] = char(v >> 16);
         out[1] = char(v >> 8);
@@ -76,7 +75,7 @@ static std::map<std::string, std::string> dc_name_map{
     {"ord", "Chicago"},
     {"par", "Paris"},
     {"scl", "Santiago"},
-    {"sea", "Seattle"},
+    {"sea", "Seaattle"},
     {"sgp", "Singapore"},
     {"sto", "Stockholm (Kista)"},
     {"sto2", "Stockholm (Bromma)"},
@@ -108,7 +107,7 @@ static CatCommand print("dc_print", "Print codes of all available data centers",
                                 g_ICvar->ConsoleColorPrintf(MENU_COLOR, "List of regions is not available yet\n");
                                 return;
                             }
-                            auto *list = new SteamNetworkingPOPID_decl[count];
+                            SteamNetworkingPOPID_decl *list = new SteamNetworkingPOPID_decl[count];
                             GetPOPList(g_ISteamNetworkingUtils, list, count);
 
                             auto it = list;
@@ -116,7 +115,7 @@ static CatCommand print("dc_print", "Print codes of all available data centers",
                             {
                                 (it++)->ToString(region);
                                 std::string region_name = dc_name_map[region];
-                                if (region_name.empty())
+                                if (region_name == "")
                                     region_name = "Not set";
                                 g_ICvar->ConsoleColorPrintf(MENU_COLOR, "%s [%s]\n", region_name.c_str(), region);
                             }
@@ -144,7 +143,7 @@ static void OnRegionsUpdate(std::string regions)
     boost::split(regions_vec, regions, boost::is_any_of(","));
     for (auto &region_str : regions_vec)
     {
-        if (region_str.empty())
+        if (region_str == "")
             continue;
         if (region_str.length() > 4)
         {
@@ -192,7 +191,7 @@ static void Hook(bool on)
 }
 
 // if add is false it will remove instead
-void manageRegions(const std::vector<std::string> &regions_vec, bool add)
+void manageRegions(std::vector<std::string> regions_vec, bool add)
 {
     std::set<std::string> regions_split;
     if ((*regions).length())
@@ -237,7 +236,7 @@ static void Init()
             }
             Hook(on);
         });
-    regions.installChangeCallback([](settings::VariableBase<std::string> &, std::string regions) { OnRegionsUpdate(std::move(regions)); });
+    regions.installChangeCallback([](settings::VariableBase<std::string> &, std::string regions) { OnRegionsUpdate(regions); });
     restrict.installChangeCallback([](settings::VariableBase<bool> &, bool) { Refresh(); });
     enable_eu.installChangeCallback([](settings::VariableBase<bool> &, bool after) { manageRegions(eu_datacenters, after); });
     enable_north_america.installChangeCallback([](settings::VariableBase<bool> &, bool after) { manageRegions(north_america_datacenters, after); });

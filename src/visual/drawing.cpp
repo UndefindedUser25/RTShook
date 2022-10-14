@@ -1,15 +1,10 @@
-﻿/*
+﻿﻿/*
  * drawing.cpp
  *
  *  Created on: Mar 10, 2019
- *      Author: Lighty
+ *      Authors: Lighty & nullifiedcat
  */
-/*
- * drawing.cpp
- *
- *  Created on: Oct 5, 2016
- *      Author: nullifiedcat
- */
+
 #include "common.hpp"
 #if ENABLE_IMGUI_DRAWING
 #include "imgui/imrenderer.hpp"
@@ -21,7 +16,6 @@
 #endif
 #include "menu/GuiInterface.hpp"
 #include <SDL2/SDL_video.h>
-#include <SDLHooks.hpp>
 #include "soundcache.hpp"
 
 // String -> Wstring
@@ -93,7 +87,7 @@ std::string ShrinkString(std::string data, int max_x, fonts::font &font)
     int dotdot_with = x;
 
     if (padding + dotdot_with > max_x)
-        return std::string();
+        return {};
 
     if (!data.empty())
     {
@@ -175,7 +169,7 @@ static InitRoutine font_size(
                 {
 #if ENABLE_GLEZ_DRAWING
                     fonts::esp->unload();
-                    fonts::esp.reset(new fonts::font(paths::getDataPath("/fonts/Verdana.ttf"), after));
+                    fonts::esp.reset(new fonts::font(paths::getDataPath("/fonts/notosans.ttf"), after));
 #else
                     fonts::esp->changeSize(after);
 #endif
@@ -188,7 +182,7 @@ static InitRoutine font_size(
                 {
 #if ENABLE_GLEZ_DRAWING
                     fonts::center_screen->unload();
-                    fonts::center_screen.reset(new fonts::font(paths::getDataPath("/fonts/Verdana.ttf"), after));
+                    fonts::center_screen.reset(new fonts::font(paths::getDataPath("/fonts/notosans.ttf"), after));
 #else
                     fonts::center_screen->changeSize(after);
 #endif
@@ -208,17 +202,17 @@ void Initialize()
     }
 #if ENABLE_GLEZ_DRAWING
     glez::preInit();
-    fonts::menu.reset(new fonts::font(paths::getDataPath("/fonts/Verdana.ttf"), 10));
-    fonts::esp.reset(new fonts::font(paths::getDataPath("/fonts/cour.ttf"), 10));
-    fonts::center_screen.reset(new fonts::font(paths::getDataPath("/fonts/ArchivoBlack-Regular.ttf"), 12));
+    fonts::menu          = std::make_unique<fonts::font>(paths::getDataPath("/fonts/notosans.ttf"), 10);
+    fonts::esp           = std::make_unique<fonts::font>(paths::getDataPath("/fonts/notosans.ttf"), 10);
+    fonts::center_screen = std::make_unique<fonts::font>(paths::getDataPath("/fonts/notosans.ttf"), 12);
 #elif ENABLE_ENGINE_DRAWING
-    fonts::menu.reset(new fonts::font(paths::getDataPath("/fonts/Verdana.ttf"), 10, true));
-    fonts::esp.reset(new fonts::font(paths::getDataPath("/fonts/cour.ttf"), 10, true));
-    fonts::center_screen.reset(new fonts::font(paths::getDataPath("/fonts/ArchivoBlack-Regular.ttf"), 12, true));
+    fonts::menu = std::make_unique<fonts::font>(paths::getDataPath("/fonts/notosans.ttf"), 10, true);
+    fonts::esp = std::make_unique<fonts::font>(paths::getDataPath("/fonts/notosans.ttf"), 10, true);
+    fonts::center_screen = std::make_unique<fonts::font>(paths::getDataPath("/fonts/notosans.ttf"), 12, true);
 #elif ENABLE_IMGUI_DRAWING
-    fonts::menu.reset(new fonts::font(paths::getDataPath("/fonts/Verdana.ttf"), 13, true));
-    fonts::esp.reset(new fonts::font(paths::getDataPath("/fonts/cour.ttf"), 13, true));
-    fonts::center_screen.reset(new fonts::font(paths::getDataPath("/fonts/ArchivoBlack-Regular.ttf"), 14, true));
+    fonts::menu          = std::make_unique<fonts::font>(paths::getDataPath("/fonts/notosans.ttf"), 14, true);
+    fonts::esp           = std::make_unique<fonts::font>(paths::getDataPath("/fonts/notosans.ttf"), 15);
+    fonts::center_screen = std::make_unique<fonts::font>(paths::getDataPath("/fonts/notosans.ttf"), 15, true);
 #endif
 #if ENABLE_ENGINE_DRAWING
     texture_white                = g_ISurface->CreateNewTextureID();
@@ -274,7 +268,7 @@ void String(int x, int y, rgba_t rgba, const char *text, fonts::font &font)
 #endif
 }
 
-// x2_offset and y2_offset are an OFFSET, meaning you need to pass coordinate 2 - coordinate 1 for it to work, x2_offset is aded to x1
+// x2_offset and y2_offset are an OFFSET, meaning you need to pass coordinate 2 - coordinate 1 for it to work, x2_offset is added to x1
 void Line(float x1, float y1, float x2_offset, float y2_offset, rgba_t color, float thickness)
 {
 #if ENABLE_IMGUI_DRAWING
@@ -323,9 +317,7 @@ void Line(float x1, float y1, float x2_offset, float y2_offset, rgba_t color, fl
         g_ISurface->DrawTexturedPolygon(4, vertices);
     }
     else
-    {
         g_ISurface->DrawLine(x1, y1, x1 + x2_offset, y1 + y2_offset);
-    }
 #elif ENABLE_GLEZ_DRAWING
     glez::draw::line(x1, y1, x2_offset, y2_offset, color, thickness);
 #endif
@@ -513,7 +505,10 @@ void StartupSound()
         total_lines++;
         line_count.push_back(cur_line);
     }
-    int random_number = rand() % total_lines;
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> dist(0.0, total_lines);
+    int random_number = (int) dist(mt);
     g_ISurface->PlaySound(line_count[random_number].c_str());
 }
 

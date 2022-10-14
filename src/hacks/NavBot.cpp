@@ -34,7 +34,7 @@ static settings::Int blacklist_delay("navbot.proximity-blacklist.delay", "500");
 static settings::Boolean blacklist_dormat("navbot.proximity-blacklist.dormant", "false");
 static settings::Int blacklist_delay_dormat("navbot.proximity-blacklist.delay-dormant", "1000");
 static settings::Int blacklist_slightdanger_limit("navbot.proximity-blacklist.slight-danger.amount", "2");
-//static settings::Boolean engie_mode("navbot.engineer-mode", "true");
+//static settings::Boolean engie_mode("navbot.engineer-mode", "true"); didnt use engineer bot anymore.
 static settings::Boolean auto_zoom_distance("aimbot.auto-zoom-distance", "false");
 static settings::Int distance("aimbot.zoom-distance", "1250");
 static settings::Boolean blacklist_dormat("navbot.proximity-blacklist.dormant", "false");

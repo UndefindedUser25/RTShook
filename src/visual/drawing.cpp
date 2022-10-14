@@ -1,11 +1,4 @@
-﻿﻿/*
- * drawing.cpp
- *
- *  Created on: Mar 10, 2019
- *      Authors: Lighty & nullifiedcat
- */
-
-#include "common.hpp"
+﻿#include "common.hpp"
 #if ENABLE_IMGUI_DRAWING
 #include "imgui/imrenderer.hpp"
 #elif ENABLE_GLEZ_DRAWING

@@ -156,8 +156,8 @@
             <AutoVariable width="fill" target="aimbot.target.ignore-non-cat" label="Cathook user only" tooltip="Ony target players set to CAT. BUT you have need set Ignore Cathook user in collective tab menu"/>
 	    <AutoVariable width="fill" target="aimbot.unzoom.time" label="Unzoom Time" tooltip="Set Auto unzoom time."/>
 	    <AutoVariable width="fill" target="aimbot.spinup-time" label="Spinup Time" tooltip="Set Spinup Minigun check time."/>
-	    <AutoVariable width="fill" target="aimbot.auto.zoom-distance" label="Zoom Prediction"/>
-	    <AutoVariable width="fill" target="aimbot.zoom-distance" label="Zoom Distance"/>
+	    <AutoVariable width="fill" target="aimbot.auto.zoom-prediction" label="Zoom Prediction"/>
+	    <AutoVariable width="fill" target="aimbot.unzoom-prediction.distance" label="Zoom Distance"/>
         </List>
     </Box>
 </Tab>

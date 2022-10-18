@@ -651,17 +651,6 @@ powerup_type GetPowerupOnPlayer(CachedEntity *player)
         return powerup_type::supernova;
     return powerup_type::not_powerup;
 }
-bool didProjectileHit(Vector start_point, Vector end_point, CachedEntity *entity, float projectile_size)
-{
-
-    trace::filter_default.SetSelf(RAW_ENT(g_pLocalPlayer->entity));
-    Ray_t ray;
-    trace_t trace_obj;
-    ray.Init(start_point, end_point, Vector(0, -projectile_size, -projectile_size), Vector(0, projectile_size, projectile_size));
-    g_ITrace->TraceRay(ray, MASK_SHOT_HULL, &trace::filter_default, &trace_obj);
-    return (((IClientEntity *) trace_obj.m_pEnt) == RAW_ENT(entity) || !trace_obj.DidHit());
-}
-
 // A function to find a weapon by WeaponID
 int getWeaponByID(CachedEntity *player, int weaponid)
 {
@@ -682,6 +671,18 @@ int getWeaponByID(CachedEntity *player, int weaponid)
     }
     // Nothing found
     return -1;
+}
+
+bool didProjectileHit(Vector start_point, Vector end_point, CachedEntity *entity, int projectile_size)
+{
+
+    trace::filter_default.SetSelf(RAW_ENT(g_pLocalPlayer->entity));
+    Ray_t ray;
+    trace_t trace_obj;
+    trace_t *tracer = &trace_obj;
+    ray.Init(start_point, end_point, Vector(0, -projectile_size, -projectile_size), Vector(0, projectile_size, projectile_size));
+    g_ITrace->TraceRay(ray, MASK_SHOT_HULL, &trace::filter_default, tracer);
+    return (((IClientEntity *) tracer->m_pEnt) == RAW_ENT(entity) || !tracer->DidHit());
 }
 
 // A function to tell if a player is using a specific weapon
@@ -712,9 +713,8 @@ CachedEntity *getClosestEntity(Vector vec)
 {
     float distance         = FLT_MAX;
     CachedEntity *best_ent = nullptr;
-    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
         if (CE_VALID(ent) && ent->m_vecDormantOrigin() && ent->m_bAlivePlayer() && ent->m_bEnemy() && vec.DistTo(ent->m_vecOrigin()) < distance)
         {
             distance = vec.DistTo(*ent->m_vecDormantOrigin());
@@ -728,9 +728,8 @@ CachedEntity *getClosestNonlocalEntity(Vector vec)
 {
     float distance         = FLT_MAX;
     CachedEntity *best_ent = nullptr;
-    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
         if (CE_VALID(ent) && ent->m_IDX != g_pLocalPlayer->entity_idx && ent->m_vecDormantOrigin() && ent->m_bAlivePlayer() && ent->m_bEnemy() && vec.DistTo(ent->m_vecOrigin()) < distance)
         {
             distance = vec.DistTo(*ent->m_vecDormantOrigin());
@@ -1028,13 +1027,18 @@ std::mutex trace_lock;
 bool IsEntityVectorVisible(CachedEntity *entity, Vector endpos, bool use_weapon_offset, unsigned int mask, trace_t *trace)
 {
     trace_t trace_object;
-
     if (!trace)
         trace = &trace_object;
     Ray_t ray;
 
+    if (g_Settings.bInvalid)
+        return false;
     if (entity == g_pLocalPlayer->entity)
         return true;
+    if (CE_BAD(g_pLocalPlayer->entity))
+        return false;
+    if (CE_BAD(entity))
+        return false;
     trace::filter_default.SetSelf(RAW_ENT(g_pLocalPlayer->entity));
     Vector eye = g_pLocalPlayer->v_Eye;
     // Adjust for weapon offsets if needed
@@ -1043,10 +1047,10 @@ bool IsEntityVectorVisible(CachedEntity *entity, Vector endpos, bool use_weapon_
     ray.Init(eye, endpos);
     {
         PROF_SECTION(IEVV_TraceRay);
+        std::lock_guard<std::mutex> lock(trace_lock);
         if (!tcm || g_Settings.is_create_move)
             g_ITrace->TraceRay(ray, mask, &trace::filter_default, trace);
     }
-
     return (((IClientEntity *) trace->m_pEnt) == RAW_ENT(entity) || !trace->DidHit());
 }
 
@@ -1563,6 +1567,11 @@ bool IsPlayerCritBoosted(CachedEntity *player)
     return HasConditionMask<KCritBoostMask.cond_0, KCritBoostMask.cond_1, KCritBoostMask.cond_2, KCritBoostMask.cond_3>(player);
 }
 
+bool IsPlayerMiniCritBoosted(CachedEntity *player)
+{
+    return HasConditionMask<KMiniCritBoostMask.cond_0, KMiniCritBoostMask.cond_1, KMiniCritBoostMask.cond_2, KMiniCritBoostMask.cond_3>(player);
+}
+
 bool IsPlayerInvisible(CachedEntity *player)
 {
     return HasConditionMask<KInvisibilityMask.cond_0, KInvisibilityMask.cond_1, KInvisibilityMask.cond_2, KInvisibilityMask.cond_3>(player);
@@ -1715,7 +1724,7 @@ void FastStop()
     auto control  = (speed < sv_stopspeed->GetFloat()) ? sv_stopspeed->GetFloat() : speed;
     auto drop     = control * friction * g_GlobalVars->interval_per_tick;
 
-    if (speed > drop - 1.0f)
+    if (speed > drop - 0.5f)
     {
         Vector velocity = vel;
         Vector direction;
@@ -1806,7 +1815,6 @@ CatCommand print_classnames("debug_print_classnames", "Lists classnames currentl
                                 // Go through all the entities
                                 for (auto &ent : entity_cache::valid_ents)
                                 {
-
                                     // Print in console, the class name of the ent
                                     logging::Info(format(RAW_ENT(ent)->GetClientClass()->m_pNetworkName).c_str());
                                 }
@@ -1823,7 +1831,7 @@ void PrintChat(const char *fmt, ...)
         va_start(list, fmt);
         vsprintf(buf.get(), fmt, list);
         va_end(list);
-        std::unique_ptr<char[]> str = std::move(strfmt("\x07%06X[\x07%06XCAT\x07%06X]\x01 %s", 0x5e3252, 0xba3d9a, 0x5e3252, buf.get()));
+        std::unique_ptr<char[]> str = std::move(strfmt("\x07%06X[\x07%06XRTShook\x07%06X]\x01 %s", 0x5e3252, 0xba3d9a, 0x5e3252, buf.get()));
         // FIXME DEBUG LOG
         logging::Info("%s", str.get());
         chat->Printf(str.get());

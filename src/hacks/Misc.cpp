@@ -34,7 +34,6 @@ static settings::Boolean tauntslide_tf2{ "misc.tauntslide", "false" };
 static settings::Boolean flashlight_spam{ "misc.flashlight-spam", "false" };
 static settings::Boolean auto_balance_spam{ "misc.auto-balance-spam", "false" };
 static settings::Boolean nopush_enabled{ "misc.no-push", "false" };
-static settings::Boolean demo_say_spy{ "misc.demo-say-spy", "false" };
 static settings::Boolean dont_hide_stealth_kills{ "misc.dont-hide-stealth-kills", "true" };
 static settings::Boolean unlimit_bumpercart_movement{ "misc.bumpercarthax.enable", "true" };
 static settings::Boolean ping_reducer{ "misc.ping-reducer.enable", "false" };
@@ -415,12 +414,6 @@ void Draw()
     {
         g_ISurface->PlaySound()
     }*/
-    if (demo_say_spy)
-        for (int i = 0; i < 40000; i++)
-        {
-            g_ISurface->PlaySound("vo/demoman_cloakedspy03.mp3");
-            demo_say_spy = 0;
-        }
     if (show_spectators)
     {
         for (int i = 0; i < PLAYER_ARRAY_SIZE; i++)
@@ -436,11 +429,11 @@ void Draw()
                 switch (CE_INT(ent, netvar.iObserverMode))
                 {
                 case 4:
-                    observermode = "First Person";
+                    observermode = "1st Person";
                     color        = colors::red_s;
                     break;
                 case 5:
-                    observermode = "Thrid Person";
+                    observermode = "3rd Person";
                     break;
                 case 7:
                     observermode = "Freecam";
@@ -455,30 +448,30 @@ void Draw()
     auto local = LOCAL_W;
     if (CE_GOOD(local))
     {
-        AddSideString(format("Slot : ", re::C_BaseCombatWeapon::GetSlot(RAW_ENT(local))));
-        AddSideString(format("Taunt Concept : ", CE_INT(LOCAL_E, netvar.m_iTauntConcept)));
-        AddSideString(format("Taunt Index : ", CE_INT(LOCAL_E, netvar.m_iTauntIndex)));
-        AddSideString(format("Sequence : ", CE_INT(LOCAL_E, netvar.m_nSequence)));
-        AddSideString(format("Velocity : ", LOCAL_E->m_vecVelocity.x, ' ', LOCAL_E->m_vecVelocity.y, ' ', LOCAL_E->m_vecVelocity.z));
-        AddSideString(format("Velocity3 : ", LOCAL_E->m_vecVelocity.Length()));
-        AddSideString(format("Velocity2 : ", LOCAL_E->m_vecVelocity.Length2D()));
+        AddSideString(format("Slot: ", re::C_BaseCombatWeapon::GetSlot(RAW_ENT(local))));
+        AddSideString(format("Taunt Concept: ", CE_INT(LOCAL_E, netvar.m_iTauntConcept)));
+        AddSideString(format("Taunt Index: ", CE_INT(LOCAL_E, netvar.m_iTauntIndex)));
+        AddSideString(format("Sequence: ", CE_INT(LOCAL_E, netvar.m_nSequence)));
+        AddSideString(format("Velocity: ", LOCAL_E->m_vecVelocity.x, ' ', LOCAL_E->m_vecVelocity.y, ' ', LOCAL_E->m_vecVelocity.z));
+        AddSideString(format("Velocity3: ", LOCAL_E->m_vecVelocity.Length()));
+        AddSideString(format("Velocity2: ", LOCAL_E->m_vecVelocity.Length2D()));
         AddSideString("NetVar Velocity");
         Vector vel = CE_VECTOR(LOCAL_E, netvar.vVelocity);
-        AddSideString(format("Velocity : ", vel.x, ' ', vel.y, ' ', vel.z));
-        AddSideString(format("Velocity3 : ", vel.Length()));
-        AddSideString(format("Velocity2 : ", vel.Length2D()));
-        AddSideString(format("flSimTime:  ", LOCAL_E->var<float>(netvar.m_flSimulationTime)));
+        AddSideString(format("Velocity: ", vel.x, ' ', vel.y, ' ', vel.z));
+        AddSideString(format("Velocity3: ", vel.Length()));
+        AddSideString(format("Velocity2: ", vel.Length2D()));
+        AddSideString(format("flSimTime: ", LOCAL_E->var<float>(netvar.m_flSimulationTime)));
         if (current_user_cmd)
             AddSideString(format("command_number: ", last_cmd_number));
-        AddSideString(format("clip : ", CE_INT(g_pLocalPlayer->weapon(), netvar.m_iClip1)));
+        AddSideString(format("clip: ", CE_INT(g_pLocalPlayer->weapon(), netvar.m_iClip1)));
         if (local->m_iClassID() == CL_CLASS(CTFMinigun))
-            AddSideString(format("Weapon state : ", CE_INT(local, netvar.iWeaponState)));
-        AddSideString(format("ItemDefinitionIndex : ", CE_INT(local, netvar.iItemDefinitionIndex)));
-        AddSideString(format("Maxspeed : ", CE_FLOAT(LOCAL_E, netvar.m_flMaxspeed)));
-        AddSideString(format("Tickbase : ", CE_INT(g_pLocalPlayer->entity, netvar.nTickBase)));
-        AddSideString(format("Weapon : ", RAW_ENT(g_pLocalPlayer->weapon())->GetClientClass()->GetName()," " , g_pLocalPlayer->weapon()->m_iClassID()));
-	AddSideString(format("Realtime : ", g_GlobalVars->realtime));
-        /*AddSideString(colors::white, "flNextPrimaryAttack: %f",
+            AddSideString(format("Weapon state: ", CE_INT(local, netvar.iWeaponState)));
+        AddSideString(format("ItemDefinitionIndex: ", CE_INT(local, netvar.iItemDefinitionIndex)));
+        AddSideString(format("Maxspeed: ", CE_FLOAT(LOCAL_E, netvar.m_flMaxspeed)));
+        /*AddSideString(colors::white, "Weapon: %s [%i]",
+        RAW_ENT(g_pLocalPlayer->weapon())->GetClientClass()->GetName(),
+        g_pLocalPlayer->weapon()->m_iClassID());
+        //AddSideString(colors::white, "flNextPrimaryAttack: %f",
         CE_FLOAT(g_pLocalPlayer->weapon(), netvar.flNextPrimaryAttack));
         //AddSideString(colors::white, "nTickBase: %f",
         (float)(CE_INT(g_pLocalPlayer->entity, netvar.nTickBase)) *
@@ -758,6 +751,7 @@ static CatCommand dump_vars_by_name("debug_dump_netvars_name", "Dump netvars of 
                                         std::string name(args.Arg(1));
                                         for (auto &ent : entity_cache::valid_ents)
                                         {
+
                                             ClientClass *clz = RAW_ENT(ent)->GetClientClass();
                                             if (!clz)
                                                 continue;
@@ -1090,7 +1084,7 @@ static InitRoutine init(
         if (render_zoomed)
             tryPatchLocalPlayerShouldDraw(true);
         render_zoomed.installChangeCallback([](settings::VariableBase<bool> &, bool after) { tryPatchLocalPlayerShouldDraw(after); });
-	patch_playerpanel = std::make_unique<BytePatch>(gSignatures.GetClientSignature, "0F 94 45 ? 85 C0 0F 8E", 0x0, std::vector<unsigned char>{ 0xC6, 0x45, 0xDF, 0x01 });
+        patch_playerpanel     = std::make_unique<BytePatch>(gSignatures.GetClientSignature, "0F 94 45 ? 85 C0 0F 8E", 0x0, std::vector<unsigned char>{ 0xC6, 0x45, 0xDF, 0x01 });
         uintptr_t addr_scrbrd = gSignatures.GetClientSignature("8B 10 89 74 24 04 89 04 24 FF 92 ? ? ? ? 83 F8 02 75 09");
 
         // Address to the function we need to jump to

@@ -1,4 +1,6 @@
-/*#include <array>
+/*#pragma once
+
+#include <array>
 #include <stdint.h>
 
 namespace hacks::tf2::NavBot

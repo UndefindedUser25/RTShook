@@ -30,10 +30,11 @@ static inline void modifyAngles()
 static inline void CreateMove()
 {
     // Empty the array
-    sniperdot_array.fill(nullptr);
+    sniperdot_array.fill(0);
     // Find sniper dots
     for (auto &dot_ent : entity_cache::valid_ents)
     {
+
         // Not a sniper dot
         if (dot_ent->m_iClassID() != CL_CLASS(CSniperDot))
             continue;
@@ -75,11 +76,11 @@ static float resolveAngleYaw(float angle, brutedata &brute)
     int entry = (int) std::floor((brute.brutenum / 2.0f)) % yaw_resolves.size();
     angle += yaw_resolves[entry];
 
-    while (angle > 90)
-        angle -= 180;
+    while (angle > 180)
+        angle -= 360;
 
-    while (angle < -90)
-        angle += 180;
+    while (angle < -180)
+        angle += 360;
     brute.new_angle.y = angle;
     return angle;
 }
@@ -144,9 +145,9 @@ void increaseBruteNum(int idx)
     if (CE_BAD(ent) || !ent->player_info.friendsID)
         return;
     auto &data = hacks::shared::anti_anti_aim::resolver_map[ent->player_info.friendsID];
-    if (data.hits_in_a_row >= 2)
-        data.hits_in_a_row = 1;
-    else if (data.hits_in_a_row >= 1)
+    if (data.hits_in_a_row >= 4)
+        data.hits_in_a_row = 2;
+    else if (data.hits_in_a_row >= 2)
         data.hits_in_a_row = 0;
     else
     {
@@ -254,14 +255,16 @@ static void shutdown()
     *original_ptrY = original_ProxyFnY;
 }
 
-static InitRoutine init([]() {
-    hook();
-    EC::Register(EC::Shutdown, shutdown, "antiantiaim_shutdown");
-    EC::Register(EC::CreateMove, CreateMove, "cm_antiantiaim");
-    EC::Register(EC::CreateMoveWarp, CreateMove, "cmw_antiantiaim");
+static InitRoutine init(
+    []()
+    {
+        hook();
+        EC::Register(EC::Shutdown, shutdown, "antiantiaim_shutdown");
+        EC::Register(EC::CreateMove, CreateMove, "cm_antiantiaim");
+        EC::Register(EC::CreateMoveWarp, CreateMove, "cmw_antiantiaim");
 #if ENABLE_TEXTMODE
-    EC::Register(EC::CreateMove, modifyAngles, "cm_textmodeantiantiaim");
-    EC::Register(EC::CreateMoveWarp, modifyAngles, "cmw_textmodeantiantiaim");
+        EC::Register(EC::CreateMove, modifyAngles, "cm_textmodeantiantiaim");
+        EC::Register(EC::CreateMoveWarp, modifyAngles, "cmw_textmodeantiantiaim");
 #endif
-});
-} // namespace hacks::shared::anti_anti_aim 
+    });
+} // namespace hacks::shared::anti_anti_aim

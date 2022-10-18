@@ -8,10 +8,15 @@
 #include "common.hpp"
 #include <settings/Bool.hpp>
 
-namespace hacks::noisemaker
+namespace hacks::tf2::noisemaker
 {
 
+// Merry Christmas
+#if ENABLE_TEXTMODE
+static settings::Boolean enable{ "noisemaker-spam.enable", "true" };
+#else
 static settings::Boolean enable{ "noisemaker-spam.enable", "false" };
+#endif
 
 static void CreateMove()
 {
@@ -62,11 +67,9 @@ static void shutdown()
     plus->m_fnCommandCallbackV1  = plus_use_action_slot_item_original;
     minus->m_fnCommandCallbackV1 = minus_use_action_slot_item_original;
 }
-static InitRoutine EC(
-    []()
-    {
-        init();
-        EC::Register(EC::CreateMove, CreateMove, "Noisemaker", EC::average);
-        EC::Register(EC::Shutdown, shutdown, "Noisemaker", EC::average);
-    });
-} // namespace hacks::noisemaker
+static InitRoutine EC([]() {
+    init();
+    EC::Register(EC::CreateMove, CreateMove, "Noisemaker", EC::average);
+    EC::Register(EC::Shutdown, shutdown, "Noisemaker", EC::average);
+});
+} // namespace hacks::tf2::noisemaker

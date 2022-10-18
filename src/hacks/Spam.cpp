@@ -286,19 +286,6 @@ void createMove()
                     break;
                 case 6: // JEERS
                     g_IEngine->ServerCmd("voicemenu 2 3");
-                    break;
-		case 7: //DISPENSER HERE
-		    g_IEngine->ServerCmd("voicemenu 1 4");
-                    break;
-		case 8: //TELEPORT HERE
-		    g_IEngine->ServerCmd("voicemenu 1 3");
-                    break;
-		case 9: //SENTRY HERE
-		    g_IEngine->ServerCmd("voicemenu 1 5");
-                    break;
-		case 10: //BATTLE CRY
-		    g_IEngine->ServerCmd("voicemenu 2 1");
-                    break;
                 }
             }
         }
@@ -406,7 +393,7 @@ const std::vector<std::string> builtin_blanks     = { "\e"
 
 const std::vector<std::string> builtin_nonecore = { "NULL CORE - REDUCE YOUR RISK OF BEING OWNED!", "NULL CORE - WAY TO THE TOP!", "NULL CORE - BEST TF2 CHEAT!", "NULL CORE - NOW WITH BLACKJACK AND HOOKERS!", "NULL CORE - BUTTHURT IN 10 SECONDS FLAT!", "NULL CORE - WHOLE SERVER OBSERVING!", "NULL CORE - GET BACK TO PWNING!", "NULL CORE - WHEN PVP IS TOO HARDCORE!", "NULL CORE - CAN CAUSE KIDS TO RAGE!", "NULL CORE - F2P NOOBS WILL BE 100% NERFED!" };
 const std::vector<std::string> builtin_lmaobox  = { "GET GOOD, GET LMAOBOX!", "LMAOBOX - WAY TO THE TOP", "WWW.LMAOBOX.NET - BEST FREE TF2 HACK!" };
-const std::vector<std::string> builtin_lithium  = { "SMELLS LIKE matrix.to/#/#govnovoz:ru-matrix.org" , "LEAVE YOUR FEEDBACK steamcommunity.com/id/salt_lake/allcomments" };
+const std::vector<std::string> builtin_lithium  = { "CHECK OUT www.YouTube.com/c/DurRud FOR MORE INFORMATION!", "PWNING AIMBOTS WITH OP ANTI-AIMS SINCE 2015 - LITHIUMCHEAT", "STOP GETTING MAD AND STABILIZE YOUR MOOD WITH LITHIUMCHEAT!", "SAVE YOUR MONEY AND GET LITHIUMCHEAT! IT IS FREE!", "GOT ROLLED BY LITHIUM? HEY, THAT MEANS IT'S TIME TO GET LITHIUMCHEAT!!" };
 
 void teamspam_reload(std::string after)
 {

@@ -17,8 +17,6 @@
 static settings::Int newlines_msg{ "chat.prefix-newlines", "0" };
 static settings::Boolean log_sent{ "debug.log-sent-chat", "false" };
 static settings::Boolean answerIdentify{ "chat.identify.answer", "true" };
-static settings::Boolean auto_mark_cat{ "chat.identify.mark-cat", "true" };
-static settings::Boolean auto_mark_rage{ "chat.identify.mark-rage", "false" };
 static Timer identify_timer{};
 constexpr int CAT_IDENTIFY   = 0xCA7;
 constexpr int CAT_REPLY      = 0xCA8;
@@ -79,14 +77,15 @@ settings::Boolean identify{ "chat.identify", "true" };
 settings::Boolean identify{ "chat.identify", "false" };
 #endif
 
-// i will not see this working anymore. Goodbye cl_drawline Have a nice day.
 /*void ProcessSendline(IGameEvent *kv)
 {
     int player_idx = kv->GetInt("player", 0xDEAD);
+
     auto id            = kv->GetFloat("x");
     float message_type = kv->GetFloat("y");
     auto panel_type    = kv->GetInt("panel");
     auto line_type     = kv->GetInt("line");
+
     // Verify all the data matches
     if (player_idx != 0xDEAD && panel_type == 2 && line_type == 0 && message_type == AUTH_MESSAGE && (id == CAT_IDENTIFY || id == CAT_REPLY))
     {
@@ -203,10 +202,8 @@ void ProcessAchievement(IGameEvent *ach)
             send_achievement_reply_timer.update();
             send_achievement_reply = true;
         }
-        if (auto_mark_cat && playerlist::ChangeState(info.friendsID, playerlist::k_EState::CAT))
-            PrintChat("\x07%06X%s\x01 Detected cheater enable BOT IDENTIFY Auto Mark as Cat", 0xe05938, info.name);
-        if (auto_mark_rage && playerlist::ChangeState(info.friendsID, playerlist::k_EState::RAGE))
-            PrintChat("\x07%06X%s\x01 Detected cheater enable BOT IDENTIFY Auto Mark as Rage", 0xe05938, info.name);
+        if (playerlist::ChangeState(info.friendsID, playerlist::k_EState::CAT))
+            PrintChat("\x07%06X%s\x01 Marked as CAT (Cathook user)", 0xe05938, info.name);
     }
 }
 

@@ -102,10 +102,10 @@ void updateSearch()
             }
     }
     startqueue_timer.test_and_set(5000);
-#if ENABLE_TEXTMODE
-    if (queue_time.test_and_set(600000))
+#if not ENABLE_VISUALS
+    if (queue_time.test_and_set(1200000))
     {
-        g_IEngine->ClientCmd_Unrestricted("quit"); // lol yes
+        g_IEngine->ClientCmd_Unrestricted("quit"); // lol
     }
 #endif
 }

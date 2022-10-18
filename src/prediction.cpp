@@ -373,6 +373,7 @@ void Prediction_PaintTraverse()
                     continue;
                 auto pos  = ProjectilePrediction_Engine(ent, hitbox_t::spine_3, 1980.0f, 0.0f, 1.0f, 0.0f);
                 auto pos2 = ProjectilePrediction(ent, hitbox_t::spine_3, 1980.0f, 0.0f, 1.0f, 0.0f);
+
                 Vector aaa;
                 if (draw::WorldToScreen(pos.first, aaa))
                     draw::Rectangle(aaa.x, aaa.y, 5, 5, colors::yellow);
@@ -405,6 +406,7 @@ void Prediction_PaintTraverse()
                 /*if (!ent->m_bEnemy())
                     continue;
                 auto pos = ProjectilePrediction(ent, hitbox_t::spine_3, 1980.0f, 0.0f, 1.0f, 0.0f);
+
                 Vector aaa;
                 if (draw::WorldToScreen(pos, aaa))
                     draw::Rectangle(aaa.x, aaa.y, 5, 5, colors::yellow);*/
@@ -499,7 +501,6 @@ Vector EnginePrediction(CachedEntity *entity, float time, Vector *vecVelocity)
 
     return result;
 }
-
 std::pair<Vector, Vector> ProjectilePrediction_Engine(CachedEntity *ent, int hb, float speed, float gravity, float entgmod, float proj_startvelocity)
 {
     Vector origin = ent->m_vecOrigin();
@@ -512,13 +513,13 @@ std::pair<Vector, Vector> ProjectilePrediction_Engine(CachedEntity *ent, int hb,
     if (!sv_gravity)
         sv_gravity = g_ICvar->FindVar("sv_gravity");
 
-    if (speed == 0.0f || !sv_gravity) 
+    if (speed == 0.0f || !sv_gravity)
         return { Vector(), Vector() };
-    
+
     float currenttime = g_pLocalPlayer->v_Eye.DistTo(hitbox) / speed - 1.5f;
-    if (currenttime <= 0.0f) 
+    if (currenttime <= 0.0f)
         currenttime = 0.01f;
-    
+
     float besttime          = currenttime;
     float mindelta          = 65536.0f;
     float no_regression     = 66534.0f;
@@ -527,7 +528,7 @@ std::pair<Vector, Vector> ProjectilePrediction_Engine(CachedEntity *ent, int hb,
     Vector current_velocity = velocity;
     int maxsteps            = (int) debug_pp_steps;
     float steplength        = g_GlobalVars->interval_per_tick;
-
+    bool has_run_before     = false;
     for (int steps = 0; steps < maxsteps; steps++, currenttime += steplength)
     {
         ent->m_vecOrigin()                                 = current;
@@ -542,7 +543,7 @@ std::pair<Vector, Vector> ProjectilePrediction_Engine(CachedEntity *ent, int hb,
         float rockettime = g_pLocalPlayer->v_Eye.DistTo(current) / speed;
         // Compensate for ping
         rockettime += g_IEngine->GetNetChannelInfo()->GetLatency(FLOW_OUTGOING) + cl_interp->GetFloat();
-	float timedelta = fabs(currenttime > rockettime ? currenttime - rockettime : rockettime - currenttime);
+        float timedelta = fabs(currenttime > rockettime ? currenttime - rockettime : rockettime - currenttime);
         if (timedelta < mindelta)
         {
             besttime = currenttime;
@@ -568,32 +569,6 @@ std::pair<Vector, Vector> ProjectilePrediction_Engine(CachedEntity *ent, int hb,
                   result.y - origin.y, result.z - origin.z);*/
     return { result, result_initialvel };
 }
-std::pair<Vector, Vector> BuildingPrediction(CachedEntity *building, Vector vec, float speed, float gravity, float proj_startvelocity)
-{
-    if (!vec.z || CE_BAD(building))
-        return { Vector(), Vector() };
-    Vector result = vec;
-
-    if (!sv_gravity)
-        sv_gravity = g_ICvar->FindVar("sv_gravity");
-
-    if (speed == 0.0f || !sv_gravity)
-        return { Vector(), Vector() };
-
-    trace::filter_no_player.SetSelf(RAW_ENT(building));
-    
-    // Buildings do not move. We don't need to do any steps here
-    float time = g_pLocalPlayer->v_Eye.DistTo(result) / speed;
-    // Compensate for ping
-    time += g_IEngine->GetNetChannelInfo()->GetLatency(FLOW_OUTGOING) + cl_interp->GetFloat();
-    
-    result.z += (sv_gravity->GetFloat() / 2.0f * time * time * gravity);
-    Vector result_initialvel = result;
-    result_initialvel.z -= proj_startvelocity * time;
-    // S = at^2/2 ; t = sqrt(2S/a)*/
-    return { result, result_initialvel };
-}
-
 std::pair<Vector, Vector> ProjectilePrediction(CachedEntity *ent, int hb, float speed, float gravitymod, float entgmod, float proj_startvelocity)
 {
     Vector origin = ent->m_vecOrigin();
@@ -650,7 +625,7 @@ std::pair<Vector, Vector> ProjectilePrediction(CachedEntity *ent, int hb, float 
         float rockettime = g_pLocalPlayer->v_Eye.DistTo(current) / speed;
         // Compensate for ping
         rockettime += g_IEngine->GetNetChannelInfo()->GetLatency(FLOW_OUTGOING) + cl_interp->GetFloat();
-	if (fabs(currenttime > rockettime ? currenttime - rockettime : rockettime - currenttime) < mindelta)
+        if (fabs(currenttime > rockettime ? currenttime - rockettime : rockettime - currenttime) < mindelta)
         {
             besttime = currenttime;
             bestpos  = current;
@@ -675,6 +650,32 @@ float DistanceToGround(CachedEntity *ent)
     Vector mins   = RAW_ENT(ent)->GetCollideable()->OBBMins();
     Vector maxs   = RAW_ENT(ent)->GetCollideable()->OBBMins();
     return DistanceToGround(origin, mins, maxs);
+}
+
+std::pair<Vector, Vector> BuildingPrediction(CachedEntity *building, Vector vec, float speed, float gravity, float proj_startvelocity)
+{
+    if (!vec.z || CE_BAD(building))
+        return { Vector(), Vector() };
+    Vector result = vec;
+
+    if (!sv_gravity)
+        sv_gravity = g_ICvar->FindVar("sv_gravity");
+
+    if (speed == 0.0f || !sv_gravity)
+        return { Vector(), Vector() };
+
+    trace::filter_no_player.SetSelf(RAW_ENT(building));
+
+    // Buildings do not move. We don't need to do any steps here
+    float time = g_pLocalPlayer->v_Eye.DistTo(result) / speed;
+    // Compensate for ping
+    time += g_IEngine->GetNetChannelInfo()->GetLatency(FLOW_OUTGOING) + cl_interp->GetFloat();
+
+    result.z += (sv_gravity->GetFloat() / 2.0f * time * time * gravity);
+    Vector result_initialvel = result;
+    result_initialvel.z -= proj_startvelocity * time;
+    // S = at^2/2 ; t = sqrt(2S/a)*/
+    return { result, result_initialvel };
 }
 
 float DistanceToGround(Vector origin, Vector mins, Vector maxs)

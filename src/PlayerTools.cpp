@@ -20,7 +20,6 @@ static settings::Boolean betrayal_sync{ "player-tools.betrayal-ipc-sync", "true"
 static settings::Boolean taunting{ "player-tools.ignore.taunting", "true" };
 static settings::Boolean hoovy{ "player-tools.ignore.hoovy", "true" };
 static settings::Boolean ignoreCathook{ "player-tools.ignore.cathook", "true" };
-static settings::Boolean ignoreLegit{ "player-tools.ignore.legit", "false" };
 
 static std::unordered_map<unsigned, unsigned> betrayal_list{};
 
@@ -36,8 +35,6 @@ bool shouldTargetSteamId(unsigned id)
 
     auto &pl = playerlist::AccessData(id);
     if (playerlist::IsFriendly(pl.state) || (pl.state == playerlist::k_EState::CAT && *ignoreCathook))
-        return false;
-    if (pl.state == playerlist::k_EState::DEFAULT && *ignoreLegit)
         return false;
     return true;
 }

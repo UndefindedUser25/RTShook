@@ -298,7 +298,6 @@ private:
     char m_szTextBuffer[2048]; // buffer for received messages
 };
 
-
 class CLC_Move : public CNetMessage
 {
     DECLARE_CLC_MESSAGE(Move);

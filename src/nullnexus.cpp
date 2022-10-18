@@ -16,7 +16,11 @@ static settings::Boolean anon("nullnexus.user.anon", "false");
 static settings::String address("nullnexus.host", "nullnexus.cathook.club");
 static settings::String port("nullnexus.port", "3000");
 static settings::String endpoint("nullnexus.endpoint", "/api/v1/client");
+#if ENABLE_TEXTMODE
+static settings::Boolean proxyenabled("nullnexus.proxy.enabled", "true");
+#else
 static settings::Boolean proxyenabled("nullnexus.proxy.enabled", "false");
+#endif
 static settings::String proxysocket("nullnexus.relay.socket", "/tmp/nullnexus.sock");
 static settings::Boolean authenticate("nullnexus.auth", "true");
 #if ENABLE_VISUALS
@@ -30,7 +34,7 @@ void printmsg(std::string &usr, std::string &msg, int colour = 0xff9340)
 #if !ENFORCE_STREAM_SAFETY && ENABLE_VISUALS
     if (msg.size() > 128 || usr.size() > 32)
     {
-        logging::Info("Nullnexus: Message too fucking large.");
+        logging::Info("Nullnexus: Message too large.");
         return;
     }
     if (g_Settings.bInvalid)
@@ -77,7 +81,7 @@ void authedplayers(std::vector<std::string> steamids)
                                {
                                    // Use actual steamid to set cat status
                                    if (playerlist::ChangeState(pinfo.friendsID, playerlist::k_EState::CAT))
-                                       PrintChat("\x07%06X%s\x01 Enable Nullnexus Auto mark stat Cat.", 0xe05938, pinfo.name);
+                                       PrintChat("\x07%06X%s\x01 Marked as CAT (Nullnexus user)", 0xe05938, pinfo.name);
                                    return true;
                                }
                                return false;

@@ -6,6 +6,8 @@
  */
 
 #include "common.hpp"
+
+#include <time.h>
 #include <settings/Float.hpp>
 #include "soundcache.hpp"
 
@@ -18,7 +20,7 @@ bool IsProjectileACrit(CachedEntity *ent)
 // This method of const'ing the index is weird.
 CachedEntity::CachedEntity() : m_IDX(int(((unsigned) this - (unsigned) &entity_cache::array) / sizeof(CachedEntity))), hitboxes(hitbox_cache::Get(unsigned(m_IDX)))
 {
-#if !PROXY_ENTITY
+#if PROXY_ENTITY != true
     m_pEntity = nullptr;
 #endif
     m_fLastUpdate = 0.0f;
@@ -37,7 +39,9 @@ void CachedEntity::Reset()
     m_fLastUpdate = 0;
 }
 
-CachedEntity::~CachedEntity() = default;
+CachedEntity::~CachedEntity()
+{
+}
 
 static settings::Float ve_window{ "debug.ve.window", "0" };
 static settings::Boolean ve_smooth{ "debug.ve.smooth", "true" };
@@ -49,10 +53,12 @@ void CachedEntity::Update()
 
     if (!raw)
         return;
-#if !PROXY_ENTITY
+#if PROXY_ENTITY != true
     m_pEntity = g_IEntityList->GetClientEntity(idx);
     if (!m_pEntity)
+    {
         return;
+    }
 #endif
     m_lSeenTicks = 0;
     m_lLastSeen  = 0;
@@ -73,7 +79,7 @@ bool CachedEntity::IsVisible()
     static constexpr int optimal_hitboxes[] = { hitbox_t::head, hitbox_t::foot_L, hitbox_t::hand_R, hitbox_t::spine_1 };
     static bool vischeck0, vischeck;
 
-    PROF_SECTION(CE_IsVisible)
+    PROF_SECTION(CE_IsVisible);
     if (m_bVisCheckComplete)
         return m_bAnyHitboxVisible;
 
@@ -88,9 +94,9 @@ bool CachedEntity::IsVisible()
 
     if (m_Type() == ENTITY_PLAYER && fast_vischeck)
     {
-        for (int optimal_hitbox : optimal_hitboxes)
+        for (int i = 0; i < 4; i++)
         {
-            if (hitboxes.VisibilityCheck(optimal_hitbox))
+            if (hitboxes.VisibilityCheck(optimal_hitboxes[i]))
             {
                 m_bAnyHitboxVisible = true;
                 m_bVisCheckComplete = true;
@@ -139,7 +145,10 @@ void Update()
     max = g_IEntityList->GetHighestEntityIndex();
     valid_ents.clear(); // Reserving isn't necessary as this doesn't reallocate it
     if (max >= MAX_ENTITIES)
+    {
         max = MAX_ENTITIES - 1;
+    }
+
     for (int i = 0; i <= max; i++)
     {
         array[i].Update();

@@ -208,7 +208,7 @@ void DoSlowAim(Vector &input_angle, int speed)
 {
     auto viewangles = current_user_cmd->viewangles;
 
-   // Don't bother if we're already on target
+    // Don't bother if we're already on target
     if (viewangles != input_angle)
     {
         Vector slow_delta = input_angle - viewangles;

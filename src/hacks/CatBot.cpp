@@ -32,8 +32,7 @@ static settings::Boolean auto_crouch{ "cat-bot.auto-crouch", "false" };
 static settings::Boolean always_crouch{ "cat-bot.always-crouch", "false" };
 static settings::Boolean random_votekicks{ "cat-bot.votekicks", "false" };
 static settings::Boolean votekick_rage_only{ "cat-bot.votekicks.rage-only", "false" };
-static settings::Boolean autoReport{ "cat-bot.autoreport", "false" };
-
+static settings::Boolean autoReport{ "cat-bot.autoreport", "true" };
 static settings::Boolean autovote_map{ "cat-bot.autovote-map", "true" };
 
 static settings::Boolean mvm_autoupgrade{ "mvm.autoupgrade", "false" };
@@ -226,7 +225,6 @@ void do_random_votekick()
     player_info_s info;
     if (!GetPlayerInfo(GetPlayerForUserID(target), &info))
         return;
-    hack::ExecuteCommand("callvote kick \"" + std::to_string(target) + " cheating\"");
     hack::ExecuteCommand("callvote kick \"" + std::to_string(target) + " cheating\"");
 }
 

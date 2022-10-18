@@ -24,7 +24,6 @@ enum class k_EState
     TEXTMODE,
     CAT,
     PARTY,
-    NULLNEXUS,
     STATE_LAST = PARTY
 };
 #if ENABLE_VISUALS
@@ -55,7 +54,7 @@ void Load();
 
 constexpr bool IsFriendly(k_EState state)
 {
-    return state != k_EState::RAGE && state != k_EState::DEFAULT && state != k_EState::CAT && state != k_EState::NULLNEXUS;
+    return state != k_EState::RAGE && state != k_EState::DEFAULT && state != k_EState::CAT;
 }
 #if ENABLE_VISUALS
 rgba_t Color(unsigned steamid);

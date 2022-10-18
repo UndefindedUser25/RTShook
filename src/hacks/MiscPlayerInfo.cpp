@@ -122,7 +122,7 @@ void Paint()
                 color.b += 0.5f;
             // tint CAT status people's names too
             if (playerlist::AccessData(ent->player_info.friendsID).state == playerlist::k_EState::CAT)
-                color.g = 0.75f;
+                color.g = 0.8f;
 
             // Calculate Player Level
             int death_score  = g_pPlayerResource->GetDeaths(i) * 7;

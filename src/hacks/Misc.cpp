@@ -146,7 +146,7 @@ int getCarriedBuilding()
             continue;
         if (!CE_INT(ent, netvar.m_bPlacing))
             continue;
-        return i;
+        return ent->m_IDX;
     }
     return -1;
 }

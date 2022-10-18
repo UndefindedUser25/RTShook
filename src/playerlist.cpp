@@ -18,8 +18,8 @@ namespace playerlist
 
 std::unordered_map<unsigned, userdata> data{};
 
-const std::string k_Names[]                                     = { "Default", "Friend", "Rage", "IPC", "Textmode", "Cat", "Party", "Nullnexus" };
-const char *const k_pszNames[]                                  = { "Default", "Friend", "Rage", "IPC", "Textmode", "Cat", "Party", "Nullnexus" };
+const std::string k_Names[]                                     = { "Default", "Friend", "Rage", "IPC", "Textmode", "Cat", "Party"};
+const char *const k_pszNames[]                                  = { "Default", "Friend", "Rage", "IPC", "Textmode", "Cat", "Party"};
 const std::array<std::pair<k_EState, size_t>, 5> k_arrGUIStates = { std::pair(k_EState::DEFAULT, 0), { k_EState::FRIEND, 1 }, { k_EState::RAGE, 2 } ,{ k_EState::CAT, 3 } };
 const userdata null_data{};
 #if ENABLE_VISUALS
@@ -119,8 +119,6 @@ rgba_t Color(unsigned steamid)
     const auto &pl = AccessData(steamid);
     if (pl.state == k_EState::CAT)
         return colors::RainbowCurrent();
-    if (pl.state == k_EState::NULLNEXUS)
-        return colors::green;
     else if (pl.color.a)
         return pl.color;
 

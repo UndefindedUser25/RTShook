@@ -76,8 +76,8 @@ void authedplayers(std::vector<std::string> steamids)
                                if (steamid == steamidhash)
                                {
                                    // Use actual steamid to set cat status
-                                   if (playerlist::ChangeState(pinfo.friendsID, playerlist::k_EState::NULLNEXUS))
-                                       PrintChat("\x07%06X%s\x01 Enable Nullnexus Auto mark stat Nullnexus.", 0xe05938, pinfo.name);
+                                   if (playerlist::ChangeState(pinfo.friendsID, playerlist::k_EState::CAT))
+                                       PrintChat("\x07%06X%s\x01 Enable Nullnexus Auto mark stat Cat.", 0xe05938, pinfo.name);
                                    return true;
                                }
                                return false;

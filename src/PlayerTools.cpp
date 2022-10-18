@@ -21,7 +21,6 @@ static settings::Boolean taunting{ "player-tools.ignore.taunting", "true" };
 static settings::Boolean hoovy{ "player-tools.ignore.hoovy", "true" };
 static settings::Boolean ignoreCathook{ "player-tools.ignore.cathook", "true" };
 static settings::Boolean ignoreLegit{ "player-tools.ignore.legit", "false" };
-static settings::Boolean ignoreNullnexus{ "player-tools.ignore.nullnexus", "true" };
 
 static std::unordered_map<unsigned, unsigned> betrayal_list{};
 
@@ -36,7 +35,7 @@ bool shouldTargetSteamId(unsigned id)
     }
 
     auto &pl = playerlist::AccessData(id);
-    if (playerlist::IsFriendly(pl.state) || (pl.state == playerlist::k_EState::CAT && *ignoreCathook) || (pl.state == playerlist::k_EState::NULLNEXUS && *ignoreNullnexus))
+    if (playerlist::IsFriendly(pl.state) || (pl.state == playerlist::k_EState::CAT && *ignoreCathook))
         return false;
     if (pl.state == playerlist::k_EState::DEFAULT && *ignoreLegit)
         return false;

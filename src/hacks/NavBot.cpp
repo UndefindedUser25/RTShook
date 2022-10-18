@@ -1263,7 +1263,7 @@ bool doRoam()
 {
     static Timer roam_timer;
     // Don't path constantly
-    if (!roam_timer.test_and_set(200))
+    if (!roam_timer.test_and_set(4000))
         return false;
 
     // Defend our objective if possible

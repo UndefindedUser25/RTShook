@@ -122,10 +122,7 @@ void Paint()
                 color.b += 0.5f;
             // tint CAT status people's names too
             if (playerlist::AccessData(ent->player_info.friendsID).state == playerlist::k_EState::CAT)
-                color.g = 0.8f;
-            // tint Nullnexus status people's names [unsure.]
-            if (playerlist::AccessData(ent->player_info.friendsID).state == playerlist::k_EState::NULLNEXUS)
-                color.g = 0.7f;
+                color.g = 0.75f;
 
             // Calculate Player Level
             int death_score  = g_pPlayerResource->GetDeaths(i) * 7;

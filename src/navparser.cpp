@@ -48,7 +48,7 @@ static settings::Int stuck_detect_time{ "nav.anti-stuck.detection-time", "3" };
 // How long until accumulated "Stuck time" expires
 static settings::Int stuck_expire_time{ "nav.anti-stuck.expire-time", "7" };
 // How long we should blacklist the node after being stuck for too long?
-static settings::Int stuck_blacklist_time{ "nav.anti-stuck.blacklist-time", "60" };
+static settings::Int stuck_blacklist_time{ "nav.anti-stuck.blacklist-time", "15" };
 static settings::Int sticky_ignore_time{ "nav.ignore.sticky-time", "15" };
 
 // Cast a Ray and return if it hit

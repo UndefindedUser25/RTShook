@@ -715,7 +715,7 @@ static void followCrumbs()
                 // Reset
                 crouch = false;
                 last_jump.update();
-		        last_duck.update();
+		    last_duck.update();
             }
         }
     }

@@ -529,4 +529,3 @@ static InitRoutine init(
         ach_items[267]  = { 1909, "TF_HALLOWEEN_BOSS_KILL_MELEE" };       // Haunted Metal Scrap - Gored!
     });
 } // namespace hacks::tf2::autoitem
-Footer

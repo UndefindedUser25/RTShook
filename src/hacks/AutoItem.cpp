@@ -441,10 +441,9 @@ CatCommand lock_single("achievement_lock_single", "Locks single achievement by I
                        });
 
 CatCommand rent_item("rent_item", "testrun a item by ID",
+                     if (autotestrun)
                      [](const CCommand &args)
                      {
-                        if (autotestrun)
-                            {
                              char *out = nullptr;
                              int id    = strtol(args.Arg(1), &out, 10);
                              if (out == args.Arg(1))
@@ -453,7 +452,7 @@ CatCommand rent_item("rent_item", "testrun a item by ID",
                                  return;
                              }
                              Rent(id);
-                            }
+                     }
                      });
 
 CatCommand lock("achievement_lock", "Lock all achievements", Lock);

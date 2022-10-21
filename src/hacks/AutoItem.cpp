@@ -442,16 +442,17 @@ CatCommand lock_single("achievement_lock_single", "Locks single achievement by I
 
 CatCommand rent_item("rent_item", "testrun a item by ID",
                      [](const CCommand &args)
+                     {
                         if (autotestrun)
-                        {  
-                             char *out = nullptr;
-                             int id    = strtol(args.Arg(1), &out, 10);
-                             if (out == args.Arg(1))
-                             {
-                                 logging::Info("Bad item ID!");
-                                 return;
-                             }
-                             Rent(id);
+                        {
+                         char *out = nullptr;
+                         int id    = strtol(args.Arg(1), &out, 10);
+                         if (out == args.Arg(1))
+                         {
+                             logging::Info("Bad item ID!");
+                             return;
+                         }
+                         Rent(id);
                         }
                      });
 
@@ -528,3 +529,4 @@ static InitRoutine init(
         ach_items[267]  = { 1909, "TF_HALLOWEEN_BOSS_KILL_MELEE" };       // Haunted Metal Scrap - Gored!
     });
 } // namespace hacks::tf2::autoitem
+Footer

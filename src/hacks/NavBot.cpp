@@ -260,7 +260,7 @@ void refreshSniperSpots()
     for (auto &area : navparser::NavEngine::getNavFile()->m_areas)
         for (auto &hiding_spot : area.m_hidingSpots)
             // Spots actually marked for sniping
-            if (hiding_spot.IsExposed() || hiding_spot.IsGoodSniperSpot() || hiding_spot.IsIdealSniperSpot())
+            if (hiding_spot.IsExposed() || hiding_spot.IsGoodSniperSpot() || hiding_spot.IsIdealSniperSpot() || hiding_spot.HasGoodCover())
                 sniper_spots.emplace_back(hiding_spot.m_pos);
 }
 

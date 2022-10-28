@@ -8,7 +8,7 @@ class CNavFile
 public:
     // Intended to use with engine->GetLevelName() or mapname from server_spawn
     // GameEvent Change it if you get the nav file from elsewhere
-    CNavFile(const char *szLevelname)
+    explicit CNavFile(const char *szLevelname)
     {
         if (!szLevelname)
             return;
@@ -73,7 +73,7 @@ public:
         {
             fs.read((char *) &len, sizeof(uint16_t));
 
-            CNavPlace place;
+            CNavPlace place{};
 
             fs.read((char *) &place.m_name, len);
 
@@ -160,7 +160,7 @@ public:
 
                 for (int s = 0; s < spotcount; ++s)
                 {
-                    SpotOrder order;
+                    SpotOrder order{};
                     fs.read((char *) &order.id, sizeof(uint32_t));
                     fs.read((char *) &order.t, sizeof(unsigned char));
                     spot.spots.push_back(order);
@@ -184,11 +184,11 @@ public:
                 }
             }
 
-            for (int j = 0; j < MAX_NAV_TEAMS; j++)
-                fs.read((char *) &area.m_earliestOccupyTime[j], sizeof(float));
+            for (float &j : area.m_earliestOccupyTime)
+                fs.read((char *) &j, sizeof(float));
 
-            for (int j = 0; j < NUM_CORNERS; ++j)
-                fs.read((char *) &area.m_lightIntensity[j], sizeof(float));
+            for (float &j : area.m_lightIntensity)
+                fs.read((char *) &j, sizeof(float));
 
             fs.read((char *) &area.m_visibleAreaCount, sizeof(uint32_t));
 
@@ -214,49 +214,31 @@ public:
         // Fill connection for every area with their area ptrs instead of IDs
         // This will come in handy in path finding
 
-        for (auto it = m_areas.begin(); it != m_areas.end(); it++)
+        for (auto &area : m_areas)
         {
-            CNavArea &area = *it;
+            for (auto &connection: area.m_connections)
+                for (auto &connected_area: m_areas)
+                    if (connection.id == connected_area.m_id)
+                        connection.area = &connected_area;
 
-            for (auto it2 = area.m_connections.begin(); it2 != area.m_connections.end(); it2++)
-            {
-                NavConnect &connection = *it2;
 
-                for (auto it3 = m_areas.begin(); it3 != m_areas.end(); it3++)
-                {
-                    CNavArea &connectedarea = *it3;
 
-                    if (connection.id == connectedarea.m_id)
-                    {
-                        connection.area = &connectedarea;
-                    }
-                }
-            }
 
             // Fill potentially visible areas as well
-            for (auto it2 = area.m_potentiallyVisibleAreas.begin(); it2 != area.m_potentiallyVisibleAreas.end(); it2++)
-            {
-                AreaBindInfo &bindinfo = *it2;
-
-                for (auto it3 = m_areas.begin(); it3 != m_areas.end(); it3++)
-                {
-                    CNavArea &boundarea = *it3;
-
+            for (auto &bindinfo: area.m_potentiallyVisibleAreas)
+                for (auto &boundarea: m_areas)
                     if (bindinfo.id == boundarea.m_id)
-                    {
                         bindinfo.area = &boundarea;
-                    }
-                }
-            }
-        }
 
+
+        }
         m_isOK = true;
     }
 
     std::string m_mapName;
-    bool m_isAnalized;
+    bool m_isAnalized{};
     std::vector<CNavPlace> m_places;
-    bool m_hasUnnamedAreas;
+    bool m_hasUnnamedAreas{};
     std::vector<CNavArea> m_areas;
     bool m_isOK = false;
 };

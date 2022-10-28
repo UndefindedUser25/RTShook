@@ -34,6 +34,7 @@ static settings::Boolean draw_bar{ "warp.draw-bar", "false" };
 static settings::Button warp_key{ "warp.key", "<null>" };
 static settings::Button charge_key{ "warp.charge-key", "<null>" };
 static settings::Boolean charge_passively{ "warp.charge-passively", "true" };
+static settings::Boolean charge_if_idle{ "warp.charge-if-idle", "false" };
 static settings::Boolean charge_in_jump{ "warp.charge-passively.jump", "true" };
 static settings::Boolean charge_no_input{ "warp.charge-passively.no-inputs", "false" };
 static settings::Int warp_movement_ratio{ "warp.movement-ratio", "6" };
@@ -664,7 +665,10 @@ void warpLogic()
         if ((ground_ticks > 1 || charge_in_jump) && (charge_no_input || velocity.IsZero()) && !HasCondition<TFCond_Charging>(LOCAL_E) && !current_user_cmd->forwardmove && !current_user_cmd->sidemove && !current_user_cmd->upmove && !(current_user_cmd->buttons & IN_JUMP) && !button_block)
         {
             if (!move_last_tick)
+		{
+            	if (charge_if_idle)
                 should_charge = true;
+		}
             move_last_tick = false;
 
             return;
@@ -1000,8 +1004,9 @@ void Draw()
         if (warp_amount == 0)
             color = colors::FromRGBA8(128.0f, 128.0f, 128.0f, 255.0f);
         else if (GetMaxWarpTicks() == warp_amount)
+	AddWarpString("Change Ready!" , colors::green);
             color = colors::green;
-        AddWarpString("Shiftable ticks: " + std::to_string(warp_amount), color);
+        AddWarpString("Change Warp/DT Ticks : " + std::to_string(warp_amount), color);
     }
 
     if (draw_bar)
@@ -1011,11 +1016,12 @@ void Draw()
         static rgba_t background_color = colors::FromRGBA8(96, 96, 96, 150);
         float bar_bg_x_size            = *size * 2.0f;
         float bar_bg_y_size            = *size / 5.0f;
-        draw::Rectangle(*bar_x - 5.0f, *bar_y - 5.0f, bar_bg_x_size + 10.0f, bar_bg_y_size + 10.0f, background_color);
+        draw::RectangleOutlined(*bar_x - 4.0f, *bar_y - 5.0f, bar_bg_x_size + 10.0f, bar_bg_y_size + 10.0f, colors::blu , 2);
+        draw::Rectangle(*bar_x - 5.0f, *bar_y - 5.0f, bar_bg_x_size + 10.0f, bar_bg_y_size + 10.0f, colors::black);
         // Draw bar
-        rgba_t color_bar = colors::orange;
+        rgba_t color_bar = colors::blu;
         if (GetMaxWarpTicks() == warp_amount)
-            color_bar = colors::green;
+            color_bar = colors::blu;
         color_bar.a = 100 / 255.0f;
         draw::Rectangle(*bar_x, *bar_y, *size * 2.0f * charge_percent, *size / 5.0f, color_bar);
     }

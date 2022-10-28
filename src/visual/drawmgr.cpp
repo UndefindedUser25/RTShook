@@ -88,7 +88,7 @@ void DrawCheatVisuals()
             draw::RectangleOutlined(3,6,153,23, colors::RainbowCurrent() , 5);
             draw::Rectangle(3,6,153,23, colors::black);
   	    }
-            AddSideString("RTShook by Nerbura", colors::gui);
+            AddSideString("RTShook", colors::gui);
             if (!info_text_min)
             {
                 AddSideString(hack::GetVersion(),

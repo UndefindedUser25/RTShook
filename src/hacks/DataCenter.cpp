@@ -74,6 +74,7 @@ static std::map<std::string, std::string> dc_name_map{
     {"okc", "Oklahoma City"},
     {"ord", "Chicago"},
     {"par", "Paris"},
+    {"per", "Peru"),
     {"scl", "Santiago"},
     {"sea", "Seaattle"},
     {"sgp", "Singapore"},
@@ -88,7 +89,7 @@ static std::map<std::string, std::string> dc_name_map{
 // clang-format on
 static std::vector<std::string> eu_datacenters            = { { "ams" }, { "fra" }, { "lhr" }, { "mad" }, { "par" }, { "sto" }, { "sto2" }, { "waw" }, { "lux" }, { "lux1" }, { "lux2" } };
 static std::vector<std::string> north_america_datacenters = { { "atl" }, { "eat" }, { "mwh" }, { "iad" }, { "lax" }, { "okc" }, { "ord" }, { "sea" } };
-static std::vector<std::string> south_america_datacenters = { { "gru" }, { "lim" }, { "scl" } };
+static std::vector<std::string> south_america_datacenters = { { "gru" }, { "lim" }, { "scl" }, { "per" } };
 static std::vector<std::string> asia_datacenters          = { { "bom" }, { "dxb" }, { "gnrt" }, { "hkg" }, { "maa" }, { "man" }, { "sgp" }, { "tyo" }, { "tyo2" }, { "tyo1" } };
 static std::vector<std::string> oceana_datacenters        = { { "syd" }, { "vie" } };
 static std::vector<std::string> africa_datacenters        = { { "jnb" } };

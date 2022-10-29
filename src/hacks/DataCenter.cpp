@@ -74,7 +74,7 @@ static std::map<std::string, std::string> dc_name_map{
     {"okc", "Oklahoma City"},
     {"ord", "Chicago"},
     {"par", "Paris"},
-    {"per", "Peru"),
+    {"per", "Peru"},
     {"scl", "Santiago"},
     {"sea", "Seaattle"},
     {"sgp", "Singapore"},

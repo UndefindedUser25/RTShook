@@ -84,7 +84,7 @@ void updateSearch()
 
     if (auto_requeue)
     {
-        if (startqueue_timer.check(5000) && gc && !gc->BConnectedToMatchServer(false) && !gc->BHaveLiveMatch() && !invites)
+        if (startqueue_timer.check(2500) && gc && !gc->BConnectedToMatchServer(false) && !gc->BHaveLiveMatch() && !invites)
             if (pc && !(pc->BInQueueForMatchGroup(tfmm::getQueue()) || pc->BInQueueForStandby()))
             {
                 logging::Info("Starting queue for standby, Invites %d", invites);
@@ -94,24 +94,24 @@ void updateSearch()
 
     if (auto_queue)
     {
-        if (startqueue_timer.check(5000) && gc && !gc->BConnectedToMatchServer(false) && !gc->BHaveLiveMatch() && !invites)
+        if (startqueue_timer.check(2500) && gc && !gc->BConnectedToMatchServer(false) && !gc->BHaveLiveMatch() && !invites)
             if (pc && !(pc->BInQueueForMatchGroup(tfmm::getQueue()) || pc->BInQueueForStandby()))
             {
                 logging::Info("Starting queue, Invites %d", invites);
                 tfmm::startQueue();
             }
     }
-    startqueue_timer.test_and_set(5000);
+    startqueue_timer.test_and_set(2500);
 #if not ENABLE_VISUALS
-    if (queue_time.test_and_set(1200000))
+    if (queue_time.test_and_set(90000))
     {
-        g_IEngine->ClientCmd_Unrestricted("quit"); // lol
+        g_IEngine->ClientCmd_Unrestricted("quit"); // Sometime bot still cant join or cant find match.
     }
 #endif
 }
 static void update()
 {
-    if (autoteam_timer.test_and_set(5000))
+    if (autoteam_timer.test_and_set(2500))
     {
         if (autojoin_team and UnassignedTeam())
         {

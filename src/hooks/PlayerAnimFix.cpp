@@ -3,7 +3,6 @@
 
 namespace hacks::tf2::animfix
 {
-static settings::Boolean enabled("misc.animfix.enabled", "false");
 DetourHook frameadvance_detour{};
 DetourHook shouldinterpolate_detour{};
 typedef float (*FrameAdvance_t)(IClientEntity *, float);
@@ -18,7 +17,7 @@ float FrameAdvance_hook(IClientEntity *self, float flInterval)
     float newInterval = flInterval;
 
     // Check if the entity is valid
-    if (enabled && self && IDX_GOOD(self->entindex()) && self->entindex() > 0 && self->entindex() <= (int) previous_simtimes.size())
+    if (self && IDX_GOOD(self->entindex()) && self->entindex() > 0 && self->entindex() <= (int) previous_simtimes.size())
     {
         // Check if they are an alive player
         CachedEntity *ent = ENTITY(self->entindex());
@@ -45,17 +44,14 @@ float FrameAdvance_hook(IClientEntity *self, float flInterval)
 
 bool ShouldInterpolate_hook(IClientEntity *ent)
 {
-    if (enabled)
+    if (ent && IDX_GOOD(ent->entindex()))
     {
-        if (ent && IDX_GOOD(ent->entindex()))
-        {
-            CachedEntity *cent = ENTITY(ent->entindex());
-            if (cent->m_Type() == ENTITY_PLAYER && cent->m_IDX != g_pLocalPlayer->entity_idx)
-            {
-                return false;
-            }
-        }
-    }
+         CachedEntity *cent = ENTITY(ent->entindex());
+         if (cent->m_Type() == ENTITY_PLAYER && cent->m_IDX != g_pLocalPlayer->entity_idx)
+         {
+              eturn false;
+         }
+     }
     ShouldInterpolate_t original = (ShouldInterpolate_t) shouldinterpolate_detour.GetOriginalFunc();
     bool ret                     = original(ent);
     shouldinterpolate_detour.RestorePatch();
@@ -65,7 +61,6 @@ bool ShouldInterpolate_hook(IClientEntity *ent)
 // We need a non crashing way to implement this. Currently it will just cause crashes
 // due to race conditions That we cannot resolve
 /*std::mutex threadsafe_mutex;
-
 void CheckForSequenceChange_hook(int *_this, int *studiohdr, int sequence, bool forcenewsequence, bool bInterpolate)
 {
     bInterpolate       = false;
@@ -74,7 +69,6 @@ void CheckForSequenceChange_hook(int *_this, int *studiohdr, int sequence, bool 
     {
         new_studiohdr = nullptr;
     }
-
     std::lock_guard<std::mutex> checkforsequencechance_mutex(threadsafe_mutex);
     CheckForSequenceChange_t original = (CheckForSequenceChange_t) checkforsequencechange_detour.GetOriginalFunc();
     original(_this, new_studiohdr, sequence, forcenewsequence, bInterpolate);

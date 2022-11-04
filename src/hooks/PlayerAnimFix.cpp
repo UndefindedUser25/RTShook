@@ -49,7 +49,7 @@ bool ShouldInterpolate_hook(IClientEntity *ent)
          CachedEntity *cent = ENTITY(ent->entindex());
          if (cent->m_Type() == ENTITY_PLAYER && cent->m_IDX != g_pLocalPlayer->entity_idx)
          {
-              eturn false;
+              return false;
          }
      }
     ShouldInterpolate_t original = (ShouldInterpolate_t) shouldinterpolate_detour.GetOriginalFunc();

@@ -55,4 +55,3 @@ static InitRoutine init([]() {
         EC::Shutdown, []() { frameadvance_detour.Shutdown(); }, "shutdown_animfix");
 });
 } // namespace hacks::tf2::animfix
-Footer

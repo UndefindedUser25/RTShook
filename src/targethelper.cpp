@@ -101,7 +101,7 @@ int GetScoreForEntity(CachedEntity *entity)
     }
     if (total > 99)
         total = 99;
-    if (playerlist::AccessData(entity).state == playerlist::k_EState::RAGE)
+    if (playerlist::AccessData(entity).state == playerlist::k_EState::RAGE || playerlist::AccessData(entity).state == playerlist::k_EState::PAZER || playerlist::AccessData(entity).state == playerlist::k_EState::ABUSE)
         total = 999;
     if (IsSentryBuster(entity))
         total = 0;

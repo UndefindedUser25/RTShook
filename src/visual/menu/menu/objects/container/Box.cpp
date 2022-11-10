@@ -11,9 +11,7 @@
 #include <menu/Menu.hpp>
 namespace zerokernel_box
 {
-
-static settings::RVariable<rgba_t> color_border{ "zk.style.box.color.border", "446498ff" };
-
+static settings::RVariable<rgba_t> color_border{ "zk.style.box.color.border", "000000ff" };
 }
 void zerokernel::Box::render()
 {

@@ -18,8 +18,8 @@ namespace playerlist
 
 std::unordered_map<unsigned, userdata> data{};
 
-const std::string k_Names[]                                     = { "Default", "Friend", "Rage", "IPC", "Textmode", "Cat", "Pazer", "Abuse", "Party" };
-const char *const k_pszNames[]                                  = { "Default", "Friend", "Rage", "IPC", "Textmode", "Cat", "Pazer", "Abuse", "Party" };
+const std::string k_Names[]                                     = { "DEFAULT", "FRIEND", "RAGE", "IPC", "TEXTMODE", "CAT", "PAZER", "ABUSE", "PARTY" };
+const char *const k_pszNames[]                                  = { "DEFAULT", "FRIEND", "RAGE", "IPC", "TEXTMODE", "CAT", "PAZER", "ABUSE", "PARTY" };
 const std::array<std::pair<k_EState, size_t>, 5> k_arrGUIStates = { std::pair(k_EState::DEFAULT, 0), { k_EState::FRIEND, 1 }, { k_EState::RAGE, 2 } };
 const userdata null_data{};
 #if ENABLE_VISUALS

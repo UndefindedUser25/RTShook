@@ -55,7 +55,7 @@ static void vote_rage_back()
     if (targets.empty())
         return;
 
-    std::snprintf(cmd, sizeof(cmd), "callvote kick \"%d cheating\"", targets[UniformRandomInt(0, targets.size() - 1)]);
+    std::snprintf(cmd, sizeof(cmd), "callvote kick \"%d idle\"", targets[UniformRandomInt(0, targets.size() - 1)]);
     g_IEngine->ClientCmd_Unrestricted(cmd);
 }
 // Call Vote RNG

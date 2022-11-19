@@ -26,7 +26,6 @@ static settings::Int interval{ "auto-item.time", "30000" };
 
 // stock by default
 static settings::Boolean weapons{ "auto-item.weapons", "false" };
-static settings::Boolean autotestrun{ "auto-item.weapons.testrun", "true" };
 static settings::String primary{ "auto-item.weapons.primary", "-1" };
 static settings::String secondary{ "auto-item.weapons.secondary", "-1" };
 static settings::String melee{ "auto-item.weapons.melee", "-1" };
@@ -443,8 +442,6 @@ CatCommand lock_single("achievement_lock_single", "Locks single achievement by I
 CatCommand rent_item("rent_item", "testrun a item by ID",
                      [](const CCommand &args)
                      {
-                        if (autotestrun)
-                        {
                          char *out = nullptr;
                          int id    = strtol(args.Arg(1), &out, 10);
                          if (out == args.Arg(1))
@@ -453,7 +450,6 @@ CatCommand rent_item("rent_item", "testrun a item by ID",
                              return;
                          }
                          Rent(id);
-                        }
                      });
 
 CatCommand lock("achievement_lock", "Lock all achievements", Lock);

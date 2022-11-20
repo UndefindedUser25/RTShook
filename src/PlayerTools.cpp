@@ -128,7 +128,7 @@ void onKilledBy(unsigned id)
                 {
                     std::ofstream cfg_betrayal;
                     cfg_betrayal.open("tf/cfg/betrayals.cfg", std::ios::app);
-                    cfg_betrayal << "cat_pl_add_id " + std::to_string(id) + " Abuse\n";
+                    cfg_betrayal << "cat_pl_add_id " + std::to_string(id) + " RAGE\n";
                     cfg_betrayal.close();
                 }
             }

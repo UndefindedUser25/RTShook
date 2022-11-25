@@ -276,7 +276,6 @@ void DoSlowAim(Vector &input_angle, int speed)
     // Clamp as we changed angles
     fClampAngle(input_angle);
 }
-}
 
 static void SandwichAim()
 {

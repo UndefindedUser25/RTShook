@@ -75,11 +75,11 @@ static float resolveAngleYaw(float angle, brutedata &brute)
     int entry = (int) std::floor((brute.brutenum / 2.0f)) % yaw_resolves.size();
     angle += yaw_resolves[entry];
 
-    while (angle > 90)
-        angle -= 180;
+    while (angle > 180)
+        angle -= 360;
 
-    while (angle < -90)
-        angle += 180;
+    while (angle < -180)
+        angle += 360;
     brute.new_angle.y = angle;
     return angle;
 }

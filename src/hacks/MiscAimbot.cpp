@@ -209,7 +209,7 @@ void DoSlowAim(Vector &input_angle, int speed)
     auto viewangles = current_user_cmd->viewangles;
 
     // Don't bother if we're already on target
-    if (viewangles != input_angle)
+    /*if (viewangles != input_angle)
     {
         Vector slow_delta = input_angle - viewangles;
 
@@ -223,7 +223,59 @@ void DoSlowAim(Vector &input_angle, int speed)
 
         // Clamp as we changed angles
         fClampAngle(input_angle);
+    }*/
+
+    // Yaw
+    if (viewangles.y != input_angle.y)
+    {
+        float flChargeYawCap = re::CTFPlayerShared::CalculateChargeCap(re::CTFPlayerShared::GetPlayerShared(RAW_ENT(LOCAL_E)));
+        flChargeYawCap *= 2.5f;
+
+        // Check if input angle and user angle are on opposing sides of yaw so
+        // we can correct for that
+        bool slow_opposing = false;
+        if ((input_angle.y < -90 && viewangles.y > 90) || (input_angle.y > 90 && viewangles.y < -90))
+            slow_opposing = true;
+
+        // Direction
+        bool slow_dir = false;
+        if (slow_opposing)
+        {
+            if (input_angle.y > 90 && viewangles.y < -90)
+                slow_dir = true;
+        }
+        else if (viewangles.y > input_angle.y)
+            slow_dir = true;
+
+        // Speed, check if opposing. We dont get a new distance due to the
+        // opposing sides making the distance spike, so just cheap out and reuse
+        // our last one.
+        if (!slow_opposing)
+            slow_change_dist_y = std::abs(viewangles.y - input_angle.y) / (int) speed;
+
+        // Move in the direction of the input angle
+        if (slow_dir)
+            input_angle.y = viewangles.y - slow_change_dist_y;
+        else
+            input_angle.y = viewangles.y + slow_change_dist_y;
     }
+
+    // Pitch
+    if (viewangles.x != input_angle.x)
+    {
+        // Get speed
+        slow_change_dist_p = std::abs(viewangles.x - input_angle.x) / speed;
+
+        // Move in the direction of the input angle
+        if (viewangles.x > input_angle.x)
+            input_angle.x = viewangles.x - slow_change_dist_p;
+        else
+            input_angle.x = viewangles.x + slow_change_dist_p;
+    }
+
+    // Clamp as we changed angles
+    fClampAngle(input_angle);
+}
 }
 
 static void SandwichAim()

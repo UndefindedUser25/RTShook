@@ -44,9 +44,9 @@ float GetAngle(CachedEntity *spy)
         yaw2 = -yaw2;
     anglediff = yaw - yaw2;
     if (anglediff > 180)
-        anglediff -= 360;
+        anglediff -= 180;
     if (anglediff < -180)
-        anglediff += 360;
+        anglediff += 180;
     // logging::Info("Angle: %.2f | %.2f | %.2f | %.2f", yaw, yaw2, anglediff,
     // yaw - yaw2);
     return anglediff;

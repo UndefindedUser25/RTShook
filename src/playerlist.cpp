@@ -122,7 +122,7 @@ rgba_t Color(unsigned steamid)
     else if (pl.state == k_EState::CHEATER)
         return colors::orange;
     else if (pl.state == k_EState::TEXTMODE)
-        return colors::purple;
+        return colors::yellow;
     else if (pl.color.a)
         return pl.color;
 

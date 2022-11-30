@@ -119,6 +119,10 @@ rgba_t Color(unsigned steamid)
     const auto &pl = AccessData(steamid);
     if (pl.state == k_EState::CAT)
         return colors::RainbowCurrent();
+    else if (pl.state == k_EState::CHEATER)
+        return colors::orange;
+    else if (pl.state == k_EState::TEXTMODE)
+        return colors::yellowish;
     else if (pl.color.a)
         return pl.color;
 

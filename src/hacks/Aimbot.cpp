@@ -64,7 +64,7 @@ static settings::Float spinup_time{ "aimbot.spinup-time", "7000" };
 static settings::Boolean minigun_tapfire{ "aimbot.auto.tapfire", "false" };
 static settings::Boolean p_fix{ "aimbot.minigun-p-fix", "false" };
 static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "false" };
-static settings::Float unzoom_time{ "aimbot.unzoom.time", "7000" };
+static settings::Float unzoom_time{ "aimbot.unzoom.time", "3000" };
 static settings::Boolean auto_unzoom{ "aimbot.auto.unzoom", "0" };
 
 static settings::Boolean backtrackAimbot{ "aimbot.backtrack", "0" };
@@ -201,7 +201,7 @@ static std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
         {
             return hitpoints;
         }
-        if (*vischeck_hitboxes == 1 && playerlist::AccessData(ent).state != playerlist::k_EState::CHEATER)
+        if (*vischeck_hitboxes == 2 && playerlist::AccessData(ent).state != playerlist::k_EState::CHEATER)
         {
             return hitpoints;
         }
@@ -1010,7 +1010,7 @@ bool IsTargetStateGood(CachedEntity *entity)
         // Rage only check
         if (rageonly)
         {
-            if (playerlist::AccessData(entity).state != playerlist::k_EState::RAGE)
+            if (playerlist::AccessData(entity).state != playerlist::k_EState::RAGE &&  playerlist::AccessData(entity).state != playerlist::k_EState::CHEATER)
             {
                 return false;
             }
@@ -1110,11 +1110,14 @@ bool IsTargetStateGood(CachedEntity *entity)
         
         if (*vischeck_hitboxes && !*multipoint)
         {
-            if (*vischeck_hitboxes == 1 && playerlist::AccessData(entity).state != playerlist::k_EState::RAGE && != playerlist::k_EState::CHEATER)
+            if (*vischeck_hitboxes == 1 && playerlist::AccessData(entity).state != playerlist::k_EState::RAGE)
             {
                 return true;
             }
-
+            if (*vischeck_hitboxes == 2 && playerlist::AccessData(entity).state != playerlist::k_EState::CHEATER)
+            {
+                return true;
+            }
             else
             {
                 int i = 0;

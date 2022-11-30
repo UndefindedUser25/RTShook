@@ -76,7 +76,8 @@
                 <Select target="aimbot.vischeck-hitboxes">
                     <Option name="Disable" value="0"/>
                     <Option name="Rage Only" value="1"/>
-                    <Option name="All" value="2"/>
+                    <Option name="CHEATER only" value="2"/>
+                    <Option name="All" value="3"/>
                 </Select>
             </LabeledObject>
             <AutoVariable width="fill" target="aimbot.assistance.only" label="Assistance only" tooltip="Aimbot will only activate if your mouse has moved in the last half second."/>

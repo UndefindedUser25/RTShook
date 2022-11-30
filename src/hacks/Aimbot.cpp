@@ -201,6 +201,10 @@ static std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
         {
             return hitpoints;
         }
+        if (*vischeck_hitboxes == 1 && playerlist::AccessData(ent).state != playerlist::k_EState::CHEATER)
+        {
+            return hitpoints;
+        }
         int i = 0;
         while (hitpoints.empty() && i <= 17) // Prevents returning empty at all costs. Loops through every hitbox
         {
@@ -1106,7 +1110,7 @@ bool IsTargetStateGood(CachedEntity *entity)
         
         if (*vischeck_hitboxes && !*multipoint)
         {
-            if (*vischeck_hitboxes == 1 && playerlist::AccessData(entity).state != playerlist::k_EState::RAGE)
+            if (*vischeck_hitboxes == 1 && playerlist::AccessData(entity).state != playerlist::k_EState::RAGE && != playerlist::k_EState::CHEATER)
             {
                 return true;
             }

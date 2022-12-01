@@ -38,7 +38,7 @@ static settings::Boolean fat_scout_mode("navbot.fat-scout-mode", "false");
 static settings::Boolean minigun_mode("navbot.minigun-mode", "true");
 static settings::Boolean engie_mode("navbot.engineer-mode", "true");
 static settings::Boolean path_nearest_bluilding("navbot.path.nearest-bluilding", "false");
-static settings::Float distance{ "aimbot.unzoom-prediction.distance", "3000" };
+static settings::Float distance{ "aimbot.unzoom-prediction.distance", "1250" };
 static settings::Boolean auto_zoom_prediction{ "aimbot.auto.zoom-prediction", "false" };
 static settings::Float distance_spinup{ "aimbot.spinup-prediction.distance", "3000" };
 static settings::Boolean auto_spinup_prediction{ "aimbot.spinup-prediction", "false" };
@@ -133,8 +133,8 @@ std::vector<CachedEntity *> getDispensers()
 
         // This fixes the fact that players can just place dispensers in unreachable locations
         auto local_nav = navparser::NavEngine::findClosestNavSquare(ent->m_vecOrigin());
-        if (local_nav->getNearestPoint(ent->m_vecOrigin().AsVector2D()).DistTo(ent->m_vecOrigin()) > 300.0f || local_nav->getNearestPoint(ent->m_vecOrigin().AsVector2D()).z - ent->m_vecOrigin().z > navparser::PLAYER_JUMP_HEIGHT)
-            continue;
+        if (local_nav->getNearestPoint(ent->m_vecOrigin().AsVector2D()).DistTo(ent->m_vecOrigin()) > 100.0f || local_nav->getNearestPoint(ent->m_vecOrigin().AsVector2D()).z - ent->m_vecOrigin().z > navparser::PLAYER_JUMP_HEIGHT)
+            navparser::NavEngine::cancelPath();
         entities.push_back(ent);
     }
     // Sort by distance, closer is better
@@ -174,7 +174,7 @@ bool getHealth(bool low_priority = false)
         if (navparser::NavEngine::current_priority == priority)
         {
             static Timer repath_timer;
-            if (!repath_timer.test_and_set(2000))
+            if (!repath_timer.test_and_set(4000))
                 return true;
         }
         auto healthpacks = getEntities({ ITEM_HEALTH_SMALL, ITEM_HEALTH_MEDIUM, ITEM_HEALTH_LARGE });
@@ -192,7 +192,7 @@ bool getHealth(bool low_priority = false)
 
         for (auto healthpack : total_ents)
             // If we succeeed, don't try to path to other packs
-            if (navparser::NavEngine::navTo(healthpack->m_vecOrigin(), priority, true, healthpack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 170.0f * 170.0f))
+            if (navparser::NavEngine::navTo(healthpack->m_vecOrigin(), priority, true, healthpack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 120.0f * 120.0f))
                 return true;
         health_cooldown.update();
     }
@@ -232,7 +232,7 @@ bool getAmmo(bool force = false)
         }
         for (auto ammopack : total_ents)
             // If we succeeed, don't try to path to other packs
-            if (navparser::NavEngine::navTo(ammopack->m_vecOrigin(), ammo, true, ammopack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 170.0f * 170.0f))
+            if (navparser::NavEngine::navTo(ammopack->m_vecOrigin(), ammo, true, ammopack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 120.0f * 120.0f))
             {
                 was_force = force;
                 return true;
@@ -251,7 +251,7 @@ std::vector<Vector> sniper_spots;
 static Timer refresh_sniperspots_timer{};
 void refreshSniperSpots()
 {
-    if (!refresh_sniperspots_timer.test_and_set(60000))
+    if (!refresh_sniperspots_timer.test_and_set(45000))
         return;
 
     sniper_spots.clear();

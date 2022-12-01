@@ -1037,7 +1037,7 @@ void Draw()
         Vector scrEdge;
         edge.z += PLAYER_JUMP_HEIGHT;
         if (draw::WorldToScreen(edge, scrEdge))
-            draw::Rectangle(scrEdge.x - 2.0f, scrEdge.y - 2.0f, 0.0f, 0.0f, colors::RainbowCurrent());
+            draw::Rectangle(scrEdge.x - 2.0f, scrEdge.y - 2.0f, 4.0f, 4.0f, colors::red);
         drawNavArea(area);
     }
 
@@ -1051,13 +1051,13 @@ void Draw()
         Vector start_screen, end_screen;
         if (draw::WorldToScreen(start_pos, start_screen))
         {
-            draw::Rectangle(start_screen.x - 2.0f, start_screen.y - 2.0f, 0.0f, 0.0f, colors::RainbowCurrent());
+            draw::Rectangle(start_screen.x - 2.0f, start_screen.y - 2.0f, 4.0f, 4.0f, colors::green);
 
             if (i < crumbs.size() - 1)
             {
                 Vector end_pos = crumbs[i + 1].vec;
                 if (draw::WorldToScreen(end_pos, end_screen))
-                    draw::Line(start_screen.x, start_screen.y, end_screen.x - start_screen.x, end_screen.y - start_screen.y, colors::RainbowCurrent(), 2.0f);
+                    draw::Line(start_screen.x, start_screen.y, end_screen.x - start_screen.x, end_screen.y - start_screen.y, colors::green, 2.0f);
             }
         }
     }

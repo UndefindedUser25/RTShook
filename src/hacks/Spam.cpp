@@ -80,6 +80,7 @@ bool PlayerPassesQuery(Query query, int idx)
     if (!RAW_ENT(player))
         return false;
     int teammate = !player->m_bEnemy();
+    int static2 = !player->m_bEnemy();
     bool alive   = !CE_BYTE(player, netvar.iLifeState);
     int clazzBit = (1 << (CE_INT(player, netvar.iClass) - 1));
     if (static_cast<int>(query.flags_class))
@@ -99,6 +100,11 @@ bool PlayerPassesQuery(Query query, int idx)
         if (!alive && !(query.flags & static_cast<int>(QueryFlags::DEAD)))
             return false;
         if (alive && !(query.flags & static_cast<int>(QueryFlags::ALIVE)))
+            return false;
+    }
+    if (query.flags & static_cast<int>(QueryFlags::STATIC))
+    {
+        if (static2 && !(query.flags & static_cast<int>(QueryFlags::STATIC)))
             return false;
     }
     return true;

@@ -10,7 +10,7 @@
 #include <random>
 #include "common.hpp"
 
-namespace hacks::spam
+namespace hacks::shared::spam
 {
 static settings::Int spam_source{ "spam.source", "0" };
 static settings::Boolean random_order{ "spam.random", "0" };

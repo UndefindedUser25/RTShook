@@ -430,5 +430,5 @@ static InitRoutine EC(
 
 static CatCommand reload_ts("teamspam_reload", "Relaod teamspam file", teamspam_reload_command);
 
-static CatCommand reload_cc("spam_reload", "Reload spam file", hacks::spam::reloadSpamFile);
+static CatCommand reload_cc("spam_reload", "Reload spam file", hacks::shared::spam::reloadSpamFile);
 } // namespace hacks::spam

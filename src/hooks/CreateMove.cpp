@@ -16,6 +16,9 @@
 #include "HookTools.hpp"
 #include "teamroundtimer.hpp"
 
+// Found in C_BasePlayer. It represents "m_pCurrentCommand"
+#define CURR_CUSERCMD_PTR 4452
+
 #include "HookedMethods.hpp"
 #include "nospread.hpp"
 #include "Warp.hpp"
@@ -63,7 +66,7 @@ void RunEnginePrediction(IClientEntity *ent, CUserCmd *ucmd)
     }
 
     // Set Usercmd for prediction
-    NET_VAR(ent, 4188, CUserCmd *) = ucmd;
+    NET_VAR(ent, CURR_CUSERCMD_PTR, CUserCmd *) = ucmd;
 
     // Set correct CURTIME
     g_GlobalVars->curtime   = g_GlobalVars->interval_per_tick * NET_INT(ent, netvar.nTickBase);
@@ -79,7 +82,7 @@ void RunEnginePrediction(IClientEntity *ent, CUserCmd *ucmd)
     g_IGameMovement->FinishTrackPredictionErrors(reinterpret_cast<CBasePlayer *>(ent));
 
     // Reset User CMD
-    NET_VAR(ent, 4188, CUserCmd *) = nullptr;
+    NET_VAR(ent, CURR_CUSERCMD_PTR, CUserCmd *) = nullptr;
 
     g_GlobalVars->frametime = frameTime;
     g_GlobalVars->curtime   = curTime;

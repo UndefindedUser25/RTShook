@@ -34,7 +34,7 @@ void Update()
         }
         if (ent->m_Type() == ENTITY_PROJECTILE || issandwich)
         {
-            /*int owner = CE_INT(ent, 0x894) & 0xFFF;
+            /*int owner = HandleToIDX(CE_INT(ent, 0x894));
             if (owner != LOCAL_W->m_IDX)
                 continue;*/
             if (tickcount % 20 == 0)

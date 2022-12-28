@@ -108,7 +108,7 @@ bool shouldSearchAmmo()
     for (int i = 0; weapon_list[i]; i++)
     {
         int handle = weapon_list[i];
-        int eid    = handle & 0xFFF;
+        int eid    = HandleToIDX(handle);
         if (eid > MAX_PLAYERS && eid <= HIGHEST_ENTITY)
         {
             IClientEntity *weapon = g_IEntityList->GetClientEntity(eid);
@@ -1396,21 +1396,12 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     }
     case tf_heavy:
 	{
-        	if (nearest.second <= 150 && nearest.first->m_iHealth() < 65)
-            	    return melee;
-        	else if (nearest.second <= 200 && nearest.first->m_iHealth() < 65)
-            	    return active_slot;
-        	else
-            	    return secondary;
-	if (auto_spinup_prediction)
-	    if (nearest.second <= *distance_spinup)
-	    	hacks::shared::aimbot::doAutoZoom(true);
         if (nearest.second <= 150 && nearest.first->m_iHealth() < 65)
-           return melee;
+            	return melee;
         else if (nearest.second <= 200 && nearest.first->m_iHealth() < 65)
-            return active_slot;
+            	return active_slot;
         else
-            return secondary;
+            	return secondary;
 	}
     case tf_medic:
 	{

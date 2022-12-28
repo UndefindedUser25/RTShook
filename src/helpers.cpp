@@ -1141,11 +1141,6 @@ bool IsBuildingVisible(CachedEntity *ent)
     return IsEntityVectorVisible(ent, GetBuildingPosition(ent));
 }
 
-int HandleToIDX(int handle)
-{
-    return handle & 0xFFF;
-}
-
 void fClampAngle(Vector &qaAng)
 {
     while (qaAng[0] > 89)
@@ -1184,7 +1179,7 @@ CachedEntity *weapon_get(CachedEntity *entity)
     if (CE_BAD(entity))
         return 0;
     handle = CE_INT(entity, netvar.hActiveWeapon);
-    eid    = handle & 0xFFF;
+    eid    = HandleToIDX(handle);
     if (IDX_BAD(eid))
         return 0;
     return ENTITY(eid);
@@ -1192,18 +1187,20 @@ CachedEntity *weapon_get(CachedEntity *entity)
 
 weaponmode GetWeaponMode(CachedEntity *ent)
 {
-    int weapon_handle, slot;
+    int weapon_handle, weapon_idx, slot;
     CachedEntity *weapon;
 
     if (CE_BAD(ent) || CE_BAD(weapon_get(ent)))
         return weapon_invalid;
     weapon_handle = CE_INT(ent, netvar.hActiveWeapon);
-    if (IDX_BAD((weapon_handle & 0xFFF)))
+    weapon_idx    = HandleToIDX(weapon_handle);
+
+    if (IDX_BAD(weapon_idx))
     {
-        // logging::Info("IDX_BAD: %i", weapon_handle & 0xFFF);
+        // logging::Info("IDX_BAD: %i", weapon_idx);
         return weaponmode::weapon_invalid;
     }
-    weapon = (ENTITY(weapon_handle & 0xFFF));
+    weapon = (ENTITY(weapon_idx));
     if (CE_BAD(weapon))
         return weaponmode::weapon_invalid;
     int classid = weapon->m_iClassID();

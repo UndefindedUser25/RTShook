@@ -10,6 +10,7 @@
 #include <settings/Bool.hpp>
 #include "common.hpp"
 #include "soundcache.hpp"
+#include <hacks/Aimbot.hpp>
 
 namespace hacks::shared::esp
 {
@@ -1654,12 +1655,8 @@ void _FASTCALL Draw3DBox(CachedEntity *ent, const rgba_t &clr)
         corners[i] += origin;
 
         if (!draw::WorldToScreen(corners[i], points[i]))
-            success = false;
+            return;
     }
-
-    // Don't continue if a point isn't on the screen
-    if (!success)
-        return;
 
     rgba_t draw_clr = clr;
     // Draw the actual box
@@ -1805,11 +1802,8 @@ bool GetCollide(CachedEntity *ent)
         for (int i = 0; i < 8; i++)
         {
             if (!draw::WorldToScreen(points_r[i], points[i]))
-                success = false;
+                return false;
         }
-        // If a point isnt on the screen, return here
-        if (!success)
-            return false;
 
         // Get max and min of the box using the newly created screen vector
         int max_x = -1;

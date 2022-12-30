@@ -197,8 +197,7 @@ bool getHealth(bool low_priority = false)
         health_cooldown.update();
     }
     else if (navparser::NavEngine::current_priority == priority)
-        navparser::NavEngine::cancelPath();
-    return false;
+        return false;
 }
 
 static bool was_force = false;
@@ -240,8 +239,7 @@ bool getAmmo(bool force = false)
         ammo_cooldown.update();
     }
     else if (navparser::NavEngine::current_priority == ammo && !was_force)
-        navparser::NavEngine::cancelPath();
-    return false;
+        return false;
 }
 
 // Vector of sniper spot positions we can nav to

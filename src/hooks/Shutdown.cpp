@@ -34,10 +34,6 @@ DEFINE_HOOKED_METHOD(Shutdown, void, INetChannel *this_, const char *reason)
             exit(1);
         }
     }
-    if (strstr(reason, "down"))
-    {
-        tfmm::abandon();
-    }
 #if ENABLE_IPC
     ipc::UpdateServerAddress(true);
 #endif

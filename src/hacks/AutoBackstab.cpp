@@ -26,7 +26,7 @@ int GetSwingRange_hook(IClientEntity *_this)
 {
     float return_val = ((GetSwingRange_o) melee_range_hook.GetOriginalFunc())(_this);
     if (decrease_range)
-        return_val *= 0.35f;
+        return_val *= 0.3f;
     melee_range_hook.RestorePatch();
     return return_val;
 }

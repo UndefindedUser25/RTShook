@@ -123,10 +123,9 @@ std::pair<CachedEntity *, Vector> FindBestEnt(bool teammate, bool Predict, bool 
         }
     }
     prevent = -1;
-    for (int i = 0; i <= g_IEngine->GetMaxClients(); i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
-        if (CE_BAD(ent) || !(ent->m_bAlivePlayer()) || (teammate && ent->m_iTeam() != LOCAL_E->m_iTeam()) || ent == LOCAL_E)
+        if (!(ent->m_bAlivePlayer()) || (teammate && ent->m_iTeam() != LOCAL_E->m_iTeam()) || ent == LOCAL_E)
             continue;
         if (!teammate && ent->m_iTeam() == LOCAL_E->m_iTeam())
             continue;
@@ -366,11 +365,8 @@ static void SapperAimbot()
     CachedEntity *target = nullptr;
     float distance       = FLT_MAX;
 
-    for (int i = 0; i < entity_cache::max; i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
-        if (CE_BAD(ent))
-            continue;
         if (ent->m_Type() != ENTITY_BUILDING)
             continue;
         if (!ent->m_bEnemy())
@@ -506,13 +502,8 @@ CachedEntity *targetBuilding(bool priority)
     float wrench_range   = re::C_TFWeaponBaseMelee::GetSwingRange(RAW_ENT(LOCAL_W));
     CachedEntity *target = nullptr;
     float distance       = FLT_MAX;
-    for (int i = 0; i < entity_cache::max; i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
-
-        if (CE_BAD(ent))
-            continue;
-
         // can't exactly repair Merasmus
         if (ent->m_Type() != ENTITY_BUILDING)
             continue;

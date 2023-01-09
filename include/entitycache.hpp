@@ -231,4 +231,5 @@ void Update();
 void Invalidate();
 void Shutdown();
 extern int max;
+extern std::vector<std::tuple<Vector, CachedEntity *>> proj_map;
 } // namespace entity_cache

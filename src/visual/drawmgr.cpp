@@ -85,10 +85,10 @@ void DrawCheatVisuals()
         {
 	    if (draw_box) // I need type this because. if enable always RTShook always crash on inject.
 	    {
-            draw::RectangleOutlined(3,6,153,23, colors::RainbowCurrent() , 5);
-            draw::Rectangle(3,6,153,23, colors::black);
+            draw::RectangleOutlined(3,6,247,23, colors::gui , 5);
+            draw::Rectangle(3,6,247,23, colors::black);
   	    }
-            AddSideString("RTShook", colors::gui);
+            AddSideString("RTShook Build : " __DATE__ " " __TIME__ , colors::gui);
             if (!info_text_min)
             {
                 AddSideString(hack::GetVersion(),

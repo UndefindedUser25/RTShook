@@ -1185,6 +1185,38 @@ CachedEntity *weapon_get(CachedEntity *entity)
     return ENTITY(eid);
 }
 
+float ProjGravMult(int class_id, float x_speed)
+{
+    switch (class_id)
+    {
+    case CL_CLASS(CTFGrenadePipebombProjectile):
+    case CL_CLASS(CTFProjectile_Cleaver):
+    case CL_CLASS(CTFProjectile_Jar):
+    case CL_CLASS(CTFProjectile_JarMilk):
+        return 1.0f;
+    case CL_CLASS(CTFProjectile_Arrow):
+        if (2599.0f <= x_speed)
+            return 0.1f;
+        else
+            return 0.5f;
+
+    case CL_CLASS(CTFProjectile_Flare):
+        return 0.25f;
+    case CL_CLASS(CTFProjectile_HealingBolt):
+        return 0.2f;
+    case CL_CLASS(CTFProjectile_Rocket):
+    case CL_CLASS(CTFProjectile_SentryRocket):
+    case CL_CLASS(CTFProjectile_EnergyBall):
+    case CL_CLASS(CTFProjectile_EnergyRing):
+    case CL_CLASS(CTFProjectile_GrapplingHook):
+    case CL_CLASS(CTFProjectile_BallOfFire):
+        return 0.0f;
+    default:
+    return 0.3f;
+
+    }
+}
+
 weaponmode GetWeaponMode(CachedEntity *ent)
 {
     int weapon_handle, weapon_idx, slot;
@@ -1994,9 +2026,10 @@ bool GetPlayerInfo(int idx, player_info_s *info)
 
 int GetPlayerForUserID(int userID)
 {
-    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
         player_info_s player_info;
+        int i = ent->m_IDX;
         if (!GetPlayerInfo(i, &player_info))
             continue;
         // Found player

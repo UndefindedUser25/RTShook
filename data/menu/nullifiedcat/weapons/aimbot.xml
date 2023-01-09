@@ -80,8 +80,6 @@
                     <Option name="All" value="3"/>
                 </Select>
             </LabeledObject>
-            <AutoVariable width="fill" target="aimbot.assistance.only" label="Assistance only" tooltip="Aimbot will only activate if your mouse has moved in the last half second."/>
-            <AutoVariable width="fill" target="aimbot.lock-target" label="Lock target" tooltip="Lock onto a target until they die or leave your FOV."/>
             <AutoVariable width="fill" target="aimbot.target.ignore-non-rage" label="Rage only" tooltip="Only target players set to RAGE."/>
             <AutoVariable width="fill" target="aimbot.target.stickybomb" label="Aim at stickybombs"/>
             <AutoVariable width="fill" target="aimbot.target.sentry" label="Aim at sentry guns"/>
@@ -91,7 +89,7 @@
             <AutoVariable width="fill" target="aimbot.target.ignore-deadringer" label="Ignore Dead Ringer"/>
         </List>
     </Box>
-    <Box padding="12 6 6 6" width="content" height="content" name="Autoshoot" x="170" y="270">
+    <Box padding="12 6 6 6" width="content" height="content" name="Autoshoot" x="170" y="250">
         <List width="150">
             <AutoVariable width="fill" target="aimbot.autoshoot" label="Enable autoshoot" tooltip="Make the aimbot automatically fire your weapon."/>
             <AutoVariable width="fill" target="aimbot.wait-for-charge" label="Wait for charge" tooltip="Hold fire until a single shot is enough to kill the target."/>
@@ -100,7 +98,7 @@
             <AutoVariable width="fill" target="aimbot.auto.tapfire" label="Tapfire minigun"/>
             <AutoVariable width="fill" target="aimbot.auto.zoom" label="Auto zoom" tooltip="Intelligently zoom if applicable to current weapon type."/>
             <AutoVariable width="fill" target="aimbot.auto.unzoom" label="Auto unzoom" tooltip="Intelligently unzoom if applicable to current weapon type."/>
-	    <AutoVariable width="fill" target="aimbot.autoshoot.activate-heatmaker" label="Auto Activate Heatmaker" tooltip="Allow activate Heatmaker for Hitman Heatmaker Sniper rifle."/>
+	        <AutoVariable width="fill" target="aimbot.autoshoot.activate-heatmaker" label="Auto Activate Heatmaker" tooltip="Allow activate Heatmaker for Hitman Heatmaker Sniper rifle."/>
         </List>
     </Box>
     <Box padding="12 6 6 6" width="content" height="content" name="Spectated mode" x="340">
@@ -117,7 +115,7 @@
             <AutoVariable width="fill" target="aimbot.spectator.slow" label="Spectated slow" tooltip="Controls how quickly the aimbot moves your crosshair while in spectated mode." min="0" max="30"/>
         </List>
     </Box>
-    <Box padding="12 6 6 6" width="content" height="content" name="Backtracking" x="340" y="85">
+    <Box padding="12 6 6 6" width="content" height="content" name="Backtrack" x="340" y="85">
         <List width="150">
             <AutoVariable width="fill" target="backtrack.enabled" label="Enable backtracking" tooltip="Allow hitting enemies where they were in the past."/>
             <AutoVariable width="fill" target="aimbot.backtrack" label="Aim at backtracking" tooltip="Aim at backtrack ticks."/>

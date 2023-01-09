@@ -40,22 +40,22 @@ public:
     inline static int GetWeaponID(IClientEntity *self)
     {
         typedef int (*fn_t)(IClientEntity *);
-        return vfunc<fn_t>(self, offsets::PlatformOffset(448, offsets::undefined, 448), 0)(self);
+        return vfunc<fn_t>(self, offsets::PlatformOffset(449, offsets::undefined, 449), 0)(self);
     }
     inline static bool IsViewModelFlipped(IClientEntity *self)
     {
         typedef bool (*fn_t)(IClientEntity *);
-        return vfunc<fn_t>(self, offsets::PlatformOffset(497, offsets::undefined, 497), 0)(self);
+        return vfunc<fn_t>(self, offsets::PlatformOffset(498, offsets::undefined, 498), 0)(self);
     }
     inline static IClientEntity *GetOwnerViaInterface(IClientEntity *self)
     {
         typedef IClientEntity *(*fn_t)(IClientEntity *);
-        return vfunc<fn_t>(self, offsets::PlatformOffset(455, offsets::undefined, 455), 0)(self);
+        return vfunc<fn_t>(self, offsets::PlatformOffset(456, offsets::undefined, 456), 0)(self);
     }
     inline static bool UsesPrimaryAmmo(IClientEntity *self)
     {
         typedef bool (*fn_t)(IClientEntity *);
-        return vfunc<fn_t>(self, offsets::PlatformOffset(451, offsets::undefined, 451), 0)(self);
+        return vfunc<fn_t>(self, offsets::PlatformOffset(452, offsets::undefined, 452), 0)(self);
     }
     inline static bool HasPrimaryAmmo(IClientEntity *self)
     {
@@ -65,27 +65,27 @@ public:
     inline static bool AreRandomCritsEnabled(IClientEntity *self)
     {
         typedef bool (*fn_t)(IClientEntity *);
-        return vfunc<fn_t>(self, offsets::PlatformOffset(470, offsets::undefined, 470), 0)(self);
+        return vfunc<fn_t>(self, offsets::PlatformOffset(471, offsets::undefined, 470), 0)(self);
     }
     inline static bool CalcIsAttackCriticalHelper(IClientEntity *self)
     {
         typedef bool (*fn_t)(IClientEntity *);
-        return vfunc<fn_t>(self, offsets::PlatformOffset(464, offsets::undefined, 464), 0)(self);
+        return vfunc<fn_t>(self, offsets::PlatformOffset(465, offsets::undefined, 465), 0)(self);
     }
     inline static bool CalcIsAttackCriticalHelperNoCrits(IClientEntity *self)
     {
         typedef bool (*fn_t)(IClientEntity *);
-        return vfunc<fn_t>(self, offsets::PlatformOffset(463, offsets::undefined, 463), 0)(self);
+        return vfunc<fn_t>(self, offsets::PlatformOffset(464, offsets::undefined, 464), 0)(self);
     }
     inline static bool CanFireCriticalShot(IClientEntity *self, bool unknown1, IClientEntity *unknown2)
     {
         typedef bool (*fn_t)(IClientEntity *, bool, IClientEntity *);
-        return vfunc<fn_t>(self, offsets::PlatformOffset(493, offsets::undefined, 493), 0)(self, unknown1, unknown2);
+        return vfunc<fn_t>(self, offsets::PlatformOffset(494, offsets::undefined, 494), 0)(self, unknown1, unknown2);
     }
     inline static float ApplyFireDelay(IClientEntity *self, float delay)
     {
         typedef float (*ApplyFireDelay_t)(IClientEntity *, float);
-                static auto signature                     = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 6C C7 45 ? 00 00 00 00 A1 ? ? ? ? C7 45 ? 00 00 00 00 8B 5D ? 85 C0 0F 84 ? ? ? ? 8D 55 ? 89 04 24 31 F6 89 54 24 ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? 6B 00 00 00 C7 44 24 ? ? ? ? ? C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 FF 50 ? A1 ? ? ? ? 8B 3D ? ? ? ? 8B 55 ? 89 45 ? 8B 45 ? 85 FF 89 55 ? 89 45 ? 0F 85 ? ? ? ? 85 DB 0F 84 ? ? ? ? 8B 7B ? 85 FF 0F 84 ? ? ? ? C7 04 24 ? ? ? ? E8 ? ? ? ? 89 45 ? 8B 07 89 3C 24 FF 10 8B 7D ? 8B 10 C7 44 24 ? 00 00 00 00 89 5C 24 ? C7 44 24 ? 00 00 80 3F 89 7C 24 ? 89 04 24 FF 52 ? D9 5D ? F3 0F 10 45 ? F3 0F 11 04 24 E8 ? ? ? ? D9 5D");
+        static auto signature                     = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 6C C7 45 ? 00 00 00 00 A1 ? ? ? ? C7 45 ? 00 00 00 00 8B 5D ? 85 C0 0F 84 ? ? ? ? 8D 55 ? 89 04 24 31 F6 89 54 24 ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? ? ? ? ? C7 44 24 ? 6B 00 00 00 C7 44 24 ? ? ? ? ? C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 C7 44 24 ? 00 00 00 00 FF 50 ? A1 ? ? ? ? 8B 3D ? ? ? ? 8B 55 ? 89 45 ? 8B 45 ? 85 FF 89 55 ? 89 45 ? 0F 85 ? ? ? ? 85 DB 0F 84 ? ? ? ? 8B 7B ? 85 FF 0F 84 ? ? ? ? C7 04 24 ? ? ? ? E8 ? ? ? ? 89 45 ? 8B 07 89 3C 24 FF 10 8B 7D ? 8B 10 C7 44 24 ? 00 00 00 00 89 5C 24 ? C7 44 24 ? 00 00 80 3F 89 7C 24 ? 89 04 24 FF 52 ? D9 5D ? F3 0F 10 45 ? F3 0F 11 04 24 E8 ? ? ? ? D9 5D");
         static ApplyFireDelay_t ApplyFireDelay_fn = (ApplyFireDelay_t) signature;
         return ApplyFireDelay_fn(self, delay);
     }

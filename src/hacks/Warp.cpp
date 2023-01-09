@@ -45,6 +45,7 @@ static settings::Boolean warp_forward{ "warp.on-hit.forward", "false" };
 static settings::Boolean warp_backwards{ "warp.on-hit.backwards", "false" };
 static settings::Boolean warp_left{ "warp.on-hit.left", "true" };
 static settings::Boolean warp_right{ "warp.on-hit.right", "true" };
+settings::Boolean dodge_projectile{ "warp.dodge_proj", "true" };
 
 static settings::Boolean debug_seqout{ "debug.warp_seqout", "false" };
 
@@ -103,15 +104,15 @@ void DrawWarpStrings()
 }
 #endif
 
-static bool should_charge       = false;
-static int warp_amount          = 0;
-static int warp_amount_override = 0;
-static bool should_melee        = false;
-static bool charged             = false;
-
-static bool should_warp = true;
-static bool was_hurt    = false;
-
+static bool should_charge = false;
+static int warp_amount    = 0;
+int warp_amount_override  = 0;
+static bool should_melee  = false;
+static bool charged       = false;
+static bool was_hurt      = false;
+static bool should_warp   = true;
+static bool warp_dodge    = false;
+static float yaw_amount   = 90.0f;
 // Rapidfire key mode
 static bool key_valid = false;
 
@@ -260,6 +261,77 @@ bool shouldRapidfire()
     }
 
     return buttons_pressed;
+}
+
+void dodgeProj()
+{
+    if (!LOCAL_E->m_bAlivePlayer() || entity_cache::proj_map.empty() || !dodge_projectile)
+        return;
+    Vector player_pos  = RAW_ENT(LOCAL_E)->GetAbsOrigin();
+    const int max_size = entity_cache::proj_map.size();
+    for (int i = 0; i < max_size; ++i)
+    {
+        auto curr_tuple   = entity_cache::proj_map[i];
+        Vector key        = std::get<0>(curr_tuple);
+        CachedEntity *val = std::get<1>(curr_tuple);
+        if (key.Length() < 0.1f)
+        {
+            if (CE_GOOD(val))
+                continue;
+            else
+                entity_cache::proj_map.erase((entity_cache::proj_map.begin() + i));
+            continue;
+        }
+        if (CE_GOOD(val))
+        {
+            // Since we are sending this warp next tick we need to compensate for fast moving projectiles
+            // 2 Ticks in advance is a fairly safe interval
+            Vector velocity_comp = key * 2 * TICK_INTERVAL;
+            velocity_comp.z -= 2 * TICK_INTERVAL * g_ICvar->FindVar("sv_gravity")->GetFloat() * ProjGravMult(val->m_iClassID(), key.Length());
+
+            Vector proj_next_tik = RAW_ENT(val)->GetAbsOrigin() + velocity_comp;
+            float diff           = proj_next_tik.DistToSqr(player_pos);
+            // Warp sooner for fast moving projectiles.
+            if (diff < (15000 * (key.Length() / 1000)))
+            {
+                trace_t trace;
+                Ray_t ray;
+                ray.Init(proj_next_tik, player_pos, Vector(0, -8, -8), Vector(0, 8, 8));
+                g_ITrace->TraceRay(ray, MASK_SHOT_HULL, &trace::filter_default, &trace);
+                if (trace.DidHit())
+                {
+
+                    // We need to determine wether the projectile is coming in from the left or right of us so we don't warp into the projectile.
+                    Vector result = GetAimAtAngles(g_pLocalPlayer->v_Eye, RAW_ENT(val)->GetAbsOrigin(), LOCAL_E) - g_pLocalPlayer->v_OrigViewangles;
+
+                    if (0 <= result.y)
+                        yaw_amount = -90.0f;
+                    else
+                        yaw_amount = 90.0f;
+                    if ((IClientEntity *) trace.m_pEnt == RAW_ENT(LOCAL_E))
+                    {
+                        was_hurt   = true;
+                        warp_dodge = true;
+                        entity_cache::proj_map.erase((entity_cache::proj_map.begin() + i));
+                    }
+                } // It didn't hit anything but it has been proven to be very close to us. Dodge. (This is for the huntsman+pills)
+                else
+                {
+                    was_hurt      = true;
+                    warp_dodge    = true;
+                    Vector result = GetAimAtAngles(g_pLocalPlayer->v_Eye, RAW_ENT(val)->GetAbsOrigin(), LOCAL_E) - g_pLocalPlayer->v_OrigViewangles;
+                    if (0 <= result.y)
+                        yaw_amount = -90.0f;
+                    else
+                        yaw_amount = 90.0f;
+
+                    entity_cache::proj_map.erase((entity_cache::proj_map.begin() + i));
+                }
+            }
+        }
+        else
+            entity_cache::proj_map.erase((entity_cache::proj_map.begin() + i));
+    }
 }
 
 // Should we warp?

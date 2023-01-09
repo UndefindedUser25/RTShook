@@ -120,6 +120,7 @@ bool IsVectorVisible(Vector a, Vector b, bool enviroment_only = false, CachedEnt
 bool IsVectorVisibleNavigation(Vector a, Vector b, unsigned int mask = MASK_SHOT_HULL);
 bool didProjectileHit(Vector start_point, Vector end_point, CachedEntity *entity, float projectile_size);
 Vector getShootPos(Vector angle);
+float ProjGravMult(int class_id, float x_speed);
 Vector GetForwardVector(Vector origin, Vector viewangles, float distance, CachedEntity *punch_entity = nullptr);
 Vector GetForwardVector(float distance, CachedEntity *punch_entity = nullptr);
 CachedEntity *getClosestEntity(Vector vec);

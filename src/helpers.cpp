@@ -2026,10 +2026,9 @@ bool GetPlayerInfo(int idx, player_info_s *info)
 
 int GetPlayerForUserID(int userID)
 {
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
     {
         player_info_s player_info;
-        int i = ent->m_IDX;
         if (!GetPlayerInfo(i, &player_info))
             continue;
         // Found player

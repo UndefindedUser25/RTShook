@@ -72,17 +72,6 @@ fi
 
 echo "(Possible) cathook crash detected!"
 
-SYMBOLS=true
-has_debug_info "$CATHOOK" || SYMBOLS=false
-
-if [ $SYMBOLS == false ]; then
-    echo "No debug symbols detected!"
-    proccount=$(grep -c '^processor' /proc/cpuinfo)
-    pushd build
-    cmake -DInternal_Symbolized=true .. && cmake --build . --target cathook -- -j$proccount
-    popd
-fi
-
 SENTRY_DATA='{"release":"%s","exception":{"values":[{"type":"Crash report","value":"Crash on %s","stacktrace":{"frames":[%s]}}]}}'
 BREADCRUMBS=''
 

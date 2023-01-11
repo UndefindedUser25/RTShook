@@ -65,7 +65,7 @@ public:
     inline static bool AreRandomCritsEnabled(IClientEntity *self)
     {
         typedef bool (*fn_t)(IClientEntity *);
-        return vfunc<fn_t>(self, offsets::PlatformOffset(471, offsets::undefined, 470), 0)(self);
+        return vfunc<fn_t>(self, offsets::PlatformOffset(471, offsets::undefined, 471), 0)(self);
     }
     inline static bool CalcIsAttackCriticalHelper(IClientEntity *self)
     {

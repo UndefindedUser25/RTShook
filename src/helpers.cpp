@@ -713,8 +713,9 @@ CachedEntity *getClosestEntity(Vector vec)
 {
     float distance         = FLT_MAX;
     CachedEntity *best_ent = nullptr;
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
     {
+        CachedEntity *ent = ENTITY(i);
         if (CE_VALID(ent) && ent->m_vecDormantOrigin() && ent->m_bAlivePlayer() && ent->m_bEnemy() && vec.DistTo(ent->m_vecOrigin()) < distance)
         {
             distance = vec.DistTo(*ent->m_vecDormantOrigin());
@@ -728,8 +729,9 @@ CachedEntity *getClosestNonlocalEntity(Vector vec)
 {
     float distance         = FLT_MAX;
     CachedEntity *best_ent = nullptr;
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
     {
+        CachedEntity *ent = ENTITY(i);
         if (CE_VALID(ent) && ent->m_IDX != g_pLocalPlayer->entity_idx && ent->m_vecDormantOrigin() && ent->m_bAlivePlayer() && ent->m_bEnemy() && vec.DistTo(ent->m_vecOrigin()) < distance)
         {
             distance = vec.DistTo(*ent->m_vecDormantOrigin());

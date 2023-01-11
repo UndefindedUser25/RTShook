@@ -186,7 +186,7 @@ static std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
     positions.insert(positions.end(), corners, &corners[8]);
     positions.insert(positions.end(), line_positions, &line_positions[12]);
 
-   for (int i = 0; i < 20; ++i)
+    for (int i = 0; i < 20; ++i)
     {
         trace_t trace;
         if (IsEntityVectorVisible(ent, positions[i], true, MASK_SHOT_HULL, &trace))
@@ -497,6 +497,11 @@ static void CreateMove()
         target_last = nullptr;
         return;
     }
+    else if (!LOCAL_E->m_bAlivePlayer() || !g_pLocalPlayer->entity)
+    {
+        target_last = nullptr;
+        return;
+    }
 
     doAutoZoom(false);
 
@@ -742,7 +747,7 @@ bool ShouldAim()
     if (g_pLocalPlayer->using_action_slot_item)
         return false;
     // Using a forbidden weapon?
-    if (g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFKnife) || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 237 || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 265)
+    else if (!g_pLocalPlayer->weapon() || g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFKnife) || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 237 || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 265)
         return false;
 
     IF_GAME(IsTF2())

@@ -16,6 +16,7 @@
 #include "MiscTemporary.hpp"
 #include "Think.hpp"
 #include "Aimbot.hpp"
+#include <Misc.hpp>
 
 namespace hacks::tf2::warp
 {

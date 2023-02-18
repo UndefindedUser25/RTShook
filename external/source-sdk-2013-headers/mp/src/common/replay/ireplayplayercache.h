@@ -12,7 +12,7 @@
 
 //----------------------------------------------------------------------------------------
 
-#define REPLAYPLAYERCACHE_INTERFACE_VERSION		"VENGINE_REPLAY_PLAYER_CACHE_001"
+#define REPLAYPLAYERCACHE_INTERFACE_VERSION		"VENGINE_REPLAY_valid_ents_001"
 
 //----------------------------------------------------------------------------------------
 

@@ -1077,9 +1077,9 @@ void Draw()
         if (warp_amount == 0)
             color = colors::FromRGBA8(128.0f, 128.0f, 128.0f, 255.0f);
         else if (GetMaxWarpTicks() == warp_amount)
-	AddWarpString("Change Ready!" , colors::green);
+	        AddWarpString("Change Ready!" , colors::green);
             color = colors::green;
-        AddWarpString("Change Warp/DT Ticks : " + std::to_string(warp_amount), color);
+        AddWarpString("Warp/DT Ticks : " + std::to_string(warp_amount), color);
     }
 
     if (draw_bar)

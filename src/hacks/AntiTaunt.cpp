@@ -4,26 +4,25 @@
 namespace hacks::antitaunts
 {
 #if ENABLE_TEXTMODE
-static settings::Boolean enable{ "remove.taunts", "true" };
+settings::Boolean enable{ "remove.taunts", "true" };
 #else
-static settings::Boolean enable{ "remove.taunts", "false" };
+settings::Boolean enable{ "remove.taunts", "false" };
 #endif
 
 void cm()
 {
     if (!*enable)
         return;
-    CachedEntity *ent;
 
-    for (unsigned int i = 1; i <= g_IEngine->GetMaxClients(); i++)
+    for (const auto &ent : entity_cache::valid_ents)
     {
-        ent = ENTITY(i);
-        if (CE_BAD(ent) || ent == LOCAL_E || ent->m_Type() != ENTITY_PLAYER)
+        if (CE_BAD(ent) || ent->m_Type() != ENTITY_PLAYER)
             continue;
 
         RemoveCondition<TFCond_Taunting>(ent);
     }
 }
+
 static InitRoutine EC(
     []()
     {

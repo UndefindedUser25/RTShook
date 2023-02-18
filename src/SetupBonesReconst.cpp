@@ -2,12 +2,11 @@
 #include "bone_setup.h"
 #include "animationlayer.h"
 #include <boost/algorithm/string.hpp>
+#include "hacks/AntiTaunt.hpp"
 
 namespace setupbones_reconst
 {
 #define MAX_OVERLAYS 15
-
-static settings::Boolean remove_taunts("remove.taunts", "false");
 
 // This is to fix hitboxes while taunting. In most cases. Sometimes these sequences suddenly
 // Have normal hitboxes.
@@ -164,3 +163,4 @@ bool SetupBones(IClientEntity *ent, matrix3x4_t *pBoneToWorld, int boneMask)
     return true;
 }
 } // namespace setupbones_reconst
+

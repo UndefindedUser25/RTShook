@@ -11,7 +11,6 @@
 
 namespace re
 {
-
 class ITFGroupMatchCriteria
 {
 public:

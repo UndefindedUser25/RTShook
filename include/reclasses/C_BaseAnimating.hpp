@@ -6,15 +6,14 @@
 
 namespace re
 {
-
 class C_BaseAnimating
 {
 public:
     inline static void InvalidateBoneCache(IClientEntity *self)
     {
         typedef int (*InvalidateBoneCache_t)(IClientEntity *);
-        static uintptr_t addr                            = gSignatures.GetClientSignature("55 8B 0D ? ? ? ? 89 E5 8B 45 ? 8D 51");
-        static InvalidateBoneCache_t InvalidateBoneCache = InvalidateBoneCache_t(addr);
+        static uintptr_t addr           = CSignature::GetClientSignature("55 8B 0D ? ? ? ? 89 E5 8B 45 ? 8D 51");
+        static auto InvalidateBoneCache = InvalidateBoneCache_t(addr);
         InvalidateBoneCache(self);
     }
     // Currently unused, might be useful in the near future though

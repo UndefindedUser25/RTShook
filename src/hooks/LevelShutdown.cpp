@@ -20,9 +20,6 @@ DEFINE_HOOKED_METHOD(LevelShutdown, void, void *this_)
     EC::run(EC::LevelShutdown);
     // Free memory for hitbox cache
     entity_cache::Shutdown();
-#if ENABLE_GUI
-    hacks::shared::esp::Shutdown();
-#endif
 #if ENABLE_IPC
     if (ipc::peer)
     {

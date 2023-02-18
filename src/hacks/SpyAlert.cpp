@@ -80,7 +80,7 @@ void Draw()
             }
             if (voicemenu && lastVoicemenu.test_and_set(5000))
                 g_IEngine->ClientCmd_Unrestricted("voicemenu 1 1");
-            AddCenterString(format("BACKSTAB WARNING! ", (int) (closest_spy_distance / 64 * 1.22f), "m (", spy_count, ")"), colors::red_s);
+            AddCenterString(format("SPY BEHIND YOU! ", (int) (closest_spy_distance / 64 * 1.22f), "m (", spy_count, ")"), colors::red_s);
         }
         else if (closest_spy_distance < (float) distance_warning)
         {
@@ -96,7 +96,7 @@ void Draw()
             }
             if (voicemenu && lastVoicemenu.test_and_set(5000))
                 g_IEngine->ClientCmd_Unrestricted("voicemenu 1 1");
-            AddCenterString(format("Incoming spy! ", (int) (closest_spy_distance / 64 * 1.22f), "m (", spy_count, ")"), colors::yellow);
+            AddCenterString(format("Spy neatest you. ", (int) (closest_spy_distance / 64 * 1.22f), "m (", spy_count, ")"), colors::yellow);
         }
     }
     else

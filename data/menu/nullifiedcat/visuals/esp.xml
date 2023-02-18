@@ -126,22 +126,15 @@
             <AutoVariable width="fill" target="dominatemark.max-size" label="Draw max size"/>
         </List>
     </Box>
-    <Box padding="12 6 6 6" width="content" height="content" name="Head ESP" x="330" y="205">
+    <Box padding="12 6 6 6" width="content" height="content" name="Sightline Danger" x="330" y="225">
         <List width="150">
-            <LabeledObject width="fill" label="Head ESP mode"
-                           tooltip="Puts a certain icon over players' heads, independent of regular ESP settings.">
-                <Select target="headesp.mode">
-                    <Option name="Off" value="0"/>
-                    <Option name="Circle" value="1"/>
-                    <Option name="Class" value="2"/>
-                    <Option name="Joy" value="3"/>
-                    <Option name="Thinking" value="4"/>
-                </Select>
-            </LabeledObject>
-            <AutoVariable width="fill" target="headesp.size-scaling" label="Size scaling"
-                          tooltip="Sets the size of the head ESP." min="2.5" max="8.01" step="0.1"/>
-            <AutoVariable width="fill" target="headesp.teammates" label="Teammates"
-                          tooltip="Toggles whether teammates have the head ESP."/>
+            <AutoVariable width="fill" target="danger.enable" label="Enable" tooltip="Check The Enemy Sight Line who is looking at you."/>
+            <AutoVariable width="fill" target="danger.draw-text" label="Draw text panel"/>
+            <AutoVariable width="fill" target="danger.draw-info.x" label="Draw x"/>
+            <AutoVariable width="fill" target="danger.draw-info.y" label="Draw y"/>
+            <AutoVariable width="fill" target="danger.fov-looking-at" label="Looking at check"/>
+            <AutoVariable width="fill" target="danger.fov-can-see" label="Can see"/>
+            <AutoVariable width="fill" target="danger.fov-visible" label="Visible"/>
         </List>
     </Box>
 </Tab>

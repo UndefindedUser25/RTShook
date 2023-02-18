@@ -19,6 +19,7 @@
 #include "FollowBot.hpp"
 #include "Warp.hpp"
 #include "AntiCheatBypass.hpp"
+#include "NavBot.hpp"
 
 namespace hacks::shared::aimbot
 {
@@ -62,10 +63,11 @@ settings::Boolean engine_projpred{ "aimbot.debug.engine-pp", "1" };
 static settings::Boolean auto_spin_up{ "aimbot.auto.spin-up", "0" };
 static settings::Float spinup_time{ "aimbot.spinup-time", "7000" };
 static settings::Boolean minigun_tapfire{ "aimbot.auto.tapfire", "false" };
-static settings::Boolean p_fix{ "aimbot.minigun-p-fix", "false" };
 static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "false" };
-static settings::Float unzoom_time{ "aimbot.unzoom.time", "3000" };
+static settings::Float zoom_time{ "aimbot.unzoom.time", "3000" };
 static settings::Boolean auto_unzoom{ "aimbot.auto.unzoom", "0" };
+static settings::Boolean zoom_distance_enable{ "aimbot.auto.zoom-distance.enable", "false" };
+static settings::Float distance{ "aimbot.auto.zoom.distance", "1250" };
 
 static settings::Boolean backtrackAimbot{ "aimbot.backtrack", "0" };
 static settings::Boolean backtrackLastTickOnly("aimbot.backtrack.only-last-tick", "true");
@@ -98,7 +100,7 @@ int slow_aim;
 float fov;
 bool enable;
 
-static void spectatorUpdate()
+void spectatorUpdate()
 {
     switch (*specmode)
     {
@@ -126,7 +128,7 @@ static void spectatorUpdate()
     };
 }
 
-static bool playerTeamCheck(CachedEntity *entity)
+bool playerTeamCheck(CachedEntity *entity)
 {
     return (int) teammates == 2 || (entity->m_bEnemy() && !teammates) || (!entity->m_bEnemy() && teammates) || (CE_GOOD(LOCAL_W) && LOCAL_W->m_iClassID() == CL_CLASS(CTFCrossbow) && entity->m_iHealth() < entity->m_iMaxHealth());
 }
@@ -134,7 +136,7 @@ static bool playerTeamCheck(CachedEntity *entity)
 #define GET_MIDDLE(c1, c2) (corners[c1] + corners[c2]) / 2.0f
 
 // Get all the valid aim positions
-static std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
+std::vector<Vector> getValidHitpoints(CachedEntity *ent, int hitbox)
 {
     // Recorded vischeckable points
     std::vector<Vector> hitpoints;
@@ -431,9 +433,10 @@ static bool allowNoScope(CachedEntity *target)
     return false;
 }*/
 	
-void doAutoZoom(bool target_found)
+void doAutoZoom(bool target_found, CachedEntity *target)
 {
     bool isIdle = target_found ? false : hacks::shared::followbot::isIdle();
+    auto nearest = hacks::tf2::NavBot::getNearestPlayerDistance();
 
     // Keep track of our zoom time
     static Timer zoomTime{};
@@ -449,18 +452,21 @@ void doAutoZoom(bool target_found)
         }
         return;
     }
-
-    if (auto_zoom && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle))
+    if /*(*/(auto_zoom /*&& !allowNoScope(target))*/ && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle || zoom_distance_enable && nearest.second <= *distance))
     {
         if (target_found)
             zoomTime.update();
-        if (not g_pLocalPlayer->bZoomed)
+        else if (!g_pLocalPlayer->bZoomed)
             current_user_cmd->buttons |= IN_ATTACK2;
     }
+
+    else if (!target_found && nearest.second > *distance)
+    {
         // Auto-Unzoom
-    if (auto_unzoom)
-        if (g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed && zoomTime.check(*unzoom_time))
-        current_user_cmd->buttons |= IN_ATTACK2;
+        if (auto_unzoom)
+            if (g_pLocalPlayer->holding_sniper_rifle && g_pLocalPlayer->bZoomed && zoomTime.test_and_set(*zoom_time))
+                    current_user_cmd->buttons |= IN_ATTACK2;
+    }
 }
 
 // Current Entity
@@ -564,7 +570,7 @@ static void CreateMove()
     }
     if (!g_IEntityList->GetClientEntity(target_entity->m_IDX))
         return;
-    if (!target_entity->hitboxes.GetHitbox(calculated_data_array[target_entity->m_IDX].hitbox))
+    else if (!target_entity->hitboxes.GetHitbox(calculated_data_array[target_entity->m_IDX].hitbox))
         return;
 
 #if ENABLE_VISUALS
@@ -579,8 +585,6 @@ static void CreateMove()
     // flNextPrimaryAttack meme
     if (only_can_shoot && g_pLocalPlayer->weapon()->m_iClassID() != CL_CLASS(CTFLaserPointer))
     {
-        if (p_fix && g_pLocalPlayer->weapon()->m_iClassID() != CL_CLASS(CTFMinigun))
-            DoAutoshoot();
         // Handle Huntsman
         if (g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFCompoundBow))
         {
@@ -744,30 +748,34 @@ bool ShouldAim()
     if (current_user_cmd->buttons & IN_USE)
         return false;
     // Check if using action slot item
-    if (g_pLocalPlayer->using_action_slot_item)
+    else if (g_pLocalPlayer->using_action_slot_item)
         return false;
     // Using a forbidden weapon?
     else if (!g_pLocalPlayer->weapon() || g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFKnife) || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 237 || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 265)
         return false;
 
-    IF_GAME(IsTF2())
-    {
         // Carrying A building?
-        if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bCarryingObject))
+        else if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bCarryingObject))
             return false;
         // Deadringer out?
-        if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bFeignDeathReady))
+        else if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bFeignDeathReady))
+            return false;
+        // Holding Sapper?
+        else if (g_pLocalPlayer->holding_sapper)
             return false;
         // Is bonked?
-        if (HasCondition<TFCond_Bonked>(g_pLocalPlayer->entity))
+        else if (HasCondition<TFCond_Bonked>(g_pLocalPlayer->entity))
             return false;
         // Is taunting?
-        if (HasCondition<TFCond_Taunting>(g_pLocalPlayer->entity))
+        else if (HasCondition<TFCond_Taunting>(g_pLocalPlayer->entity))
             return false;
         // Is cloaked
-        if (IsPlayerInvisible(g_pLocalPlayer->entity))
+        else if (IsPlayerInvisible(g_pLocalPlayer->entity))
             return false;
-    }
+        // Dont aim as minigun if out of ammo
+        else if (LOCAL_W->m_iClassID() == CL_CLASS(CTFMinigun) && CE_INT(LOCAL_E, netvar.m_iAmmo + 4) == 0)
+            return false;
+ 
 #if ENABLE_VISUALS
     if (assistance_only && !MouseMoving())
         return false;
@@ -1317,60 +1325,15 @@ bool IsTargetStateGood(CachedEntity *entity)
 // A function to aim at a specific entitiy
 void Aim(CachedEntity *entity)
 {
-    if (silent_assist)
-    {
-        //TODO: paste this
-        /*
-        vector2_t aimassist::calculate_point( vector2_t object, vector2_t cursor ) {
-           const auto distance    = cursor.delta( object ).length();
-           auto       screen_size = get_screen();
-
-           auto amplitude = 120;
-           auto power     = 1.f / ( 2.f + ceaihack::config::features::aimassist::power ) * amplitude;
-
-           float half_screen = (float) min( screen_size.width, screen_size.height ) / 2;
-           auto  importance  = powf( 1.0f - min( 1.0f, max( distance / half_screen, 0.0f ) ), power );
-
-           const auto x = object.x - ( object.x * importance + cursor.x * ( 1.f - importance ) );
-           const auto y = object.y - ( object.y * importance + cursor.y * ( 1.f - importance ) );
-
-           vector2_t calculated_point = { object.x - x, object.y - y };
-
-           last_importance = importance;
-           last_point      = calculated_point;
-
-           return calculated_point;
-        }
-        */
-        if (CE_BAD(entity))
-            return;
-
-        // base
-        Vector angles = GetAimAtAngles(g_pLocalPlayer->v_Eye, PredictEntity(entity, false), LOCAL_E);
-        auto viewangles   = current_user_cmd->viewangles;
-        Vector slow_delta = { 0, 0, 0 };
-
-        slow_delta = angles - viewangles;
-
-        while (slow_delta.y > 180)
-            slow_delta.y -= 360;
-        while (slow_delta.y < -180)
-            slow_delta.y += 360;
-
-        angles = viewangles + slow_delta;
-        fClampAngle(angles);
-        //g_pLocalPlayer->bUseSilentAngles = true;
-        current_user_cmd->viewangles = angles;
-        aimed_this_tick              = true;
-        //viewangles_this_tick         = angles;
-        return;
-    }
-
     if (*miss_chance > 0 && UniformRandomInt(0, 99) < *miss_chance)
         return;
 
     // Dont aim at a bad entity
     if (CE_BAD(entity))
+        return;
+
+    // Special case for miniguns
+    if (only_can_shoot/* && LOCAL_W->m_iClassID() == CL_CLASS(CTFMinigun)*/ && !CanShoot() && !hacks::tf2::warp::in_rapidfire)
         return;
 
     // Get angles from eye to target
@@ -1889,7 +1852,7 @@ static void DrawText()
             // Dont show ring while player is dead
             if (CE_GOOD(LOCAL_E) && LOCAL_E->m_bAlivePlayer())
             {
-                rgba_t color = colors::gui;
+                rgba_t color = LOCAL_E->m_iTeam() == TEAM_BLU ? colors::blu : (LOCAL_E->m_iTeam() == TEAM_RED ? colors::red : colors::white);
                 color.a      = float(fovcircle_opacity);
 
                 int width, height;

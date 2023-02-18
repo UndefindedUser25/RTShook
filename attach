@@ -9,9 +9,6 @@ fi
 [[ ! -z "$SUDO_USER" ]] && RUNUSER="$SUDO_USER" || RUNUSER="$LOGNAME"
 RUNCMD="sudo -u $RUNUSER"
 
-$RUNCMD bash ./scripts/updater true
-$RUNCMD bash ./report-crash true
-
 line=$(pgrep -u $RUNUSER hl2_linux)
 arr=($line)
 
@@ -19,7 +16,7 @@ if [ $# == 1 ]; then
     proc=$1
 else
     if [ ${#arr[@]} == 0 ]; then
-        echo TF2 isn\'t running!
+        echo TF2 isn\'t running bruh.
         exit 1
     fi
     proc=${arr[0]}

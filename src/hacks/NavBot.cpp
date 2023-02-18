@@ -13,6 +13,7 @@
 #include "navparser.hpp"
 #include "MiscAimbot.hpp"
 #include "Misc.hpp"
+#include "NavBot.hpp"
 
 namespace hacks::tf2::NavBot
 {
@@ -34,14 +35,8 @@ static settings::Int blacklist_delay("navbot.proximity-blacklist.delay", "500");
 static settings::Boolean blacklist_dormat("navbot.proximity-blacklist.dormant", "false");
 static settings::Int blacklist_delay_dormat("navbot.proximity-blacklist.delay-dormant", "1000");
 static settings::Int blacklist_slightdanger_limit("navbot.proximity-blacklist.slight-danger.amount", "2");
-static settings::Boolean fat_scout_mode("navbot.fat-scout-mode", "false");
-static settings::Boolean minigun_mode("navbot.minigun-mode", "true");
-static settings::Boolean engie_mode("navbot.engineer-mode", "true");
-static settings::Boolean path_nearest_bluilding("navbot.path.nearest-bluilding", "false");
-static settings::Float distance{ "aimbot.unzoom-prediction.distance", "1250" };
-static settings::Boolean auto_zoom_prediction{ "aimbot.auto.zoom-prediction", "false" };
-static settings::Float distance_spinup{ "aimbot.spinup-prediction.distance", "3000" };
-static settings::Boolean auto_spinup_prediction{ "aimbot.spinup-prediction", "false" };
+static settings::Boolean engie_mode("navbot.engineer-mode", "false");
+static settings::Boolean path_nearest_building("navbot.path.nearest-building", "true"); //Set by default to useful for enginner bots.
 
 #if ENABLE_VISUALS
 static settings::Boolean draw_danger("navbot.draw-danger", "false");
@@ -262,7 +257,7 @@ void refreshSniperSpots()
                 sniper_spots.emplace_back(hiding_spot.m_pos);
 }
 
-static std::pair<CachedEntity *, float> getNearestPlayerDistance()
+std::pair<CachedEntity *, float> getNearestPlayerDistance()
 {
     float distance         = FLT_MAX;
     CachedEntity *best_ent = nullptr;
@@ -1055,6 +1050,8 @@ static bool smackBuilding(CachedEntity *ent)
     }
     else if (navparser::NavEngine::current_priority != engineer)
         return navparser::NavEngine::navTo(*ent->m_vecDormantOrigin(), engineer);
+    else if (CE_BYTE(ent, netvar.m_bHasSapper)) //Need Smack building when got sapped
+        return true;
     return true;
 }
 
@@ -1094,7 +1091,7 @@ static bool runEngineerLogic()
                     // We already have a dispenser, see if it needs to be smacked
                     if (buildingNeedsToBeSmacked(myDispenser))
                         return smackBuilding(myDispenser);
-    	            else if (path_nearest_bluilding)
+    	            else if (path_nearest_building)
                         return runEngineerLogic;
                 }
             }
@@ -1395,11 +1392,11 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     case tf_heavy:
 	{
         if (nearest.second <= 150 && nearest.first->m_iHealth() < 65)
-            	return melee;
+            return melee;
         else if (nearest.second <= 200 && nearest.first->m_iHealth() < 65)
-            	return active_slot;
+            return active_slot;
         else
-            	return secondary;
+            return secondary;
 	}
     case tf_medic:
 	{
@@ -1419,10 +1416,6 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
     }
     case tf_sniper:
     {
-	if (auto_zoom_prediction)
-		if (nearest.second <= *distance)
-	    	hacks::shared::aimbot::doAutoZoom(true);
-
         if (nearest.second <= 250)
             return melee;
         else if (nearest.second <= 350 && nearest.first->m_iHealth() < 75)

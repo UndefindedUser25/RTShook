@@ -9,7 +9,6 @@
 #include "reclasses.hpp"
 namespace re
 {
-
 class CTFPartyClient
 {
 public:

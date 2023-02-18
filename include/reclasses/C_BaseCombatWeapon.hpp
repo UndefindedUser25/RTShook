@@ -11,7 +11,6 @@
 
 namespace re
 {
-
 class C_BaseCombatWeapon : public C_BaseEntity
 {
 public:

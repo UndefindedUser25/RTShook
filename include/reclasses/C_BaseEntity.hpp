@@ -13,7 +13,6 @@
 
 namespace re
 {
-
 class C_BaseEntity
 {
 public:
@@ -35,8 +34,8 @@ public:
     inline static int SetAbsOrigin(IClientEntity *self, Vector const &origin)
     {
         typedef int (*SetAbsOrigin_t)(IClientEntity *, Vector const &);
-        static uintptr_t addr                 = e8call_direct(gSignatures.GetClientSignature("E8 ? ? ? ? A1 ? ? ? ? F3 0F 2A 45"));
-        static SetAbsOrigin_t SetAbsOrigin_fn = SetAbsOrigin_t(addr);
+        static uintptr_t addr       = e8call_direct(CSignature::GetClientSignature("E8 ? ? ? ? A1 ? ? ? ? F3 0F 2A 45"));
+        static auto SetAbsOrigin_fn = SetAbsOrigin_t(addr);
 
         return SetAbsOrigin_fn(self, origin);
     }

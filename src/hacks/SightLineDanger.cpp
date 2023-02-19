@@ -13,7 +13,6 @@
 namespace sight_danger
 {
 static settings::Boolean dangercheck{ "danger.enable", "true" };
-static settings::Boolean draw_text{ "danger.draw-text", "true" };
 static settings::Int draw_string_x{ "danger.draw-info.x", "1500" };
 static settings::Int draw_string_y{ "danger.draw-info.y", "600" };
 static settings::Int fov1{ "danger.fov-looking-at", "15" };
@@ -63,10 +62,6 @@ static void FOVCheck()
                 player_info_s info{};
             if (!GetPlayerInfo(ent->m_IDX, &info)/* || !info.friendsID*/)
                 continue;
-            if (draw_text)
-            {
-                AddDangerString("Sight Line danger Panel" , colors::green);
-            }
             else
             {
                 rgba_t color = colors::green;

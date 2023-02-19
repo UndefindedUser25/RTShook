@@ -37,10 +37,9 @@ static settings::Boolean look{ "nav.look-at-path", "false" };
 static settings::Boolean smooth_look{ "nav.look-at-path-but-smooth", "true" };
 static settings::Boolean look_legit{ "nav.look-at-legit", "false" };  
 static settings::Int look_crumbs{ "nav.look-crumbs", "0" };
-
-static settings::Boolean draw_debug_areas("nav.draw.debug-areas", "false");
 static settings::Boolean log_pathing{ "nav.log", "false" };
-static settings::Int stuck_time{ "nav.stuck-time", "20000" };
+static settings::Int crumb_tollerance("nav.crumb-tollerance", "50");
+static settings::Int stuck_time{ "nav.stuck-time", "10000" };
 static settings::Int vischeck_cache_time{ "nav.vischeck-cache.time", "240" };
 static settings::Boolean vischeck_runtime{ "nav.vischeck-runtime.enabled", "true" };
 static settings::Int vischeck_time{ "nav.vischeck-runtime.delay", "1200" };
@@ -50,6 +49,8 @@ static settings::Int stuck_expire_time{ "nav.anti-stuck.expire-time", "7" };
 // How long we should blacklist the node after being stuck for too long?
 static settings::Int stuck_blacklist_time{ "nav.anti-stuck.blacklist-time", "15" };
 static settings::Int sticky_ignore_time{ "nav.ignore.sticky-time", "15" };
+
+static settings::Boolean draw_debug_areas{ "nav.draw-debug-areas", "false" };
 
 // Cast a Ray and return if it hit
 static bool CastRay(Vector origin, Vector endpos, unsigned mask, ITraceFilter *filter)
@@ -189,6 +190,7 @@ public:
     NavState state;
     micropather::MicroPather pather{ this, 3000, 6, true };
     std::string mapname;
+    /* Boost here */
     std::unordered_map<std::pair<CNavArea *, CNavArea *>, CachedConnection, boost::hash<std::pair<CNavArea *, CNavArea *>>> vischeck_cache;
     std::unordered_map<std::pair<CNavArea *, CNavArea *>, CachedStucktime, boost::hash<std::pair<CNavArea *, CNavArea *>>> connection_stuck_time;
     // This is a pure blacklist that does not get cleared and is for free usage internally and externally, e.g. blacklisting where enemies are standing
@@ -663,7 +665,7 @@ static void followCrumbs()
         current_vec.z = g_pLocalPlayer->v_Origin.z;
 
     // We are close enough to the crumb to have reached it
-    if (current_vec.DistTo(g_pLocalPlayer->v_Origin) < 50)
+    if (current_vec.DistTo(g_pLocalPlayer->v_Origin) < *crumb_tollerance)
     {
         last_crumb = crumbs[0];
         crumbs.erase(crumbs.begin());
@@ -678,7 +680,7 @@ static void followCrumbs()
         current_vec.z = g_pLocalPlayer->v_Origin.z;
 
     // We are close enough to the second crumb, Skip both (This is espcially helpful with drop downs)
-    if (crumbs.size() > 1 && crumbs[1].vec.DistTo(g_pLocalPlayer->v_Origin) < 50)
+    if (crumbs.size() > 1 && crumbs[1].vec.DistTo(g_pLocalPlayer->v_Origin) < *crumb_tollerance)
     {
         last_crumb = crumbs[1];
         crumbs.erase(crumbs.begin(), std::next(crumbs.begin()));
@@ -715,7 +717,7 @@ static void followCrumbs()
                 // Reset
                 crouch = false;
                 last_jump.update();
-		    last_duck.update();
+		        last_duck.update();
             }
         }
     }
@@ -920,11 +922,13 @@ void CreateMove()
 {
     if (!isReady())
         return;
+
     if (CE_BAD(LOCAL_E) || !LOCAL_E->m_bAlivePlayer())
     {
         cancelPath();
         return;
     }
+
     if (vischeck_runtime)
         vischeckPath();
     checkBlacklist();
@@ -1030,6 +1034,7 @@ void Draw()
 {
     if (!isReady() || !draw)
         return;
+
     if (draw_debug_areas && CE_GOOD(LOCAL_E) && LOCAL_E->m_bAlivePlayer())
     {
         auto area = map->findClosestNavSquare(g_pLocalPlayer->v_Origin);
@@ -1051,7 +1056,7 @@ void Draw()
         Vector start_screen, end_screen;
         if (draw::WorldToScreen(start_pos, start_screen))
         {
-            draw::Rectangle(start_screen.x - 2.0f, start_screen.y - 2.0f, 4.0f, 4.0f, colors::green);
+            draw::Rectangle(start_screen.x - 2.0f, start_screen.y - 3.0f, 5.0f, 5.0f, colors::green);
 
             if (i < crumbs.size() - 1)
             {

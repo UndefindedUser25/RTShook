@@ -4,9 +4,9 @@
 namespace hacks::antitaunts
 {
 #if ENABLE_TEXTMODE
-settings::Boolean enable{ "remove.taunts", "true" };
+static settings::Boolean enable{ "remove.taunts", "true" };
 #else
-settings::Boolean enable{ "remove.taunts", "false" };
+static settings::Boolean enable{ "remove.taunts", "false" };
 #endif
 
 void cm()

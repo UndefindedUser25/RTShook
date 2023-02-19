@@ -6,7 +6,6 @@
 #include <hacks/Aimbot.hpp>
 #include <hacks/hacklist.hpp>
 #include "HookedMethods.hpp"
-#include "ESP.hpp"
 
 namespace hooked_methods
 {

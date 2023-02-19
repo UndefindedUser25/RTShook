@@ -105,7 +105,7 @@ void DrawCheatVisuals()
                 server_info = " | " + std::to_string((int)(avgLatency*1000.0f)) + " ms";
             }
 
-            std::string result = std::string(strfmt("RTShook | %s%s", timeString, server_info.c_str()).get());
+            std::string result = std::string(strfmt("RTShook v2 | %s%s", timeString, server_info.c_str()).get());
 
             // Sizes for rectangle and line
             float w, h;

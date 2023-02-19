@@ -65,9 +65,8 @@ static settings::Float spinup_time{ "aimbot.spinup-time", "7000" };
 static settings::Boolean minigun_tapfire{ "aimbot.auto.tapfire", "false" };
 static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "false" };
 static settings::Float zoom_time{ "aimbot.unzoom.time", "3000" };
-static settings::Boolean auto_unzoom{ "aimbot.auto.unzoom", "0" };
-static settings::Boolean zoom_distance_enable{ "aimbot.auto.zoom-distance.enable", "false" };
-static settings::Float distance{ "aimbot.auto.zoom.distance", "1250" };
+static settings::Boolean auto_unzoom{ "aimbot.auto.unzoom", "false" };
+static settings::Float distance{ "aimbot.auto.zoom.distance", "0" };
 
 static settings::Boolean backtrackAimbot{ "aimbot.backtrack", "0" };
 static settings::Boolean backtrackLastTickOnly("aimbot.backtrack.only-last-tick", "true");
@@ -452,11 +451,11 @@ void doAutoZoom(bool target_found, CachedEntity *target)
         }
         return;
     }
-    if /*(*/(auto_zoom /*&& !allowNoScope(target))*/ && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle || zoom_distance_enable && nearest.second <= *distance))
+    if /*(*/(auto_zoom /*&& !allowNoScope(target))*/ && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle || nearest.second <= *distance))
     {
         if (target_found)
             zoomTime.update();
-        else if (!g_pLocalPlayer->bZoomed)
+        if (!g_pLocalPlayer->bZoomed)
             current_user_cmd->buttons |= IN_ATTACK2;
     }
 
@@ -509,7 +508,7 @@ static void CreateMove()
         return;
     }
 
-    doAutoZoom(false);
+    doAutoZoom(false, nullptr);
 
     // TODO: Investigate this hack. Why is this necessary?
     if (LOCAL_W->m_iClassID() == CL_CLASS(CTFMinigun) && CE_INT(LOCAL_E, netvar.m_iAmmo + 4) == 0)
@@ -560,7 +559,7 @@ static void CreateMove()
         return;
 
     // Auto-zoom
-    doAutoZoom(true);
+    doAutoZoom(true, target_last);
 
     // If zoomed only is on, check if zoomed
     if (zoomed_only && g_pLocalPlayer->holding_sniper_rifle)
@@ -1546,6 +1545,7 @@ Vector PredictEntity(CachedEntity *entity, bool vischeck)
 // A function to find the best hitbox for a target
 int BestHitbox(CachedEntity *target)
 {
+    float target_health = target->m_iHealth();
     // Switch based apon the hitbox mode set by the user
     switch (*hitbox_mode)
     {
@@ -1569,10 +1569,10 @@ int BestHitbox(CachedEntity *target)
                 float begincharge = CE_FLOAT(g_pLocalPlayer->weapon(), netvar.flChargeBeginTime);
                 float charge      = g_GlobalVars->curtime - begincharge;
                 int damage        = std::floor(50.0f + 70.0f * fminf(1.0f, charge));
-                if (damage >= target->m_iHealth())
-                    preferred = hitbox_t::spine_3;
+                if (damage >= target_health)
+                    return hitbox_t::spine_1;
                 else
-                    preferred = hitbox_t::head;
+                    return hitbox_t::head;
             }
 
             // Ambassador
@@ -1653,9 +1653,8 @@ int BestHitbox(CachedEntity *target)
         if (target->hitboxes.VisibilityCheck(preferred))
             return preferred;
         // Else attempt to find any hitbox at all
-	for (int i = 6; i > projectile_mode ? 1 : 0 && i < 6; i--)
-            if (target->hitboxes.VisibilityCheck(i))
-                return i;
+        else
+            return hitbox_t::spine_1;
     }
     break;
     case 1:

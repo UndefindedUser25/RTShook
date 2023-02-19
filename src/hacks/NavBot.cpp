@@ -14,6 +14,7 @@
 #include "MiscAimbot.hpp"
 #include "Misc.hpp"
 #include "NavBot.hpp"
+#include "Aimbot.hpp"
 
 namespace hacks::tf2::NavBot
 {
@@ -27,13 +28,13 @@ static settings::Boolean snipe_sentries_shortrange("navbot.snipe-sentries.shortr
 static settings::Boolean escape_danger("navbot.escape-danger", "true");
 static settings::Boolean escape_danger_ctf_cap("navbot.escape-danger.ctf-cap", "false");
 static settings::Boolean enable_slight_danger_when_capping("navbot.escape-danger.slight-danger.capping", "false");
-static settings::Boolean autojump("navbot.autojump.enabled", "false");
 static settings::Boolean primary_only("navbot.primary-only", "true");
 static settings::Int force_slot("navbot.force-slot", "0");
-static settings::Float jump_distance("navbot.autojump.trigger-distance", "300");
+static settings::Boolean defend_intel("navbot.defend-intel", "false");
 static settings::Int blacklist_delay("navbot.proximity-blacklist.delay", "500");
 static settings::Boolean blacklist_dormat("navbot.proximity-blacklist.dormant", "false");
 static settings::Int blacklist_delay_dormat("navbot.proximity-blacklist.delay-dormant", "1000");
+static settings::Int repath_delay("navbot.repath-time.delay", "2000");
 static settings::Int blacklist_slightdanger_limit("navbot.proximity-blacklist.slight-danger.amount", "2");
 static settings::Boolean engie_mode("navbot.engineer-mode", "false");
 static settings::Boolean path_nearest_building("navbot.path.nearest-building", "true"); //Set by default to useful for enginner bots.
@@ -118,10 +119,9 @@ bool shouldSearchAmmo()
 std::vector<CachedEntity *> getDispensers()
 {
     std::vector<CachedEntity *> entities;
-    for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
-        if (CE_BAD(ent) || ent->m_iClassID() != CL_CLASS(CObjectDispenser) || ent->m_iTeam() != g_pLocalPlayer->team)
+        if (ent->m_iClassID() != CL_CLASS(CObjectDispenser) || ent->m_iTeam() != g_pLocalPlayer->team)
             continue;
         if (CE_BYTE(ent, netvar.m_bCarryDeploy) || CE_BYTE(ent, netvar.m_bHasSapper) || CE_BYTE(ent, netvar.m_bBuilding))
             continue;
@@ -129,7 +129,7 @@ std::vector<CachedEntity *> getDispensers()
         // This fixes the fact that players can just place dispensers in unreachable locations
         auto local_nav = navparser::NavEngine::findClosestNavSquare(ent->m_vecOrigin());
         if (local_nav->getNearestPoint(ent->m_vecOrigin().AsVector2D()).DistTo(ent->m_vecOrigin()) > 100.0f || local_nav->getNearestPoint(ent->m_vecOrigin().AsVector2D()).z - ent->m_vecOrigin().z > navparser::PLAYER_JUMP_HEIGHT)
-            navparser::NavEngine::cancelPath();
+            continue;
         entities.push_back(ent);
     }
     // Sort by distance, closer is better
@@ -161,7 +161,7 @@ std::vector<CachedEntity *> getEntities(const std::vector<k_EItemType> &itemtype
 bool getHealth(bool low_priority = false)
 {
     Priority_list priority = low_priority ? lowprio_health : health;
-    if (!health_cooldown.check(1000))
+    if (!health_cooldown.check(*repath_delay / 2))
         return navparser::NavEngine::current_priority == priority;
     if (shouldSearchHealth(low_priority))
     {
@@ -169,7 +169,7 @@ bool getHealth(bool low_priority = false)
         if (navparser::NavEngine::current_priority == priority)
         {
             static Timer repath_timer;
-            if (!repath_timer.test_and_set(4000))
+            if (!repath_timer.test_and_set(*repath_delay))
                 return true;
         }
         auto healthpacks = getEntities({ ITEM_HEALTH_SMALL, ITEM_HEALTH_MEDIUM, ITEM_HEALTH_LARGE });
@@ -187,19 +187,20 @@ bool getHealth(bool low_priority = false)
 
         for (auto healthpack : total_ents)
             // If we succeeed, don't try to path to other packs
-            if (navparser::NavEngine::navTo(healthpack->m_vecOrigin(), priority, true, healthpack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 120.0f * 120.0f))
+            if (navparser::NavEngine::navTo(healthpack->m_vecOrigin(), priority, true, healthpack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 100.0f * 100.0f))
                 return true;
         health_cooldown.update();
     }
     else if (navparser::NavEngine::current_priority == priority)
-        return false;
+        navparser::NavEngine::cancelPath();
+    return false;
 }
 
 static bool was_force = false;
 // Find ammo if needed
 bool getAmmo(bool force = false)
 {
-    if (!force && !ammo_cooldown.check(1000))
+    if (!force && !ammo_cooldown.check(*repath_delay / 2))
         return navparser::NavEngine::current_priority == ammo;
     if (force || shouldSearchAmmo())
     {
@@ -207,7 +208,7 @@ bool getAmmo(bool force = false)
         if (navparser::NavEngine::current_priority == ammo)
         {
             static Timer repath_timer;
-            if (!repath_timer.test_and_set(2000))
+            if (!repath_timer.test_and_set(*repath_delay))
                 return true;
         }
         else
@@ -226,7 +227,7 @@ bool getAmmo(bool force = false)
         }
         for (auto ammopack : total_ents)
             // If we succeeed, don't try to path to other packs
-            if (navparser::NavEngine::navTo(ammopack->m_vecOrigin(), ammo, true, ammopack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 120.0f * 120.0f))
+            if (navparser::NavEngine::navTo(ammopack->m_vecOrigin(), ammo, true, ammopack->m_vecOrigin().DistToSqr(g_pLocalPlayer->v_Origin) > 100.0f * 100.0f))
             {
                 was_force = force;
                 return true;
@@ -234,7 +235,8 @@ bool getAmmo(bool force = false)
         ammo_cooldown.update();
     }
     else if (navparser::NavEngine::current_priority == ammo && !was_force)
-        return false;
+        navparser::NavEngine::cancelPath();
+    return false;
 }
 
 // Vector of sniper spot positions we can nav to
@@ -624,13 +626,13 @@ bool isAreaValidForStayNear(Vector ent_origin, CNavArea *area, bool fix_local_z 
     if (distance < selected_config.min_full_danger * selected_config.min_full_danger)
         return false;
     // Blacklisted
-    if (navparser::NavEngine::getFreeBlacklist()->find(area) != navparser::NavEngine::getFreeBlacklist()->end())
+    else if (navparser::NavEngine::getFreeBlacklist()->find(area) != navparser::NavEngine::getFreeBlacklist()->end())
         return false;
     // Too far away
-    if (distance > selected_config.max * selected_config.max)
+    else if (distance > selected_config.max * selected_config.max)
         return false;
     // Attempt to vischeck
-    if (!IsVectorVisibleNavigation(ent_origin, area_origin))
+    else if (!IsVectorVisibleNavigation(ent_origin, area_origin))
         return false;
     return true;
 }
@@ -700,7 +702,7 @@ bool stayNear()
         return false;
     // Don't constantly path, it's slow.
     // Far range classes do not need to repath nearly as often as close range ones.
-    if (!staynear_cooldown.test_and_set(selected_config.prefer_far ? 2000 : 500))
+    if (!staynear_cooldown.test_and_set(selected_config.prefer_far ? *repath_delay : *repath_delay))
         return navparser::NavEngine::current_priority == staynear;
 
     // Too high priority, so don't try
@@ -769,6 +771,7 @@ bool stayNear()
     return false;
 }
 
+bool isVisible;
 // Try to attack people using melee if we are in a situation where this is viable
 bool meleeAttack(int slot, std::pair<CachedEntity *, float> &nearest)
 {
@@ -794,7 +797,6 @@ bool meleeAttack(int slot, std::pair<CachedEntity *, float> &nearest)
     }
 
     static Timer melee_cooldown{};
-    bool isVisible;
 
     {
         Ray_t ray;
@@ -840,7 +842,7 @@ bool meleeAttack(int slot, std::pair<CachedEntity *, float> &nearest)
     // If we are close enough, don't even bother with using the navparser to get there
     if (nearest.second < 200 && isVisible)
     {
-        AimAt(g_pLocalPlayer->v_Eye, nearest.first->hitboxes.GetHitbox(head)->center, current_user_cmd); //Aim for it. to counter Backstab
+        AimAt(g_pLocalPlayer->v_Eye, nearest.first->hitboxes.GetHitbox(spine_1)->center, current_user_cmd); //Aim for it. to counter Backstab
         WalkTo(nearest.first->m_vecOrigin());
         navparser::NavEngine::cancelPath();
         return true;
@@ -849,7 +851,7 @@ bool meleeAttack(int slot, std::pair<CachedEntity *, float> &nearest)
     {
         // Don't constantly path, it's slow.
         // The closer we are, the more we should try to path
-        if (!melee_cooldown.test_and_set(nearest.second < 250 ? 250 : nearest.second < 1250 ? 750 : 2250) && navparser::NavEngine::isPathing())
+        if (!melee_cooldown.test_and_set(nearest.second < 200 ? 200 : nearest.second < 1000 ? 500 : 2000) && navparser::NavEngine::isPathing())
             return navparser::NavEngine::current_priority == prio_melee;
 
         // Just walk at the enemy l0l
@@ -943,9 +945,8 @@ bool snipeSentries()
     if (!snipe_sentries_shortrange && (g_pLocalPlayer->clazz == tf_scout || g_pLocalPlayer->clazz == tf_pyro))
         return false;
 
-    for (int i = g_IEngine->GetMaxClients() + 1; i < MAX_ENTITIES; i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
         // Invalid sentry
         if (!isSnipeTargetValid(ent))
             continue;
@@ -1124,11 +1125,43 @@ std::optional<Vector> getCtfGoal(int our_team, int enemy_team)
     auto position = flagcontroller::getPosition(enemy_team);
     auto carrier  = flagcontroller::getCarrier(enemy_team);
 
-    // No flag :(
-    if (!position)
+    auto status_friendly   = flagcontroller::getStatus(our_team);
+    auto position_friendly = flagcontroller::getPosition(our_team);
+    auto carrier_friendly  = flagcontroller::getCarrier(our_team);
+
+    // No flags :(
+    if (!position || !position_friendly)
         return std::nullopt;
 
     current_capturetype = ctf;
+
+    // Defend our intel and help other bots escort enemy intel, this is priority over capturing
+    if (defend_intel)
+    {
+        // Goto the enemy who took our intel - highest priority
+        if (status_friendly == TF_FLAGINFO_STOLEN)
+        {
+            if (player_tools::shouldTargetSteamId(carrier_friendly->player_info.friendsID))
+                return carrier_friendly->m_vecDormantOrigin();
+        }
+        // Standby a dropped friendly flag - medium priority
+        if (status_friendly == TF_FLAGINFO_DROPPED)
+        {
+            // Dont spam nav if we are already there
+            if ((*position_friendly).DistTo(LOCAL_E->m_vecOrigin()) < 100.0f)
+            {
+                overwrite_capture = true;
+                return std::nullopt;
+            }
+            return position_friendly;
+        }
+        // Assist other bots with capturing - low priority
+        if (status == TF_FLAGINFO_STOLEN && carrier != LOCAL_E)
+        {
+            if (!player_tools::shouldTargetSteamId(carrier->player_info.friendsID))
+                return carrier->m_vecDormantOrigin();
+        }
+    }
 
     // Flag is taken by us
     if (status == TF_FLAGINFO_STOLEN)
@@ -1160,7 +1193,6 @@ std::optional<Vector> getPayloadGoal(int our_team)
     // Adjust position so it's not floating high up, provided the local player is close.
     if (LOCAL_E->m_vecOrigin().DistTo(*position) <= 150.0f)
         (*position).z = LOCAL_E->m_vecOrigin().z;
-    static Timer zoomTime{};
     // If close enough, don't move (mostly due to lifts)
     if ((*position).DistTo(LOCAL_E->m_vecOrigin()) <= 50.0f)
     {
@@ -1184,8 +1216,8 @@ std::optional<Vector> getControlPointGoal(int our_team)
     if ((*position).DistTo(LOCAL_E->m_vecOrigin()) <= 50.0f)
     {
         overwrite_capture = true;
-	// bot need Autozoom on capturing Control points.
-	hacks::shared::aimbot::doAutoZoom(true);
+	// bot need Autozoom on capturing Control points to always checking who is coming try to capture
+	hacks::shared::aimbot::doAutoZoom(true, nullptr);
         return std::nullopt;
     }
     else
@@ -1258,11 +1290,11 @@ bool doRoam()
 {
     static Timer roam_timer;
     // Don't path constantly
-    if (!roam_timer.test_and_set(4000))
+    if (!roam_timer.test_and_set(*repath_delay))
         return false;
 
     // Defend our objective if possible
-    int enemy_team = g_pLocalPlayer->team == TEAM_BLU ? TEAM_RED : TEAM_BLU;
+        int enemy_team = g_pLocalPlayer->team == TEAM_BLU ? TEAM_RED : TEAM_BLU;
 
     std::optional<Vector> target;
     target = getPayloadGoal(enemy_team);
@@ -1286,7 +1318,7 @@ bool doRoam()
     if (navparser::NavEngine::current_priority == patrol)
         return false;
     // Max 10 attempts
-    for (int attempts = 0; attempts < 10; ++attempts)
+    for (int attempts = 0; attempts < 10 && attempts < sniper_spots.size(); ++attempts)
     {
         // Get a random sniper spot
         auto random = select_randomly(sniper_spots.begin(), sniper_spots.end());
@@ -1362,18 +1394,6 @@ bool escapeDanger()
 
 static int slot = primary;
 
-static void autoJump(std::pair<CachedEntity *, float> &nearest)
-{
-    if (!autojump || navparser::NavEngine::current_priority == prio_melee)
-        return;
-    static Timer last_jump{};
-    if (!last_jump.test_and_set(200) || CE_BAD(nearest.first))
-        return;
-
-    if (nearest.second <= *jump_distance)
-        current_user_cmd->buttons |= IN_JUMP | IN_DUCK;
-}
-
 static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &nearest)
 {
     if (force_slot)
@@ -1399,8 +1419,8 @@ static slots getBestSlot(slots active_slot, std::pair<CachedEntity *, float> &ne
             return secondary;
 	}
     case tf_medic:
-	{
-        if (nearest.second <= 250 && nearest.first->m_iHealth() < 65)
+    {
+        if (nearest.second <= 250 && nearest.first->m_bAlivePlayer() && nearest.first->IsVisible())
             return melee;
         else
             return secondary;
@@ -1531,7 +1551,6 @@ void CreateMove()
     auto nearest = getNearestPlayerDistance();
 
     updateSlot(nearest);
-    autoJump(nearest);
     updateEnemyBlacklist(slot);
 
     // Try to escape danger first of all

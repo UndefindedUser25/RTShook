@@ -37,7 +37,7 @@ bool BacktrackVisCheck(CachedEntity *entity);
 void Reset();
 
 // Stuff to make storing functions easy
-void doAutoZoom(bool target_found);
+void doAutoZoom(bool target_found, CachedEntity *target);
 bool isAiming();
 CachedEntity *CurrentTarget();
 bool ShouldAim();

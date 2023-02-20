@@ -36,7 +36,7 @@ void BaseMenuObject::render()
 {
     float w, h;
     font = &resource::font::base;
-
+   
     font->stringSize(label, &w, &h);
     int length = int(w);
     if (tooltip.has_value() && isHoveredText(length))

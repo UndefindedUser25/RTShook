@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.20.4)
 
 set(NativePrecompiledHeaders 1)
 # Ensure that only 32 bit libraries are used.

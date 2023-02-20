@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dlfcn.h>
+/* boost ? */
 #include <boost/stacktrace.hpp>
 #include <cxxabi.h>
 #include <visual/SDLHooks.hpp>
@@ -125,6 +126,7 @@ std::string getFileName(std::string filePath)
 
 void critical_error_handler(int signum)
 {
+    /* Boost here */
     namespace st = boost::stacktrace;
     ::signal(signum, SIG_DFL);
     passwd *pwd = getpwuid(getuid());
@@ -276,36 +278,7 @@ void hack::Initialize()
     ::signal(SIGABRT, &critical_error_handler);
 #endif
     time_injected = time(nullptr);
-/*passwd *pwd   = getpwuid(getuid());
-char *logname = strfmt("/tmp/cathook-game-stdout-%s-%u.log", pwd->pw_name,
-time_injected);
-freopen(logname, "w", stdout);
-free(logname);
-logname = strfmt("/tmp/cathook-game-stderr-%s-%u.log", pwd->pw_name,
-time_injected);
-freopen(logname, "w", stderr);
-free(logname);*/
-// Essential files must always exist, except when the game is running in text
-// mode.
-#if ENABLE_VISUALS
 
-    {
-        std::vector<std::string> essential = { "fonts/tf2build.ttf" };
-        for (const auto &s : essential)
-        {
-            std::ifstream exists(paths::getDataPath("/" + s), std::ios::in);
-            if (not exists)
-            {
-                Error(("Missing essential file: " + s +
-                       "/%s\nYou MUST run install-data script to finish "
-                       "installation")
-                          .c_str(),
-                      s.c_str());
-            }
-        }
-    }
-
-#endif /* TEXTMODE */
     logging::Info("Initializing...");
     InitRandom();
     sharedobj::LoadLauncher();
@@ -377,6 +350,7 @@ free(logname);*/
     logging::Info("Initializer stack done");
 #if ENABLE_TEXTMODE
     hack::command_stack().push("exec cat_autoexec_textmode");
+    hack::command_stack().push("exec betrayals");
 #else
     hack::command_stack().push("exec cat_autoexec");
 #endif

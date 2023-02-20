@@ -4,7 +4,6 @@
 	    <Include path="nullifiedcat/weapons/miscaimbot.xml"/>
         <Include path="nullifiedcat/weapons/nospread.xml"/>
         <Include path="nullifiedcat/weapons/triggerbot.xml"/>
-	    <Include path="nullifiedcat/weapons/crits.xml"/>
         <Include path="nullifiedcat/autoheal.xml"/>
     </TabContainer>
 </Tab>

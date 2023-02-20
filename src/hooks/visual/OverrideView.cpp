@@ -121,36 +121,6 @@ DEFINE_HOOKED_METHOD(OverrideView, void, void *this_, CViewSetup *setup)
         freecam_is_toggled = false;
 
     draw::fov = setup->fov;
-
-    auto zoom_sensitivity_ratio = g_ICvar->FindVar("zoom_sensitivity_ratio");
-
-    if (g_pLocalPlayer->bZoomed)
-    {
-        static bool last_zoom_state = false;
-        bool current_zoom_state     = no_zoom && no_scope;
-        if (current_zoom_state != last_zoom_state)
-        {
-            if (user_sensitivity_ratio_set)
-                zoom_sensitivity_ratio_user = zoom_sensitivity_ratio->GetFloat();
-
-            // Both requirements are true, so change the zoom_sensitivity_ratio to 4
-            if (no_zoom && no_scope)
-            {
-                zoom_sensitivity_ratio->SetValue(4);
-                user_sensitivity_ratio_set = false;
-            }
-            // No removing zoom, so user zoom_sensitivity_ratio will be reset to what they had it to on zoom
-            else
-            {
-                if (!user_sensitivity_ratio_set)
-                {
-                    zoom_sensitivity_ratio->SetValue(zoom_sensitivity_ratio_user);
-                    user_sensitivity_ratio_set = true;
-                }
-            }
-        }
-        last_zoom_state = current_zoom_state;
-    }
 }
 static InitRoutine override_init([]() {
     EC::Register(

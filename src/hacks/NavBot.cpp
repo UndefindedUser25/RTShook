@@ -161,7 +161,7 @@ std::vector<CachedEntity *> getEntities(const std::vector<k_EItemType> &itemtype
 bool getHealth(bool low_priority = false)
 {
     Priority_list priority = low_priority ? lowprio_health : health;
-    if (!health_cooldown.check(*repath_delay / 2))
+    if (!health_cooldown.check(1000))
         return navparser::NavEngine::current_priority == priority;
     if (shouldSearchHealth(low_priority))
     {
@@ -169,7 +169,7 @@ bool getHealth(bool low_priority = false)
         if (navparser::NavEngine::current_priority == priority)
         {
             static Timer repath_timer;
-            if (!repath_timer.test_and_set(*repath_delay))
+            if (!repath_timer.test_and_set(2000))
                 return true;
         }
         auto healthpacks = getEntities({ ITEM_HEALTH_SMALL, ITEM_HEALTH_MEDIUM, ITEM_HEALTH_LARGE });
@@ -191,8 +191,6 @@ bool getHealth(bool low_priority = false)
                 return true;
         health_cooldown.update();
     }
-    else if (navparser::NavEngine::current_priority == priority)
-        navparser::NavEngine::cancelPath();
     return false;
 }
 
@@ -200,7 +198,7 @@ static bool was_force = false;
 // Find ammo if needed
 bool getAmmo(bool force = false)
 {
-    if (!force && !ammo_cooldown.check(*repath_delay / 2))
+    if (!force && !ammo_cooldown.check(1000))
         return navparser::NavEngine::current_priority == ammo;
     if (force || shouldSearchAmmo())
     {
@@ -208,7 +206,7 @@ bool getAmmo(bool force = false)
         if (navparser::NavEngine::current_priority == ammo)
         {
             static Timer repath_timer;
-            if (!repath_timer.test_and_set(*repath_delay))
+            if (!repath_timer.test_and_set(2000))
                 return true;
         }
         else
@@ -234,8 +232,6 @@ bool getAmmo(bool force = false)
             }
         ammo_cooldown.update();
     }
-    else if (navparser::NavEngine::current_priority == ammo && !was_force)
-        navparser::NavEngine::cancelPath();
     return false;
 }
 
@@ -702,7 +698,7 @@ bool stayNear()
         return false;
     // Don't constantly path, it's slow.
     // Far range classes do not need to repath nearly as often as close range ones.
-    if (!staynear_cooldown.test_and_set(selected_config.prefer_far ? *repath_delay : *repath_delay))
+    if (!staynear_cooldown.test_and_set(selected_config.prefer_far ? 2000 : 500))
         return navparser::NavEngine::current_priority == staynear;
 
     // Too high priority, so don't try
@@ -1290,7 +1286,7 @@ bool doRoam()
 {
     static Timer roam_timer;
     // Don't path constantly
-    if (!roam_timer.test_and_set(*repath_delay))
+    if (!roam_timer.test_and_set(4000))
         return false;
 
     // Defend our objective if possible

@@ -1332,7 +1332,7 @@ void Aim(CachedEntity *entity)
         return;
 
     // Special case for miniguns
-    if (only_can_shoot/* && LOCAL_W->m_iClassID() == CL_CLASS(CTFMinigun)*/ && !CanShoot() && !hacks::tf2::warp::in_rapidfire)
+    if (only_can_shoot && LOCAL_W->m_iClassID() == CL_CLASS(CTFMinigun) && !CanShoot() && !hacks::tf2::warp::in_rapidfire)
         return;
 
     // Get angles from eye to target
@@ -1364,6 +1364,9 @@ void DoAutoshoot(CachedEntity *target_entity)
 {
     // Enable check
     if (!autoshoot)
+        return;
+    // Check if we can shoot, ignore during rapidfire (special case for minigun: we can shoot 24/7 just dont aim, idk why this works)
+    if (only_can_shoot && !CanShoot() && !hacks::tf2::warp::in_rapidfire && LOCAL_W->m_iClassID() != CL_CLASS(CTFMinigun))
         return;
     if (IsPlayerDisguised(g_pLocalPlayer->entity) && !autoshoot_disguised)
         return;

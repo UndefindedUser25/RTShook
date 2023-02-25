@@ -137,7 +137,7 @@ void dispatchUserMessage(bf_read &buffer, int type)
         if (*chat_partysay)
         {
             char formated_string[256];
-            std::snprintf(formated_string, sizeof(formated_string), "[CAT] votekick called: %s => %s (%s)", info2.name, info.name, reason);
+            std::snprintf(formated_string, sizeof(formated_string), "[RTShook] votekick called: %s => %s (%s)", info2.name, info.name, reason);
             if (chat_partysay)
                 re::CTFPartyClient::GTFPartyClient()->SendPartyChat(formated_string);
         }

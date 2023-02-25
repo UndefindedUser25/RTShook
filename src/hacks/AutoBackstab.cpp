@@ -26,7 +26,7 @@ int GetSwingRange_hook(IClientEntity *_this)
 {
     float return_val = ((GetSwingRange_o) melee_range_hook.GetOriginalFunc())(_this);
     if (decrease_range)
-        return_val *= 0.3f;
+        return_val *= 0.5f;
     melee_range_hook.RestorePatch();
     return return_val;
 }
@@ -262,9 +262,10 @@ static bool doRageBackstab()
     float swingrange = re::C_TFWeaponBaseMelee::GetSwingRange(RAW_ENT(LOCAL_W));
     // AimAt Autobackstab
     {
-        for (auto &ent : entity_cache::valid_ents)
+        for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
         {
-            if (ent->m_flDistance() > swingrange * 4 || !ent->m_bEnemy() || !ent->m_bAlivePlayer() || g_pLocalPlayer->entity_idx == ent->m_IDX || IsPlayerInvulnerable(ent))
+            auto ent = ENTITY(i);
+            if (CE_BAD(ent) || ent->m_flDistance() > swingrange * 4 || !ent->m_bEnemy() || !ent->m_bAlivePlayer() || g_pLocalPlayer->entity_idx == ent->m_IDX || IsPlayerInvulnerable(ent))
                 continue;
             if (!player_tools::shouldTarget(ent))
                 continue;
@@ -277,7 +278,7 @@ static bool doRageBackstab()
             auto angle     = GetAimAtAngles(g_pLocalPlayer->v_Eye, aim_pos, LOCAL_E);
             if (!angleCheck(ent, std::nullopt, angle) && !canFaceStab(ent))
                 continue;
-            if (doSwingTraceAngle(angle, trace) && ((IClientEntity *) trace.m_pEnt)->entindex() == ent->m_IDX)
+            if (doSwingTraceAngle(angle, trace) && ((IClientEntity *) trace.m_pEnt)->entindex() == i)
             {
                 current_user_cmd->buttons |= IN_ATTACK;
                 g_pLocalPlayer->bUseSilentAngles = true;
@@ -352,13 +353,14 @@ static bool doBacktrackStab(bool legit = false)
     // Set for our filter
     legit_stab = legit;
     // Get the Best tick
-    for (auto &ent : entity_cache::valid_ents)
+    for (int i = 1; i <= g_IEngine->GetMaxClients(); i++)
     {
         // Found a target, break out
         if (stab_ent)
             break;
+        CachedEntity *ent = ENTITY(i);
         // Targeting checks
-        if (!ent->m_bAlivePlayer() || !ent->m_bEnemy() || !player_tools::shouldTarget(ent) || IsPlayerInvulnerable(ent))
+        if (CE_BAD(ent) || !ent->m_bAlivePlayer() || !ent->m_bEnemy() || !player_tools::shouldTarget(ent) || IsPlayerInvulnerable(ent))
             continue;
 
         auto good_ticks = hacks::tf2::backtrack::getGoodTicks(ent);
@@ -448,4 +450,4 @@ static InitRoutine EC(
         EC::Register(EC::CreateMove, CreateMove, "autobackstab", EC::average);
         EC::Register(EC::CreateMoveWarp, CreateMove, "autobackstab_w", EC::average);
     });
-} // namespace hacks::tf2::autobackstab
+} // namespace hacks::autobackstab

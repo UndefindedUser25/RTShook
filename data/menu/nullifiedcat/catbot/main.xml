@@ -71,8 +71,6 @@
             <AutoVariable width="fill" target="cat-bot.micspam.enable" label="Micspam" tooltip="Micspamming in your bots and yourself"/>
             <AutoVariable width="fill" target="cat-bot.micspam.interval-off" label="Micspam interval off"/>
             <AutoVariable width="fill" target="cat-bot.micspam.interval-on" label="Micspam interval on"/>
-            <AutoVariable width="fill" target="cat-bot.votekicks" label="Random votekicks"/>
-            <AutoVariable width="fill" target="cat-bot.votekicks.rage-only" label="Rage only votekicks"/>
             <AutoVariable width="fill" target="cat-bot.always-crouch" label="Always crouch"/>
             <AutoVariable width="fill" target="cat-bot.autoreport" label="Autoreport" tooltip="Random Report issue"/>
             <AutoVariable width="fill" target="cat-bot.anti-autobalance" label="Anti auto balance" tooltip="When you have get Autobalance. match auto rejoining"/>

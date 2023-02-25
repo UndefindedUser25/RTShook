@@ -66,7 +66,6 @@
             <AutoVariable width="fill" target="cat-bot.abandon-if.ipc-bots-gte" label="Abandon if IPC bots Gte"/>
             <AutoVariable width="fill" target="cat-bot.abandon-if.humans-lte" label="Abandon if humans Lte"/>
             <AutoVariable width="fill" target="cat-bot.abandon-if.players-lte" label="Abandon if players Lte"/>
-	    <AutoVariable width="fill" target="votelogger.abandon-on-kick" label="Abandon if Some votekick" tooltip="Auto abandon if you got F1 count 4"/>
             <AutoVariable width="fill" target="cat-bot.auto-crouch" label="Smart Autocrouch"/>
             <AutoVariable width="fill" target="cat-bot.micspam.enable" label="Micspam" tooltip="Micspamming in your bots and yourself"/>
             <AutoVariable width="fill" target="cat-bot.micspam.interval-off" label="Micspam interval off"/>

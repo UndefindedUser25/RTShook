@@ -30,8 +30,6 @@ static settings::Int micspam_off{ "cat-bot.micspam.interval-off", "60" };
 
 static settings::Boolean auto_crouch{ "cat-bot.auto-crouch", "false" };
 static settings::Boolean always_crouch{ "cat-bot.always-crouch", "false" };
-static settings::Boolean random_votekicks{ "cat-bot.votekicks", "false" };
-static settings::Boolean votekick_rage_only{ "cat-bot.votekicks.rage-only", "false" };
 static settings::Boolean autoReport{ "cat-bot.autoreport", "false" };
 static settings::Boolean autovote_map{ "cat-bot.autovote-map", "true" };
 
@@ -191,41 +189,6 @@ void on_killed_by(int userid)
             }
         }
     }
-}
-
-void do_random_votekick()
-{
-    std::vector<int> targets;
-    player_info_s local_info;
-
-    if (CE_BAD(LOCAL_E) || !GetPlayerInfo(LOCAL_E->m_IDX, &local_info))
-        return;
-    for (int i = 1; i < g_GlobalVars->maxClients; ++i)
-    {
-        player_info_s info;
-        if (!GetPlayerInfo(i, &info) || !info.friendsID)
-            continue;
-        if (g_pPlayerResource->GetTeam(i) != g_pLocalPlayer->team)
-            continue;
-        if (info.friendsID == local_info.friendsID)
-            continue;
-        auto &pl = playerlist::AccessData(info.friendsID);
-        if (votekick_rage_only && pl.state != playerlist::k_EState::RAGE)
-            continue;
-        if (pl.state != playerlist::k_EState::RAGE && pl.state != playerlist::k_EState::DEFAULT)
-            continue;
-
-        targets.push_back(info.userID);
-    }
-
-    if (targets.empty())
-        return;
-
-    int target = targets[rand() % targets.size()];
-    player_info_s info;
-    if (!GetPlayerInfo(GetPlayerForUserID(target), &info))
-        return;
-    hack::ExecuteCommand("callvote kick \"" + std::to_string(target) + " cheating\"");
 }
 
 // Get Muh money
@@ -529,7 +492,6 @@ CatBotEventListener2 &listener2()
     return object;
 }
 
-Timer timer_votekicks{};
 static Timer timer_catbot_list{};
 static Timer timer_abandon{};
 
@@ -778,8 +740,6 @@ void update()
             g_IEngine->ClientCmd_Unrestricted("-voicerecord");
     }
 
-    if (random_votekicks && timer_votekicks.test_and_set(5000))
-        do_random_votekick();
     if (timer_abandon.test_and_set(2000) && level_init_timer.check(13000))
     {
         count_ipc = 0;

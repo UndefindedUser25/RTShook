@@ -40,7 +40,7 @@ void sendAchievementKv(int value)
     g_IEngine->ServerCmdKeyValues(kv);
 }
 
-// Goodbye old Friend.
+// Goodbye old Friend. we have you to idenfity a cathook user... have a nice day.
 /*void sendDrawlineKv(float x_value, float y_value)
 {
     KeyValues *kv = new KeyValues("cl_drawline");
@@ -70,13 +70,7 @@ static CatCommand debug_drawpanel("debug_drawline", "debug",
                                       kv->SetFloat("y", AUTH_MESSAGE);
                                       g_IEngine->ServerCmdKeyValues(kv);
                                   });
-
-#if ENABLE_TEXTMODE
-settings::Boolean identify{ "chat.identify", "true" };
-#else
 settings::Boolean identify{ "chat.identify", "false" };
-#endif
-
 /*void ProcessSendline(IGameEvent *kv)
 {
     int player_idx = kv->GetInt("player", 0xDEAD);

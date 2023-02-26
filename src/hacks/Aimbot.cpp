@@ -400,7 +400,7 @@ bool CarryingMachina()
 {
     return CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 526;
 }
-/*
+
 static bool allowNoScope(CachedEntity *target)
 {
     if (target)
@@ -413,14 +413,14 @@ static bool allowNoScope(CachedEntity *target)
         if (IsPlayerCritBoosted(LOCAL_E) && target_health <= 150.0f)
             return true;
 
-        if (IsPlayerMiniCritBoosted(LOCAL_E))
+        /*if (IsPlayerMiniCritBoosted(LOCAL_E))
         {
             if (!CarryingHeatmaker() && target_health <= 68.0f)
                 return true;
 
             if (CarryingHeatmaker() && target_health <= 54.0f)
                 return true;
-        }
+        }*/
 
         if (!CarryingHeatmaker() && target_health <= 50.0f)
             return true;
@@ -428,9 +428,8 @@ static bool allowNoScope(CachedEntity *target)
         if (CarryingHeatmaker() && target_health <= 40.0f)
             return true;
     }
-
     return false;
-}*/
+}
 	
 void doAutoZoom(bool target_found, CachedEntity *target)
 {
@@ -451,7 +450,7 @@ void doAutoZoom(bool target_found, CachedEntity *target)
         }
         return;
     }
-    if /*(*/(auto_zoom /*&& !allowNoScope(target))*/ && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle || nearest.second <= *distance))
+    if ((auto_zoom || !allowNoScope(target)) && g_pLocalPlayer->holding_sniper_rifle && (target_found || isIdle || nearest.second <= *distance))
     {
         if (target_found)
             zoomTime.update();
@@ -1322,6 +1321,8 @@ bool IsTargetStateGood(CachedEntity *entity)
 }
 
 // A function to aim at a specific entitiy
+// __attribute__ has to be ontop of the function, since we need to check for nans
+__attribute__((optimize("-fno-finite-math-only")))
 void Aim(CachedEntity *entity)
 {
     if (*miss_chance > 0 && UniformRandomInt(0, 99) < *miss_chance)
@@ -1365,13 +1366,12 @@ void DoAutoshoot(CachedEntity *target_entity)
     // Enable check
     if (!autoshoot)
         return;
-    // Check if we can shoot, ignore during rapidfire (special case for minigun: we can shoot 24/7 just dont aim, idk why this works)
-    if (only_can_shoot && !CanShoot() && !hacks::tf2::warp::in_rapidfire && LOCAL_W->m_iClassID() != CL_CLASS(CTFMinigun))
-        return;
-    if (IsPlayerDisguised(g_pLocalPlayer->entity) && !autoshoot_disguised)
+    /*else if (only_can_shoot && !CanShoot() && !hacks::tf2::warp::in_rapidfire && LOCAL_W->m_iClassID() != CL_CLASS(CTFMinigun))
+        return; also... i cant just do it.*/
+    else if (IsPlayerDisguised(g_pLocalPlayer->entity) && !autoshoot_disguised)
         return;
     // Handle Huntsman/Loose cannon
-    if (g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFCompoundBow) || g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFCannon))
+    else if (g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFCompoundBow) || g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFCannon))
     {
         if (!only_can_shoot)
         {
@@ -1421,7 +1421,7 @@ void DoAutoshoot(CachedEntity *target_entity)
         {
             if (g_pLocalPlayer->holding_sniper_rifle)
             {
-                if (zoomed_only && !CanHeadshot())
+                if (zoomed_only && !CanHeadshot() && !allowNoScope(target_entity))
                     attack = false;
             }
         }

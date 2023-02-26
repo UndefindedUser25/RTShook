@@ -1592,8 +1592,6 @@ int BestHitbox(CachedEntity *target)
             // Rockets and stickies should aim at the foot if the target is on the ground
             else if (ci == CL_CLASS(CTFPipebombLauncher) || ci == CL_CLASS(CTFRocketLauncher) || ci == CL_CLASS(CTFParticleCannon) || ci == CL_CLASS(CTFRocketLauncher_AirStrike) || ci == CL_CLASS(CTFRocketLauncher_Mortar) || ci == CL_CLASS(CTFRocketLauncher_DirectHit))
             {
-                bool ground = CE_INT(target, netvar.iFlags) & (1 << 0);
-                if (ground)
                     preferred = hitbox_t::foot_L;
             }
 

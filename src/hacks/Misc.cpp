@@ -486,25 +486,23 @@ void Draw()
     auto local = LOCAL_W;
     if (CE_GOOD(local))
     {
-        AddSideString(format("Slot: ", re::C_BaseCombatWeapon::GetSlot(RAW_ENT(local))));
-        AddSideString(format("Taunt Concept: ", CE_INT(LOCAL_E, netvar.m_iTauntConcept)));
-        AddSideString(format("Taunt Index: ", CE_INT(LOCAL_E, netvar.m_iTauntIndex)));
-        AddSideString(format("Sequence: ", CE_INT(LOCAL_E, netvar.m_nSequence)));
-        AddSideString(format("Velocity: ", LOCAL_E->m_vecVelocity.x, ' ', LOCAL_E->m_vecVelocity.y, ' ', LOCAL_E->m_vecVelocity.z));
-        AddSideString(format("Velocity3: ", LOCAL_E->m_vecVelocity.Length()));
-        AddSideString(format("Velocity2: ", LOCAL_E->m_vecVelocity.Length2D()));
+        AddSideString(format("Weapon Slot : ", re::C_BaseCombatWeapon::GetSlot(RAW_ENT(local))));
+        AddSideString(format("Taunt Concept : ", CE_INT(LOCAL_E, netvar.m_iTauntConcept)));
+        AddSideString(format("Taunt Index : ", CE_INT(LOCAL_E, netvar.m_iTauntIndex)));
+        AddSideString(format("Sequence : ", CE_INT(LOCAL_E, netvar.m_nSequence)));
         AddSideString("NetVar Velocity");
         Vector vel = CE_VECTOR(LOCAL_E, netvar.vVelocity);
-        AddSideString(format("Velocity: ", vel.x, ' ', vel.y, ' ', vel.z));
-        AddSideString(format("Velocity3: ", vel.Length()));
-        AddSideString(format("Velocity2: ", vel.Length2D()));
-        AddSideString(format("flSimTime: ", LOCAL_E->var<float>(netvar.m_flSimulationTime)));
+        AddSideString(format("Velocity : ", vel.x, ' ', vel.y, ' ', vel.z));
+        AddSideString(format("Velocity3 : ", vel.Length()));
+        AddSideString(format("Velocity2 : ", vel.Length2D()));
+        AddSideString(format("flSimTime : ", LOCAL_E->var<float>(netvar.m_flSimulationTime)));
         if (current_user_cmd)
-            AddSideString(format("command_number: ", last_cmd_number));
-        AddSideString(format("clip: ", CE_INT(g_pLocalPlayer->weapon(), netvar.m_iClip1)));
-        AddSideString(format("Weapon state: ", CE_INT(LOCAL_W, netvar.iWeaponState)));
-        AddSideString(format("ItemDefinitionIndex: ", CE_INT(local, netvar.iItemDefinitionIndex)));
-        AddSideString(format("Maxspeed: ", CE_FLOAT(LOCAL_E, netvar.m_flMaxspeed)));
+            AddSideString(format("command_number : ", last_cmd_number));
+        AddSideString(format("clip : ", CE_INT(g_pLocalPlayer->weapon(), netvar.m_iClip1)));
+        AddSideString(format("Weapon state : ", CE_INT(LOCAL_W, netvar.iWeaponState)));
+        AddSideString(format("ItemDefinitionIndex : ", CE_INT(local, netvar.iItemDefinitionIndex)));
+        AddSideString(format("Maxspeed : ", CE_FLOAT(LOCAL_E, netvar.m_flMaxspeed)));
+        AddSideString(format("Currently Weapon :", RAW_ENT(g_pLocalPlayer->weapon())->GetClientClass()->GetName()," Index Number : ", g_pLocalPlayer->weapon()->m_iClassID()));
     }
 }
 
@@ -780,11 +778,12 @@ static CatCommand reload_presence("presence_reload", "Reload rich presence file"
 
 #if ENABLE_VISUALS
 // This makes us able to see enemy class and status in scoreboard and player panel
+/*
 static std::unique_ptr<BytePatch> patch_playerpanel;
 static std::unique_ptr<BytePatch> patch_scoreboard1;
 static std::unique_ptr<BytePatch> patch_scoreboard2;
 static std::unique_ptr<BytePatch> patch_scoreboard3;
-
+*/
 // Credits to UNKN0WN
 namespace ScoreboardColoring
 {
@@ -1000,10 +999,12 @@ void Shutdown()
 #if ENABLE_VISUALS
     // unpatching local player
     render_zoomed = false;
+    /*
     patch_playerpanel->Shutdown();
     patch_scoreboard1->Shutdown();
     patch_scoreboard2->Shutdown();
     patch_scoreboard3->Shutdown();
+    */
     if (ScoreboardColoring::addr1 == 3 || ScoreboardColoring::addr2 == 2)
         return;
 
@@ -1079,6 +1080,7 @@ static InitRoutine init(
         if (render_zoomed)
             tryPatchLocalPlayerShouldDraw(true);
         render_zoomed.installChangeCallback([](settings::VariableBase<bool> &, bool after) { tryPatchLocalPlayerShouldDraw(after); });
+        /*
         patch_playerpanel     = std::make_unique<BytePatch>(gSignatures.GetClientSignature, "0F 94 45 ? 85 C0 0F 8E", 0x0, std::vector<unsigned char>{ 0xC6, 0x45, 0xDF, 0x01 });
         uintptr_t addr_scrbrd = gSignatures.GetClientSignature("8B 10 89 74 24 04 89 04 24 FF 92 ? ? ? ? 83 F8 02 75 09");
 
@@ -1093,7 +1095,7 @@ static InitRoutine init(
         patch_scoreboard1->Patch();
         patch_scoreboard2->Patch();
         patch_scoreboard3->Patch();
-
+        */
         static BytePatch stealth_kill{ gSignatures.GetClientSignature, "84 C0 75 28 A1", 2, { 0x90, 0x90 } }; // stealth kill patch
         stealth_kill.Patch();
         static BytePatch cyoa_patch{ gSignatures.GetClientSignature, "75 ? 80 BB ? ? ? ? 00 74 ? A1 ? ? ? ? 8B 10 C7 44 24", 0, { 0xEB } };

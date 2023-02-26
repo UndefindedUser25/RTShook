@@ -11,7 +11,7 @@ namespace hacks::votekicks
 static settings::Boolean enabled{ "votekicks.enabled", "false" };
 /* 0 - Smart, 1 - Random, 2 - Sequential */
 static settings::Int mode{ "votekicks.mode", "0" };
-/* static settings::Int reason{ "votekicks.reason", "0" }; */
+static settings::Int reason{ "votekicks.reason", "0" };
 /* Time between calling a vote in milliseconds */
 static settings::Int timer{ "votekicks.timer", "1000" };
 /* Minimum amount of team members to start a vote */

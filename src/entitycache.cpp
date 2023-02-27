@@ -145,13 +145,10 @@ void Update()
 {
     max = g_IEntityList->GetHighestEntityIndex();
     valid_ents.clear(); // Reserving isn't necessary as this doesn't reallocate it
-    if (g_Settings.bInvalid)
-        return;
     if (max >= MAX_ENTITIES)
     {
         max = MAX_ENTITIES - 1;
     }
-
     for (int i = 0; i <= max; i++)
     {
         array[i].Update();

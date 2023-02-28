@@ -81,6 +81,7 @@
                 </Select>
             </LabeledObject>
             <AutoVariable width="fill" target="aimbot.target.ignore-non-rage" label="Rage only" tooltip="Only target players set to RAGE."/>
+            <AutoVariable width="fill" target="aimbot.target.ignore-non-cat" label="Cathook user only" tooltip="Ony target players set to CAT. BUT you have need set Ignore Cathook user in collective tab menu"/>
             <AutoVariable width="fill" target="aimbot.target.stickybomb" label="Aim at stickybombs"/>
             <AutoVariable width="fill" target="aimbot.target.sentry" label="Aim at sentry guns"/>
             <AutoVariable width="fill" target="aimbot.target.other-buildings" label="Aim at other buildings"/>
@@ -89,7 +90,7 @@
             <AutoVariable width="fill" target="aimbot.target.ignore-deadringer" label="Ignore Dead Ringer"/>
         </List>
     </Box>
-    <Box padding="12 6 6 6" width="content" height="content" name="Autoshoot" x="170" y="250">
+    <Box padding="12 6 6 6" width="content" height="content" name="Autoshoot" x="170" y="255">
         <List width="150">
             <AutoVariable width="fill" target="aimbot.autoshoot" label="Enable autoshoot" tooltip="Make the aimbot automatically fire your weapon."/>
             <AutoVariable width="fill" target="aimbot.wait-for-charge" label="Wait for charge" tooltip="Hold fire until a single shot is enough to kill the target."/>
@@ -137,25 +138,36 @@
             </LabeledObject>
         </List>
     </Box>
-    <Box padding="12 6 6 6" width="content" height="content" name="Sandvich aimbot" x="340" y="230">
+    <Box padding="12 6 6 6" width="content" height="content" name="Projectile Prediction Aimbot" y="210">
         <List width="150">
-            <AutoVariable width="fill" target="sandwichaim.enable" label="Enable Sandvich aimbot"/>
-            <AutoVariable width="fill" target="sandwichaim.aimkey" label="Aimkey"/>
-            <LabeledObject width="fill" label="Aimkey mode">
+            <AutoVariable width="fill" target="aimbot.projectile.enable" label="Enable projectile aimbot"/>
+            <AutoVariable width="fill" target="aimbot.debug.engine-pp" label="Prediction"/>
+            <AutoVariable width="fill" target="misc.auto-flip-viewmodel" label="Flip viewmodel" tooltip="Automatically flip the viewmodel for projectile weapons."/>
+            <AutoVariable width="fill" target="debug.pp-steps" label="PP Step" min="1" max="150"/>
+            <AutoVariable width="fill" target="aimbot.projectile.gravity" label="Gravity override"/>
+            <AutoVariable width="fill" target="aimbot.projectile.initial-velocity" label="Initial velocity"/>
+            <AutoVariable width="fill" target="aimbot.projectile.speed" label="Velocity override"/>
+            <AutoVariable width="fill" target="aimbot.projectile.huntsman-autoshoot" label="Bow threshold"/>
+            <AutoVariable width="fill" target="aimbot.projectile.sticky-autoshoot" label="Sticky threshold"/>
+        </List>
+    </Box>
+    <Box padding="12 6 6 6" width="content" height="content" name="Misc" x="340" y="230">
+        <List width="175">
+	        <AutoVariable width="fill" target="aimbot.zoom.time" label="Zoom Time"/>
+	        <AutoVariable width="fill" target="aimbot.spinup-time" label="Spinup Time"/>
+	        <AutoVariable width="fill" target="aimbot.auto.zoom.distance" label="Zoom Distance" tooltip="Autozoom if Enemy nearest you to get ready for aiming."/>
+            <AutoVariable width="fill" target="sandwichaim.enable" label="Sandwich Aimbot"/>
+            <AutoVariable width="fill" target="sandwichaim.aimkey" label="Sandwich Aimkey"/>
+            <LabeledObject width="fill" label="Sandwich aim mode">
                 <Select target="sandwichaim.aimkey-mode">
                     <Option name="Disable" value="0"/>
                     <Option name="Pressed" value="1"/>
                     <Option name="Not pressed" value="2"/>
                 </Select>
             </LabeledObject>
-        </List>
-    </Box>
-    <Box padding="12 6 6 6" width="content" height="content" name="Misc" x="340" y="300">
-        <List width="150">
-            <AutoVariable width="fill" target="aimbot.target.ignore-non-cat" label="Cathook user only" tooltip="Ony target players set to CAT. BUT you have need set Ignore Cathook user in collective tab menu"/>
-	    <AutoVariable width="fill" target="aimbot.zoom.time" label="Zoom Time"/>
-	    <AutoVariable width="fill" target="aimbot.spinup-time" label="Spinup Time"/>
-	    <AutoVariable width="fill" target="aimbot.auto.zoom.distance" label="Zoom Distance" tooltip="Autozoom if Enemy nearest you to get ready for aiming."/>
+            <AutoVariable width="fill" target="autosapper.enabled" label="Auto Sapper" tooltip="Auto sap engineer building if holding sapper"/>
+            <AutoVariable width="fill" target="chargeaim.enable" label="Shield Aimbot" tooltip="Makes your demoman charge automatically go towards the enemy. Only active when key is held, and does not trigger the charge itself."/>
+            <AutoVariable width="fill" target="chargeaim.key" label="Shield Key"/>
         </List>
     </Box>
 </Tab>

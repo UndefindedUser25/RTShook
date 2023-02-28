@@ -33,13 +33,7 @@
             <!-- <!AutoVariable width="fill" target="navbot.take-teleporters" label="take teleporters"/> //coming soon...-->
         </List>
     </Box>
-    <Box padding="12 6 6 6" width="content" height="content" name="Shield aimbot" x="165">
-        <List width="150">
-            <AutoVariable width="fill" target="chargeaim.enable" label="Enabled" tooltip="Makes your demoman charge automatically go towards the enemy. Only active when key is held, and does not trigger the charge itself."/>
-            <AutoVariable width="fill" target="chargeaim.key" label="Key to hold"/>
-        </List>
-    </Box>
-    <Box padding="12 6 6 6" width="content" height="content" name="Jumping" x="165" y="45">
+    <Box padding="12 6 6 6" width="content" height="content" name="Jumping" x="165">
         <List width="150">
             <AutoVariable width="fill" target="bunnyhop.enable" label="Enable bunny hop"/>
             <AutoVariable width="fill" target="bunnyhop.chance" label="Bhop chance" tooltip="% chance of a successful bunnyhop."/>

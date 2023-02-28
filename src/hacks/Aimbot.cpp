@@ -36,8 +36,7 @@ static settings::Float normal_fov{ "aimbot.fov", "0" };
 static settings::Int priority_mode{ "aimbot.priority-mode", "0" };
 static settings::Boolean wait_for_charge{ "aimbot.wait-for-charge", "0" };
 
-static settings::Boolean silent{ "aimbot.silent", "1" };
-static settings::Boolean silent_assist{ "aimbot.silentassist", "0" };
+settings::Boolean silent{ "aimbot.silent", "true" };
 static settings::Boolean target_lock{ "aimbot.lock-target", "0" };
 #if ENABLE_VISUALS
 static settings::Boolean assistance_only{ "aimbot.assistance.only", "0" };
@@ -64,7 +63,7 @@ static settings::Boolean auto_spin_up{ "aimbot.auto.spin-up", "0" };
 static settings::Float spinup_time{ "aimbot.spinup-time", "7000" };
 static settings::Boolean minigun_tapfire{ "aimbot.auto.tapfire", "false" };
 static settings::Boolean auto_zoom{ "aimbot.auto.zoom", "false" };
-static settings::Float zoom_time{ "aimbot.unzoom.time", "3000" };
+static settings::Float zoom_time{ "aimbot.zoom.time", "3000" };
 static settings::Boolean auto_unzoom{ "aimbot.auto.unzoom", "false" };
 static settings::Float distance{ "aimbot.auto.zoom.distance", "0" };
 

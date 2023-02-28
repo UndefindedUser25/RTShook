@@ -71,54 +71,26 @@ void CachedEntity::Update()
         GetPlayerInfo(m_IDX, &player_info);
 }
 
-// FIXME maybe disable this by default
-static settings::Boolean fast_vischeck{ "debug.fast-vischeck", "true" };
-
 bool CachedEntity::IsVisible()
 {
-    static constexpr int optimal_hitboxes[] = { hitbox_t::head, hitbox_t::foot_L, hitbox_t::hand_R, hitbox_t::spine_1 };
-    static bool vischeck0, vischeck;
-
     PROF_SECTION(CE_IsVisible);
     if (m_bVisCheckComplete)
         return m_bAnyHitboxVisible;
+    auto hitbox = hitboxes.GetHitbox(std::max(0, (hitboxes.GetNumHitboxes() >> 1) - 1));
+    Vector result;
+    if (!hitbox)
+        result = m_vecOrigin();
+    else
+        result = hitbox->center;
 
-    vischeck0 = IsEntityVectorVisible(this, m_vecOrigin(), true);
-
-    if (vischeck0)
+    // Just check a centered hitbox. This is mostly used for ESP anyway
+    if (IsEntityVectorVisible(this, result, true, MASK_SHOT_HULL, nullptr))
     {
         m_bAnyHitboxVisible = true;
         m_bVisCheckComplete = true;
         return true;
     }
 
-    if (m_Type() == ENTITY_PLAYER && fast_vischeck)
-    {
-        for (int i = 0; i < 4; i++)
-        {
-            if (hitboxes.VisibilityCheck(optimal_hitboxes[i]))
-            {
-                m_bAnyHitboxVisible = true;
-                m_bVisCheckComplete = true;
-                return true;
-            }
-        }
-        m_bAnyHitboxVisible = false;
-        m_bVisCheckComplete = true;
-        return false;
-    }
-
-    for (int i = 0; i < hitboxes.m_nNumHitboxes; i++)
-    {
-        vischeck = false;
-        vischeck = hitboxes.VisibilityCheck(i);
-        if (vischeck)
-        {
-            m_bAnyHitboxVisible = true;
-            m_bVisCheckComplete = true;
-            return true;
-        }
-    }
     m_bAnyHitboxVisible = false;
     m_bVisCheckComplete = true;
 

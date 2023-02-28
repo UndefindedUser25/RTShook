@@ -11,6 +11,7 @@
 #include "MiscAimbot.hpp"
 #include "DetourHook.hpp"
 #include "Backtrack.hpp"
+#include "Aimbot.hpp"
 
 namespace hacks::tf2::misc_aimbot
 {
@@ -391,7 +392,7 @@ static void SapperAimbot()
             if (trace.DidHit() && (IClientEntity *) trace.m_pEnt == RAW_ENT(target))
             {
                 current_user_cmd->viewangles = angle;
-                if (autosapper_silent)
+                if (hacks::shared::aimbot::silent)
                     g_pLocalPlayer->bUseSilentAngles = true;
                 current_user_cmd->buttons |= IN_ATTACK;
             }

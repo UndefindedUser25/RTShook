@@ -16,7 +16,7 @@
 #include "MiscTemporary.hpp"
 #include "Think.hpp"
 #include "Aimbot.hpp"
-#include <Misc.hpp>
+#include "NavBot.hpp"
 
 namespace hacks::tf2::warp
 {
@@ -29,6 +29,7 @@ static settings::Boolean wait_full{ "warp.rapidfire.wait-full", "true" };
 static settings::Button rapidfire_key{ "warp.rapidfire.key", "<null>" };
 static settings::Int rapidfire_key_mode{ "warp.rapidfire.key-mode", "1" };
 static settings::Int rf_disable_on{ "warp.rapidfire.disable-on", "0" };
+static settings::Int rf_flamethrower_modes{ "warp.rapidfire.flmaethrower-modes", "0" };
 static settings::Float speed{ "warp.speed", "23" };
 static settings::Boolean draw{ "warp.draw", "false" };
 static settings::Boolean draw_bar{ "warp.draw-bar", "false" };
@@ -46,9 +47,7 @@ static settings::Boolean warp_forward{ "warp.on-hit.forward", "false" };
 static settings::Boolean warp_backwards{ "warp.on-hit.backwards", "false" };
 static settings::Boolean warp_left{ "warp.on-hit.left", "true" };
 static settings::Boolean warp_right{ "warp.on-hit.right", "true" };
-settings::Boolean dodge_projectile{ "warp.dodge_proj", "true" };
-
-static settings::Boolean debug_seqout{ "debug.warp_seqout", "false" };
+static settings::Boolean warp_melee{ "warp.to.enemy", "false" };
 
 // Hidden control rvars for communtiy servers
 static settings::Int maxusrcmdprocessticks("warp.maxusrcmdprocessticks", "24");
@@ -105,15 +104,15 @@ void DrawWarpStrings()
 }
 #endif
 
-static bool should_charge = false;
-static int warp_amount    = 0;
-int warp_amount_override  = 0;
-static bool should_melee  = false;
-static bool charged       = false;
-static bool was_hurt      = false;
-static bool should_warp   = true;
-static bool warp_dodge    = false;
-static float yaw_amount   = 90.0f;
+static bool should_charge       = false;
+static int warp_amount          = 0;
+static int warp_amount_override = 0;
+static bool should_melee        = false;
+static bool charged             = false;
+
+static bool should_warp = true;
+static bool was_hurt    = false;
+
 // Rapidfire key mode
 static bool key_valid = false;
 
@@ -230,9 +229,34 @@ bool shouldRapidfire()
     // Mouse 1 is held, do it.
     bool buttons_pressed = current_user_cmd && current_user_cmd->buttons & IN_ATTACK;
 
-    // Unless we are on a flamethrower, where we want both m1 and m2.
-    if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
-        buttons_pressed = current_user_cmd && current_user_cmd->buttons & (IN_ATTACK | IN_ATTACK2);
+    switch (*rf_flamethrower_modes)
+    {
+    case 0: // Any mode
+    {
+        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
+            buttons_pressed = current_user_cmd && current_user_cmd->buttons & (IN_ATTACK | IN_ATTACK2);
+        break;
+    }
+    case 1: // "Flame" mode / mouse 1
+    {
+        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
+            buttons_pressed = current_user_cmd && current_user_cmd->buttons & IN_ATTACK;
+        break;
+    }
+    case 2: // Airblast mode / mouse 2
+    {
+        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
+            buttons_pressed = current_user_cmd && current_user_cmd->buttons & IN_ATTACK2;
+        break;
+    }
+    case 3: // Disable all
+    default:
+    {
+        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFFlameThrower))
+            return false;
+        break;
+    }
+    }
 
     if (g_pLocalPlayer->holding_sniper_rifle)
     {
@@ -264,80 +288,10 @@ bool shouldRapidfire()
     return buttons_pressed;
 }
 
-void dodgeProj()
-{
-    if (!LOCAL_E->m_bAlivePlayer() || entity_cache::proj_map.empty() || !dodge_projectile)
-        return;
-    Vector player_pos  = RAW_ENT(LOCAL_E)->GetAbsOrigin();
-    const int max_size = entity_cache::proj_map.size();
-    for (int i = 0; i < max_size; ++i)
-    {
-        auto curr_tuple   = entity_cache::proj_map[i];
-        Vector key        = std::get<0>(curr_tuple);
-        CachedEntity *val = std::get<1>(curr_tuple);
-        if (key.Length() < 0.1f)
-        {
-            if (CE_GOOD(val))
-                continue;
-            else
-                entity_cache::proj_map.erase((entity_cache::proj_map.begin() + i));
-            continue;
-        }
-        if (CE_GOOD(val))
-        {
-            // Since we are sending this warp next tick we need to compensate for fast moving projectiles
-            // 2 Ticks in advance is a fairly safe interval
-            Vector velocity_comp = key * 2 * TICK_INTERVAL;
-            velocity_comp.z -= 2 * TICK_INTERVAL * g_ICvar->FindVar("sv_gravity")->GetFloat() * ProjGravMult(val->m_iClassID(), key.Length());
-
-            Vector proj_next_tik = RAW_ENT(val)->GetAbsOrigin() + velocity_comp;
-            float diff           = proj_next_tik.DistToSqr(player_pos);
-            // Warp sooner for fast moving projectiles.
-            if (diff < (15000 * (key.Length() / 1000)))
-            {
-                trace_t trace;
-                Ray_t ray;
-                ray.Init(proj_next_tik, player_pos, Vector(0, -8, -8), Vector(0, 8, 8));
-                g_ITrace->TraceRay(ray, MASK_SHOT_HULL, &trace::filter_default, &trace);
-                if (trace.DidHit())
-                {
-
-                    // We need to determine wether the projectile is coming in from the left or right of us so we don't warp into the projectile.
-                    Vector result = GetAimAtAngles(g_pLocalPlayer->v_Eye, RAW_ENT(val)->GetAbsOrigin(), LOCAL_E) - g_pLocalPlayer->v_OrigViewangles;
-
-                    if (0 <= result.y)
-                        yaw_amount = -90.0f;
-                    else
-                        yaw_amount = 90.0f;
-                    if ((IClientEntity *) trace.m_pEnt == RAW_ENT(LOCAL_E))
-                    {
-                        was_hurt   = true;
-                        warp_dodge = true;
-                        entity_cache::proj_map.erase((entity_cache::proj_map.begin() + i));
-                    }
-                } // It didn't hit anything but it has been proven to be very close to us. Dodge. (This is for the huntsman+pills)
-                else
-                {
-                    was_hurt      = true;
-                    warp_dodge    = true;
-                    Vector result = GetAimAtAngles(g_pLocalPlayer->v_Eye, RAW_ENT(val)->GetAbsOrigin(), LOCAL_E) - g_pLocalPlayer->v_OrigViewangles;
-                    if (0 <= result.y)
-                        yaw_amount = -90.0f;
-                    else
-                        yaw_amount = 90.0f;
-
-                    entity_cache::proj_map.erase((entity_cache::proj_map.begin() + i));
-                }
-            }
-        }
-        else
-            entity_cache::proj_map.erase((entity_cache::proj_map.begin() + i));
-    }
-}
-
 // Should we warp?
 bool shouldWarp(bool check_amount)
 {
+    auto nearest = hacks::tf2::NavBot::getNearestPlayerDistance();
     return
         // Ingame?
         g_IEngine->IsInGame() &&
@@ -348,7 +302,9 @@ bool shouldWarp(bool check_amount)
           // Rapidfire and trying to attack?
           || shouldRapidfire()) &&
          // Do we have enough to warp?
-         (!check_amount || warp_amount));
+         (!check_amount || warp_amount))
+        // Option is enabled, in melee range and target is visible to us
+        || (warp_melee && nearest.second < 175 && hacks::tf2::NavBot::isVisible);
 }
 
 // How many ticks of excess we have (for decimal speeds)
@@ -694,9 +650,7 @@ void warpLogic()
 {
     if (!enabled)
         return;
-    if (CE_BAD(LOCAL_E) || !LOCAL_E->m_bAlivePlayer())
-        return;
-    if (CE_BAD(LOCAL_W))
+    if (CE_BAD(LOCAL_E) || CE_BAD(LOCAL_W) || !LOCAL_E->m_bAlivePlayer())
         return;
 
     // Handle minigun in rapidfire
@@ -737,9 +691,8 @@ void warpLogic()
         // Bunch of checks, if they all pass we are standing still
         if ((ground_ticks > 1 || charge_in_jump) && (charge_no_input || velocity.IsZero()) && !HasCondition<TFCond_Charging>(LOCAL_E) && !current_user_cmd->forwardmove && !current_user_cmd->sidemove && !current_user_cmd->upmove && !(current_user_cmd->buttons & IN_JUMP) && !button_block)
         {
-            if (!move_last_tick)
+            if (charge_if_idle && !move_last_tick)
 		{
-            	if (charge_if_idle)
                 should_charge = true;
 		}
             move_last_tick = false;
@@ -1077,7 +1030,6 @@ void Draw()
         if (warp_amount == 0)
             color = colors::FromRGBA8(128.0f, 128.0f, 128.0f, 255.0f);
         else if (GetMaxWarpTicks() == warp_amount)
-	        AddWarpString("Change Ready!" , colors::green);
             color = colors::green;
         AddWarpString("Warp/DT Ticks : " + std::to_string(warp_amount), color);
     }
@@ -1194,4 +1146,4 @@ static InitRoutine init(
         EC::Register(EC::Draw, Draw, "warp_draw");
 #endif
     });
-} // namespace hacks::tf2::warp
+} // namespace hacks::warp

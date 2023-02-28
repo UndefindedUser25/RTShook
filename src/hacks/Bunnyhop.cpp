@@ -11,11 +11,13 @@
 namespace hacks::shared::bunnyhop
 {
 static settings::Boolean enable{ "bunnyhop.enable", "false" };
+static settings::Boolean duck_jump{ "bunnyhop.duck-jump", "false" };
 static settings::Int bhop_chance{ "bunnyhop.chance", "100" };
 
 // Var for user settings
 
 static int ticks_last_jump = 0;
+static int ticks_last_duck = 0;
 // static int perfect_jumps = 0;
 
 // Function called by game for movement

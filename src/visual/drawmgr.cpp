@@ -3,6 +3,10 @@
  *
  *  Created on: May 22, 2017
  *      Author: nullifiedcat
+ *
+ *  Recode in Inithook on : Unknown
+ *      Author : Simulink and d3fc0n6
+ *
  */
 
 #include <MiscTemporary.hpp>
@@ -88,6 +92,10 @@ void DrawCheatVisuals()
                 float avgLatency = netchannel->GetAvgLatency(FLOW_OUTGOING);
                 float adjust = 0.0f;
 
+                auto map_name = std::string(g_IEngine->GetLevelName());
+                auto address = std::string(netchannel->GetAddress());
+                auto netname = std::string(netchannel->GetName());
+
                 static const ConVar *pUpdateRate = g_pCVar->FindVar("cl_updaterate");
                 if (!pUpdateRate)
                     pUpdateRate = g_pCVar->FindVar("cl_updaterate");
@@ -102,7 +110,7 @@ void DrawCheatVisuals()
                 // Can't be below zero
                 avgLatency = MAX( 0.0, avgLatency );
 
-                server_info = " | " + std::to_string((int)(avgLatency*1000.0f)) + " ms";
+                server_info = " | " + std::to_string((int)(avgLatency*1000.0f)) + " ms" + " | " + std::string(map_name) + " | Address : " + std::string(address) + " | " + std::string(netname);
             }
 
             std::string result = std::string(strfmt("RTShook v2 | %s%s", timeString, server_info.c_str()).get());

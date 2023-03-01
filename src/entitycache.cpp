@@ -49,10 +49,6 @@ static settings::Int ve_averager_size{ "debug.ve.averaging", "0" };
 
 void CachedEntity::Update()
 {
-    auto raw = RAW_ENT(this);
-
-    if (!raw)
-        return;
 #if PROXY_ENTITY != true
     m_pEntity = g_IEntityList->GetClientEntity(idx);
     if (!m_pEntity)
@@ -60,15 +56,9 @@ void CachedEntity::Update()
         return;
     }
 #endif
-    m_lSeenTicks = 0;
-    m_lLastSeen  = 0;
-
-    hitboxes.Update();
-
+    m_lLastSeen = 0;
+    hitboxes.InvalidateCache();
     m_bVisCheckComplete = false;
-
-    if (m_Type() == EntityType::ENTITY_PLAYER)
-        GetPlayerInfo(m_IDX, &player_info);
 }
 
 bool CachedEntity::IsVisible()

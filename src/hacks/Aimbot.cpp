@@ -273,22 +273,6 @@ std::vector<Vector> getHitpointsVischeck(CachedEntity *ent, int hitbox)
     return hitpoints;
 }
 
-bool isHitboxMedium(int hitbox)
-{
-    switch (hitbox)
-    {
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-        return true;
-    default:
-        return false;
-    }
-    return false;
-}
-
 // Get the best point to aim at for a given hitbox
 static std::optional<Vector> getBestHitpoint(CachedEntity *ent, int hitbox)
 {
@@ -325,16 +309,13 @@ unsigned last_target_ignore_timer = 0;
 
 int GetSentry()
 {
-    for (int i = 1; i <= HIGHEST_ENTITY; i++)
+    for (auto &ent : entity_cache::valid_ents)
     {
-        CachedEntity *ent = ENTITY(i);
-        if (CE_BAD(ent))
-            continue;
         if (ent->m_Type() != ENTITY_BUILDING || ent->m_iClassID() != CL_CLASS(CObjectSentrygun))
             continue;
         if ((CE_INT(ent, netvar.m_hBuilder) & 0xFFF) != g_pLocalPlayer->entity_idx)
             continue;
-        return i;
+        return ent->m_IDX;
     }
     return -1;
 }
@@ -360,9 +341,9 @@ bool shouldBacktrack(CachedEntity *ent)
 {
     if (!shouldbacktrack_cache)
         return false;
-    if (ent && ent->m_Type() != ENTITY_PLAYER)
+    else if (ent && ent->m_Type() != ENTITY_PLAYER)
         return false;
-    if (!tf2::backtrack::getGoodTicks(ent))
+    else if (!tf2::backtrack::getGoodTicks(ent))
         return false;
     return true;
 }
@@ -412,7 +393,7 @@ static bool allowNoScope(CachedEntity *target)
         if (IsPlayerCritBoosted(LOCAL_E) && target_health <= 150.0f)
             return true;
 
-        /*if (IsPlayerMiniCritBoosted(LOCAL_E))
+        /*else if (IsPlayerMiniCritBoosted(LOCAL_E))
         {
             if (!CarryingHeatmaker() && target_health <= 68.0f)
                 return true;
@@ -421,10 +402,13 @@ static bool allowNoScope(CachedEntity *target)
                 return true;
         }*/
 
-        if (!CarryingHeatmaker() && target_health <= 50.0f)
+        else if (!CarryingHeatmaker() && target_health <= 50.0f)
             return true;
 
-        if (CarryingHeatmaker() && target_health <= 40.0f)
+        else if (CarryingHeatmaker() && target_health <= 40.0f)
+            return true;
+
+        else if (target->m_Type() == ENTITY_BUILDING)
             return true;
     }
     return false;
@@ -751,62 +735,51 @@ bool ShouldAim()
     else if (!g_pLocalPlayer->weapon() || g_pLocalPlayer->weapon()->m_iClassID() == CL_CLASS(CTFKnife) || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 237 || CE_INT(LOCAL_W, netvar.iItemDefinitionIndex) == 265)
         return false;
 
-        // Carrying A building?
-        else if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bCarryingObject))
-            return false;
-        // Deadringer out?
-        else if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bFeignDeathReady))
-            return false;
-        // Holding Sapper?
-        else if (g_pLocalPlayer->holding_sapper)
-            return false;
-        // Is bonked?
-        else if (HasCondition<TFCond_Bonked>(g_pLocalPlayer->entity))
-            return false;
-        // Is taunting?
-        else if (HasCondition<TFCond_Taunting>(g_pLocalPlayer->entity))
-            return false;
-        // Is cloaked
-        else if (IsPlayerInvisible(g_pLocalPlayer->entity))
-            return false;
-        // Dont aim as minigun if out of ammo
-        else if (LOCAL_W->m_iClassID() == CL_CLASS(CTFMinigun) && CE_INT(LOCAL_E, netvar.m_iAmmo + 4) == 0)
-            return false;
- 
-#if ENABLE_VISUALS
-    if (assistance_only && !MouseMoving())
+    // Carrying A building?
+    else if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bCarryingObject))
         return false;
-#endif
+    // Deadringer out?
+    else if (CE_BYTE(g_pLocalPlayer->entity, netvar.m_bFeignDeathReady))
+        return false;
+    // Holding Sapper?
+    else if (g_pLocalPlayer->holding_sapper)
+        return false;
+    // Is bonked?
+    else if (HasCondition<TFCond_Bonked>(g_pLocalPlayer->entity))
+        return false;
+    // Is taunting?
+    else if (HasCondition<TFCond_Taunting>(g_pLocalPlayer->entity))
+        return false;
+    // Is cloaked
+    else if (IsPlayerInvisible(g_pLocalPlayer->entity))
+        return false;
+    // Dont aim as minigun if out of ammo
+    else if (LOCAL_W->m_iClassID() == CL_CLASS(CTFMinigun) && CE_INT(LOCAL_E, netvar.m_iAmmo + 4) == 0)
+        return false;
 
-    IF_GAME(IsTF2())
+    switch (GetWeaponMode())
     {
-        switch (GetWeaponMode())
-        {
-        case weapon_hitscan:
-            break;
-        case weapon_melee:
-            break;
-        // Check we need to run projectile Aimbot code
-        case weapon_projectile:
-            if (!projectileAimbotRequired)
-                return false;
-            break;
-        // Check if player doesnt have a weapon usable by aimbot
-        default:
+    case weapon_hitscan:
+        break;
+    case weapon_melee:
+        break;
+    // Check we need to run projectile Aimbot code
+    case weapon_projectile:
+        if (!projectileAimbotRequired)
             return false;
-        };
-    }
+        break;
+    // Check if player doesnt have a weapon usable by aimbot
+    default:
+        return false;
+    };
 
-    IF_GAME(IsTF())
+    // Check if player is zooming
+    if (g_pLocalPlayer->bZoomed)
     {
-        // Check if player is zooming
-        if (g_pLocalPlayer->bZoomed)
+        if (!(current_user_cmd->buttons & (IN_ATTACK | IN_ATTACK2)))
         {
-            if (!(current_user_cmd->buttons & (IN_ATTACK | IN_ATTACK2)))
-            {
-                if (!CanHeadshot())
-                    return false;
-            }
+            if (!CanHeadshot())
+                return false;
         }
     }
     return true;
@@ -910,6 +883,9 @@ CachedEntity *RetrieveBestTarget(bool aimkey_state)
                 case 1: // Fov Priority
                     scr = 360.0f - calculated_data_array[ent->m_IDX].fov;
                     break;
+                case 2:
+                    scr = 4096.0f - calculated_data_array[ent->m_IDX].aim_position.DistTo(g_pLocalPlayer->v_Eye);
+                    break;
                 case 3: // Health Priority (Lowest)
                     scr = 450.0f - ent->m_iHealth();
                     break;
@@ -988,13 +964,13 @@ bool IsTargetStateGood(CachedEntity *entity)
         if (entity == LOCAL_E)
             return false;
         // Dead
-        if (!entity->m_bAlivePlayer())
+        else if (!entity->m_bAlivePlayer())
             return false;
         // Teammates
-        if (!playerTeamCheck(entity))
+        else if (!playerTeamCheck(entity))
             return false;
         // Distance
-        if (EffectiveTargetingRange())
+        else if (EffectiveTargetingRange())
         {
             if (g_pLocalPlayer->weapon_mode != weapon_melee)
             {
@@ -1155,7 +1131,7 @@ bool IsTargetStateGood(CachedEntity *entity)
         // Vis check + fov check
         if (!VischeckPredictedEntity(entity))
             return false;
-        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFLaserPointer))
+        else if (LOCAL_W->m_iClassID() == CL_CLASS(CTFLaserPointer))
         {
             int sentry = GetSentry();
             if (sentry == -1)
@@ -1166,7 +1142,7 @@ bool IsTargetStateGood(CachedEntity *entity)
             if (!IsVectorVisible(pos, entity->hitboxes.GetHitbox(cd.hitbox)->center, false, ENTITY(sentry)))
                 return false;
         }
-        if (fov > 0.0f && cd.fov > fov && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
+        else if (fov > 0.0f && cd.fov > fov && tickcount > hacks::shared::aimbot::last_target_ignore_timer)
             return false;
 
         return true;
@@ -1267,11 +1243,11 @@ bool IsTargetStateGood(CachedEntity *entity)
             return false;
 
         // Only hitscan weapons can break stickys so check for them.
-        if (!(GetWeaponMode() == weapon_hitscan || GetWeaponMode() == weapon_melee))
+        else if (!(GetWeaponMode() == weapon_hitscan || GetWeaponMode() == weapon_melee))
             return false;
 
         // Distance
-        if (EffectiveTargetingRange())
+        else if (EffectiveTargetingRange())
         {
             if (entity->m_flDistance() > (int) EffectiveTargetingRange())
                 return false;
@@ -1279,11 +1255,11 @@ bool IsTargetStateGood(CachedEntity *entity)
 
         // Teammates, Even with friendly fire enabled, stickys can NOT be
         // destroied
-        if (!entity->m_bEnemy())
+        else if (!entity->m_bEnemy())
             return false;
 
         // Check if target is a pipe bomb
-        if (CE_INT(entity, netvar.iPipeType) != 1)
+        else if (CE_INT(entity, netvar.iPipeType) != 1)
             return false;
 
         // Moving Sticky?
@@ -1298,7 +1274,7 @@ bool IsTargetStateGood(CachedEntity *entity)
         // Vis and fov check
         if (!VischeckPredictedEntity(entity))
             return false;
-        if (LOCAL_W->m_iClassID() == CL_CLASS(CTFLaserPointer))
+        else if (LOCAL_W->m_iClassID() == CL_CLASS(CTFLaserPointer))
         {
             int sentry = GetSentry();
             if (sentry == -1)
@@ -1307,7 +1283,7 @@ bool IsTargetStateGood(CachedEntity *entity)
             if (!IsVectorVisible(pos, entity->m_vecOrigin(), false))
                 return false;
         }
-        if (fov > 0.0f && cd.fov > fov)
+        else if (fov > 0.0f && cd.fov > fov)
             return false;
 
         return true;

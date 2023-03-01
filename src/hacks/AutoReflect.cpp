@@ -7,6 +7,7 @@
 
 #include "common.hpp"
 #include <settings/Bool.hpp>
+#include "Aimbot.hpp"
 
 namespace hacks::tf::autoreflect
 {
@@ -28,14 +29,6 @@ static settings::Boolean sentryrockets{ "autoreflect.sentryrockets", "true" };
 static settings::Boolean cleavers{ "autoreflect.cleavers", "false" };
 static settings::Boolean teammates{ "autoreflect.teammate", "false" };
 static settings::Boolean teammates_fire{ "autoreflect.teammatesfire", "false" };
-
-static settings::Float fov{ "autoreflect.fov", "85" };
-
-#if ENABLE_VISUALS
-static settings::Boolean fov_draw{ "autoreflect.draw-fov", "false" };
-static settings::Float fovcircle_opacity{ "autoreflect.draw-fov-opacity", "0.7" };
-#endif
-
 // Function to determine whether an ent is good to reflect
 static bool ShouldReflect(CachedEntity *ent)
 {
@@ -197,7 +190,7 @@ void CreateMove()
         // dont aim at the projectile
         if (legit)
         {
-            if (GetFov(g_pLocalPlayer->v_OrigViewangles, g_pLocalPlayer->v_Eye, predicted_proj) > (float) fov)
+            if (GetFov(g_pLocalPlayer->v_OrigViewangles, g_pLocalPlayer->v_Eye, predicted_proj) > (float) hacks::shared::aimbot::normal_fov)
                 continue;
         }
 
@@ -228,50 +221,10 @@ void CreateMove()
     current_user_cmd->buttons |= IN_ATTACK2;
 }
 
-void Draw()
-{
-#if ENABLE_VISUALS
-    // Dont draw to screen when reflect is disabled
-    if (!enable)
-        return;
-    // Don't draw to screen when legit is disabled
-    if (!legit)
-        return;
-
-    // Fov ring to represent when a projectile will be reflected
-    if (fov_draw)
-    {
-        // It cant use fovs greater than 180, so we check for that
-        if (*fov > 0.0f && *fov < 180)
-        {
-            // Dont show ring while player is dead
-            if (CE_GOOD(LOCAL_E) && LOCAL_E->m_bAlivePlayer())
-            {
-                rgba_t color = colors::gui;
-                color.a      = float(fovcircle_opacity);
-
-                int width, height;
-                g_IEngine->GetScreenSize(width, height);
-
-                // Math
-                float mon_fov  = (float(width) / float(height) / (4.0f / 3.0f));
-                float fov_real = RAD2DEG(2 * atanf(mon_fov * tanf(DEG2RAD(draw::fov / 2))));
-                float radius   = tan(DEG2RAD(float(fov)) / 2) / tan(DEG2RAD(fov_real) / 2) * (width);
-
-                draw::Circle(width / 2, height / 2, radius, color, 1, 100);
-            }
-        }
-    }
-#endif
-}
-
 static InitRoutine EC(
     []()
     {
         EC::Register(EC::CreateMove, CreateMove, "cm_auto_reflect", EC::average);
         EC::Register(EC::CreateMoveWarp, CreateMove, "cmw_auto_reflect", EC::average);
-#if ENABLE_VISUALS
-        EC::Register(EC::Draw, Draw, "draw_auto_reflect", EC::average);
-#endif
     });
 } // namespace hacks::tf::autoreflect

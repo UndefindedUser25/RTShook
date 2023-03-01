@@ -10,6 +10,7 @@
 #include "settings/Bool.hpp"
 #include "PlayerTools.hpp"
 #include "MiscAimbot.hpp"
+#include "Aimbot.hpp"
 
 namespace hacks::tf::autoheal
 {
@@ -49,6 +50,7 @@ static settings::Int auto_vacc_blast_pop_ubers{ "autoheal.vacc.blast.min-charges
 static settings::Int default_resistance{ "autoheal.vacc.default-resistance", "0" };
 static settings::Int steam_var{ "autoheal.steamid", "0" };
 
+static settings::Boolean legit{ "autoheal.legit", "true" };
 // Per class Heal Priorities, You should heal low hp classes earlier because they have an overall smaller healthpool
 static settings::Int healp_scout{ "autoheal.priority-scout", "60" };
 static settings::Int healp_soldier{ "autoheal.priority-soldier", "50" };
@@ -219,11 +221,11 @@ int BlastDangerValue(CachedEntity *patient)
     {
         if (!ent->m_bEnemy())
             continue;
-        if (ent->m_Type() != ENTITY_PROJECTILE)
+        else if (ent->m_Type() != ENTITY_PROJECTILE)
             continue;
-        if (ent->m_iClassID() == CL_CLASS(CTFProjectile_Flare))
+        else if (ent->m_iClassID() == CL_CLASS(CTFProjectile_Flare))
             continue;
-        if (patient->m_vecOrigin().DistTo(ent->m_vecOrigin()) > (int) auto_vacc_proj_danger_range)
+        else if (patient->m_vecOrigin().DistTo(ent->m_vecOrigin()) > (int) auto_vacc_proj_danger_range)
             continue;
         proj_data_array.push_back(proj_data_s{ ent->m_IDX, ent->m_vecOrigin() });
     }
@@ -252,10 +254,16 @@ int NearbyEntities()
 
         if (ent == LOCAL_E)
             continue;
-        if (!ent->m_bAlivePlayer())
+        else if (!ent->m_bAlivePlayer())
             continue;
-        if (ent->m_flDistance() <= 300.0f)
+        else if (ent->m_flDistance() <= 300.0f)
             ret++;
+
+        else if (legit)
+        {
+            if (GetFov(g_pLocalPlayer->v_OrigViewangles, g_pLocalPlayer->v_Eye, LOCAL_E->hitboxes.GetHitbox(spine_1)->center) > (float) hacks::shared::aimbot::normal_fov)
+                continue;
+        }
     }
     return ret;
 }

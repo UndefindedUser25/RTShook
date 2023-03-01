@@ -32,7 +32,7 @@ static settings::Boolean autoshoot_disguised{ "aimbot.autoshoot-disguised", "1" 
 static settings::Int multipoint{ "aimbot.multipoint", "0" };
 static settings::Int hitbox_mode{ "aimbot.hitbox-mode", "0" };
 static settings::Int vischeck_hitboxes{ "aimbot.vischeck-hitboxes", "0" };
-static settings::Float normal_fov{ "aimbot.fov", "0" };
+settings::Float normal_fov{ "aimbot.fov", "0" };
 static settings::Int priority_mode{ "aimbot.priority-mode", "0" };
 static settings::Boolean wait_for_charge{ "aimbot.wait-for-charge", "0" };
 
@@ -1567,7 +1567,7 @@ int BestHitbox(CachedEntity *target)
             // Rockets and stickies should aim at the foot if the target is on the ground
             else if (ci == CL_CLASS(CTFPipebombLauncher) || ci == CL_CLASS(CTFRocketLauncher) || ci == CL_CLASS(CTFParticleCannon) || ci == CL_CLASS(CTFRocketLauncher_AirStrike) || ci == CL_CLASS(CTFRocketLauncher_Mortar) || ci == CL_CLASS(CTFRocketLauncher_DirectHit))
             {
-                    preferred = hitbox_t::foot_L;
+                preferred = hitbox_t::foot_L;
             }
 
             // Bodyshot handling
@@ -1619,10 +1619,7 @@ int BestHitbox(CachedEntity *target)
         // Head only
         if (headonly)
         {
-            IF_GAME(IsTF())
             return hitbox_t::head;
-            IF_GAME(IsCSS())
-            return 12;
         }
 
         // preferred hitbox

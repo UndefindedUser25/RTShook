@@ -55,4 +55,5 @@ bool UpdateAimkey();
 float EffectiveTargetingRange();
 
 extern settings::Boolean silent;
+extern settings::Float normal_fov;
 } // namespace hacks::shared::aimbot

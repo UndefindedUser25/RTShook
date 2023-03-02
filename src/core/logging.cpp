@@ -49,7 +49,7 @@ static inline void Log(const char *result, bool file_only)
     if (!hack::shutdown)
     {
         if (!file_only && *log_to_console)
-            g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: %s\n", result);
+            g_ICvar->ConsoleColorPrintf(MENU_COLOR, "RTShook Console : %s\n", result);
     }
 #endif
 #endif

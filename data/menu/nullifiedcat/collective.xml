@@ -14,9 +14,8 @@
             <AutoVariable width="fill" target="misc.full-auto" label="Fully automated firing"/>
             <AutoVariable width="fill" target="misc.show-spectators" label="Show spectators"/>
             <AutoVariable width="fill" target="misc.tauntslide" label="Tauntslide"/>
-	    <AutoVariable width="fill" target="misc.fuckmode" label="Fuckmode" tooltip="idk. what happen"/>player-tools.ignore.legit
-	    <AutoVariable width="fill" target="misc.animfix.enabled" label="Fix Animation Hitable" tooltip="Rewite Setup bone who about taunting."/>
-            <AutoVariable width="fill" target="announcer" label="Enable announcer"/>
+	        <AutoVariable width="fill" target="misc.fuckmode" label="Fuckmode" tooltip="idk. what happen"/>player-tools.ignore.legit
+	        <AutoVariable width="fill" target="misc.animfix.enabled" label="Animfix" tooltip="Rewite Setup bone to more improvment aimbot."/>
         </List>
     </Box>
     <Box height="content" width="content" padding="12 6 6 6" name="Extra" x="215">

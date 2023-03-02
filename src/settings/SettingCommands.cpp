@@ -182,11 +182,11 @@ static CatCommand delete_config("delete_config", "", [](const CCommand &args) {
     {
         remove((paths::getConfigPath() + "/" + args.Arg(1) + ".conf").c_str());
         refreshConfigList();
-        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_config_delete: Config Deleted!\n");
+        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Config Deleted.\n");
     }
     else
     {
-        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_config_delete: No config specified!\n");
+        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Config Not found.\n");
     }
 });
 

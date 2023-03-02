@@ -30,21 +30,21 @@ bool settings::SettingsWriter::saveTo(std::string path, bool autosave)
     {
         logging::File("cat_save: FATAL! FAILED to create stream!");
         if (!autosave)
-            g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_save: Can't create config file!\n");
+            g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Failed to create Config files.\n");
         return false;
     }
 
     using pair_type = std::pair<std::string, settings::IVariable *>;
     std::vector<pair_type> all_registered{};
-    logging::File("cat_save: Getting variable references...");
+    logging::File("Getting variable references.");
     for (auto &v : settings::Manager::instance().registered)
     {
         if (!only_changed || v.second.isChanged())
             all_registered.emplace_back(std::make_pair(v.first, &v.second.variable));
     }
-    logging::File("cat_save: Sorting...");
+    logging::File("Sorting...");
     std::sort(all_registered.begin(), all_registered.end(), [](const pair_type &a, const pair_type &b) -> bool { return a.first.compare(b.first) < 0; });
-    logging::File("cat_save: Writing...");
+    logging::File("Writing...");
     for (auto &v : all_registered)
         if (!v.first.empty())
         {
@@ -54,11 +54,11 @@ bool settings::SettingsWriter::saveTo(std::string path, bool autosave)
     if (!stream || stream.bad() || stream.fail())
     {
         if (!autosave)
-            g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_save: Failed to save config!\n");
+            g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Failed to Save configs.\n");
         logging::File("cat_save: FATAL! Stream bad!");
     }
     else if (!autosave)
-        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_save: Successfully saved config!\n");
+        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Config saved.\n");
     stream.close();
     if (stream.fail())
         logging::File("cat_save: FATAL! Stream bad (2)!");
@@ -108,7 +108,7 @@ bool settings::SettingsReader::loadFrom(std::string path)
     if (stream.fail())
     {
         logging::Info("cat_load: Can't access file!");
-        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_load: File doesn't exist / can't open file!\n");
+        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Config File doesn't exist\n");
         return false;
     }
 
@@ -128,12 +128,12 @@ bool settings::SettingsReader::loadFrom(std::string path)
     if (stream.fail() && !stream.eof())
     {
         logging::Info("cat_load: FATAL: Read failed!");
-        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_load: Failed to read config!\n");
+        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Failed to load configs.\n");
         return false;
     }
 
     logging::Info("cat_load: Read Success!");
-    g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_load: Successfully loaded config!\n");
+    g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Configs Loaded.\n");
     finishString(true);
 
     return true;
@@ -145,7 +145,7 @@ bool settings::SettingsReader::loadFromString(std::string stream)
     if (stream == "")
     {
         logging::Info("cat_load: Empty String!");
-        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_load: Empty String!\n");
+        g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Empty String.\n");
         return false;
     }
 
@@ -160,7 +160,7 @@ bool settings::SettingsReader::loadFromString(std::string stream)
     }
 
     logging::Info("cat_load: Read Success!");
-    g_ICvar->ConsoleColorPrintf(MENU_COLOR, "CAT: cat_load: Successfully loaded config!\n");
+    g_ICvar->ConsoleColorPrintf(MENU_COLOR, "Configs Loaded.\n");
     loader.finishString(true);
 
     return true;

@@ -13,7 +13,6 @@
             <AutoVariable width="fill" target="misc.full-auto" label="Fully automated firing"/>
             <AutoVariable width="fill" target="misc.show-spectators" label="Show spectators"/>
             <AutoVariable width="fill" target="misc.tauntslide" label="Tauntslide"/>
-            <AutoVariable width="fill" target="announcer" label="Enable announcer"/>
         </List>
     </Box>
     <Box height="content" width="content" padding="12 6 6 6" name="Fake name" x="215">

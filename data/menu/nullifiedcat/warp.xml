@@ -26,14 +26,14 @@
             <AutoVariable width="fill" target="warp.to.enemy" label="Melee warp" tooltip="Automatically warp to the enemy we are trying to hit with our melee"/>
         </List>
     </Box>
-    <Box padding="12 6 6 6" width="content" height="content" name="Rapidfire" x="190">
+    <Box padding="12 6 6 6" width="content" height="content" name="Double Tap" x="190">
         <List width="185">
             <AutoVariable width="fill" target="warp.rapidfire" label="Enable" tooltip="Allows you to shoot multiple shots at once or reduce time between shots."/>
             <AutoVariable width="fill" target="warp.rapidfire.distance" label="Maximum distance" tooltip="How close an enemy has to be to trigger. 0 = unlimited range."/>
-            <AutoVariable width="fill" target="warp.rapidfire.zoom" label="Enable rapid zoom" tooltip="Allows you to instantly zoom in."/>
-            <AutoVariable width="fill" target="warp.rapidfire.no-movement" label="Prevent movement" tooltip="Attempt to not move when Rapidfiring."/>
+            <AutoVariable width="fill" target="warp.rapidfire.zoom" label="Enable DT Zoom" tooltip="Allows you to instantly zoom in."/>
+            <AutoVariable width="fill" target="warp.rapidfire.no-movement" label="Anti-Wrap" tooltip="Attempt to not move when Double tapping."/>
             <AutoVariable width="fill" target="warp.rapidfire.key" label="Key" tooltip="Optional. If set you can use this key to control when to trigger."/>
-            <LabeledObject width="fill" label="Rapidfire key mode" tooltip="Controls what the key does.">
+            <LabeledObject width="fill" label="Double Tap key mode" tooltip="Controls what the key does.">
                 <Select target="warp.rapidfire.key-mode">
                     <Option name="Disable" value="0"/>
                     <Option name="Pressed" value="1"/>

@@ -126,21 +126,21 @@ public:
     {
         std::random_device rd;
         std::mt19937 mt(rd());
-        std::uniform_real_distribution<double> dist(1000.0, 10000.0);
+        std::uniform_int_distribution<unsigned> dist(1000, 10000);
         settings_set = true;
         {
             if ((!settings.username && !newsettings.username) || (newsettings.username && *newsettings.username == "anon"))
-                settings.username = "Anon-" + std::to_string((int) dist(mt));
+                settings.username = "Anon-" + std::to_string(dist(mt));
             else if (!settings.username || (newsettings.username && *newsettings.username != *settings.username))
                 settings.username = *newsettings.username;
         }
         // RNG colour generator
         if (!newsettings.colour && !settings.colour)
         {
-            std::uniform_real_distribution<double> dist(255.0, 510.0);
-            int r              = (int) dist(mt) / 2;
-            int g              = (int) dist(mt) / 2;
-            int b              = (int) dist(mt) / 2;
+            std::uniform_int_distribution<unsigned> dist(255, 510);
+            int r              = dist(mt) / 2;
+            int g              = dist(mt) / 2;
+            int b              = dist(mt) / 2;
             newsettings.colour = (r << 16) + (g << 8) + b;
         }
         boost::property_tree::ptree pt;

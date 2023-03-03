@@ -224,7 +224,7 @@ class WebSocketClient
             return;
         trySendMessageQueue();
     }
-    
+
     void trySendMessageQueue()
     {
         if (!NULLNEXUS_VALIDWS)
@@ -248,7 +248,7 @@ class WebSocketClient
             }
         }
     }
-    
+
     void onImmediateMessageSend(std::string msg, std::promise<bool> &ret)
     {
         try
@@ -267,7 +267,7 @@ class WebSocketClient
             return;
         }
     }
-    
+
     void onAsyncMessageSend(const std::string &msg)
     {
         // Push into a queue
@@ -285,14 +285,14 @@ class WebSocketClient
         doConnectionAttempt();
     }
 
-    // Use the io_context+worker to sheudule a restart/start
+    // Use the io_context+worker to schedule a restart/start
     void scheduleDelayedStart()
     {
         start_delay_timer.cancel();
         start_delay_timer.expires_from_now(boost::posix_time::seconds(RESTART_WAIT_TIME));
         start_delay_timer.async_wait([this](auto &&PH1) { handler_startDelayTimer(std::forward<decltype(PH1)>(PH1)); });
     }
-    
+
     void internalStart(std::promise<void> *ret)
     {
         if (is_running)
@@ -304,7 +304,7 @@ class WebSocketClient
         is_running = true;
         doConnectionAttempt(ret);
     }
-    
+
     void internalStop(std::promise<void> &ret)
     {
         if (!is_running)
@@ -346,7 +346,7 @@ public:
             future.wait();
         }
     }
-    
+
     void stop()
     {
         std::promise<void> ret;
@@ -389,7 +389,7 @@ public:
         work.emplace(ioc.get_executor());
         worker.emplace([this] { runIO(); });
     }
-    
+
 #ifdef __linux__
     WebSocketClient(std::string unixsocket_addr, std::string endpoint, std::function<void(std::string)> callback) : host(std::move(unixsocket_addr)), endpoint(std::move(endpoint)), callback(std::move(callback))
     {

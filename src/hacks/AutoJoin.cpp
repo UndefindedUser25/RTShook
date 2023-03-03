@@ -75,16 +75,11 @@ void updateSearch()
 #if not ENABLE_VISUALS
         queue_time.update();
 #endif
-        tfmm::leaveQueue();
     }
-    //    if (gc && !gc->BConnectedToMatchServer(false) &&
-    //            queuetime.test_and_set(10 * 1000 * 60) &&
-    //            !gc->BHaveLiveMatch())
-    //        tfmm::leaveQueue();
 
     if (auto_requeue)
     {
-        if (startqueue_timer.check(5000) && gc && !gc->BConnectedToMatchServer(false) && !gc->BHaveLiveMatch() && !invites)
+        if (startqueue_timer.check(1000) && gc && !gc->BConnectedToMatchServer(false) && !gc->BHaveLiveMatch() && !invites)
             if (pc && !(pc->BInQueueForMatchGroup(tfmm::getQueue()) || pc->BInQueueForStandby()))
             {
                 logging::Info("Starting queue for standby, Invites %d", invites);
@@ -94,16 +89,16 @@ void updateSearch()
 
     if (auto_queue)
     {
-        if (startqueue_timer.check(5000) && gc && !gc->BConnectedToMatchServer(false) && !gc->BHaveLiveMatch() && !invites)
+        if (startqueue_timer.check(2000) && gc && !gc->BConnectedToMatchServer(false) && !gc->BHaveLiveMatch() && !invites)
             if (pc && !(pc->BInQueueForMatchGroup(tfmm::getQueue()) || pc->BInQueueForStandby()))
             {
                 logging::Info("Starting queue, Invites %d", invites);
                 tfmm::startQueue();
             }
     }
-    startqueue_timer.test_and_set(5000);
+    startqueue_timer.test_and_set(2000);
 #if not ENABLE_VISUALS
-    if (queue_time.test_and_set(1200000))
+    if (queue_time.test_and_set(1800000))
     {
         g_IEngine->ClientCmd_Unrestricted("quit"); // lol
     }
@@ -111,7 +106,7 @@ void updateSearch()
 }
 static void update()
 {
-    if (autoteam_timer.test_and_set(5000))
+    if (autoteam_timer.test_and_set(1000))
     {
         if (autojoin_team and UnassignedTeam())
         {

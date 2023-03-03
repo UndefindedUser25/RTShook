@@ -1570,6 +1570,12 @@ int BestHitbox(CachedEntity *target)
                 preferred = hitbox_t::foot_L;
             }
 
+            // Any Flaregun on Pyro need to be aiming as center hitbox to perfectly hit.
+            else if (ci == CL_CLASS(CTFFlareGun_Revenge) || ci == CL_CLASS(CTFFlareGun))
+            {
+                preferred = hitbox_t::spine_3;
+            }
+
             // Bodyshot handling
             if (g_pLocalPlayer->holding_sniper_rifle)
             {

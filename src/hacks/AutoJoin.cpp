@@ -39,21 +39,21 @@ bool UnassignedClass()
 
 static Timer autoteam_timer{};
 static Timer startqueue_timer{};
-#if not ENABLE_VISUALS
+#if !ENABLE_VISUALS
 Timer queue_time{};
 #endif
 void updateSearch()
 {
     if (!auto_queue && !auto_requeue)
     {
-#if not ENABLE_VISUALS
+#if !ENABLE_VISUALS
         queue_time.update();
 #endif
         return;
     }
     if (g_IEngine->IsInGame())
     {
-#if not ENABLE_VISUALS
+#if !ENABLE_VISUALS
         queue_time.update();
 #endif
         return;
@@ -72,7 +72,7 @@ void updateSearch()
 
     if (current_user_cmd && gc && gc->BConnectedToMatchServer(false) && gc->BHaveLiveMatch())
     {
-#if not ENABLE_VISUALS
+#if !ENABLE_VISUALS
         queue_time.update();
 #endif
         tfmm::leaveQueue();
@@ -102,7 +102,7 @@ void updateSearch()
             }
     }
     startqueue_timer.test_and_set(5000);
-#if not ENABLE_VISUALS
+#if !ENABLE_VISUALS
     if (queue_time.test_and_set(1200000))
     {
         g_IEngine->ClientCmd_Unrestricted("quit"); // lol

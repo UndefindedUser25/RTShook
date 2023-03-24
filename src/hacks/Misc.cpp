@@ -999,8 +999,7 @@ void Shutdown()
 #if ENABLE_VISUALS
     // unpatching local player
     render_zoomed = false;
-    /*
-    patch_playerpanel->Shutdown();
+    /*patch_playerpanel->Shutdown();
     patch_scoreboard1->Shutdown();
     patch_scoreboard2->Shutdown();
     patch_scoreboard3->Shutdown();

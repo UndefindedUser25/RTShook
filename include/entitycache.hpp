@@ -78,14 +78,16 @@ public:
     }
     __attribute__((always_inline, hot, const)) inline bool Good() const
     {
-        if (!RAW_ENT(this) || !RAW_ENT(this)->GetClientClass()->m_ClassID)
+        auto internalEntity = RAW_ENT(this);
+        if (!internalEntity || !internalEntity->GetClientClass()->m_ClassID)
             return false;
         IClientEntity *const entity = InternalEntity();
         return entity && !entity->IsDormant();
     }
     __attribute__((always_inline, hot, const)) inline bool Valid() const
     {
-        if (!RAW_ENT(this) || !RAW_ENT(this)->GetClientClass()->m_ClassID)
+        auto internalEntity = RAW_ENT(this);
+        if (!internalEntity || !internalEntity->GetClientClass()->m_ClassID)
             return false;
         IClientEntity *const entity = InternalEntity();
         return entity;
@@ -99,10 +101,20 @@ public:
 
     int m_iClassID()
     {
-        if (RAW_ENT(this))
-            if (RAW_ENT(this)->GetClientClass())
-                if (RAW_ENT(this)->GetClientClass()->m_ClassID)
-                    return RAW_ENT(this)->GetClientClass()->m_ClassID;
+        if (this)
+        {
+            auto internalEntity = RAW_ENT(this);
+            if (internalEntity)
+            {
+                auto clientClass = internalEntity->GetClientClass();
+                if (clientClass)
+                {
+                    int classID = clientClass->m_ClassID;
+                    if (classID)
+                        return classID;
+                }
+            }
+        }
         return 0;
     };
     Vector m_vecOrigin()
@@ -182,7 +194,8 @@ public:
     };
     bool m_bGrenadeProjectile()
     {
-        return m_iClassID() == CL_CLASS(CTFGrenadePipebombProjectile) || m_iClassID() == CL_CLASS(CTFProjectile_Cleaver) || m_iClassID() == CL_CLASS(CTFProjectile_Jar) || m_iClassID() == CL_CLASS(CTFProjectile_JarMilk);
+        int classID = m_iClassID();
+        return classID == CL_CLASS(CTFGrenadePipebombProjectile) || classID == CL_CLASS(CTFProjectile_Cleaver) || classID == CL_CLASS(CTFProjectile_Jar) || classID == CL_CLASS(CTFProjectile_JarMilk);
     };
 
     bool m_bAnyHitboxVisible{ false };

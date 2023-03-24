@@ -283,10 +283,8 @@ void hack::Initialize()
     InitRandom();
     sharedobj::LoadLauncher();
 
-#if !ENABLE_TEXTMODE
     // remove epic source lock (needed for non-preload tf2)
     std::remove("/tmp/source_engine_2925226592.lock");
-#endif
 
     sharedobj::LoadEarlyObjects();
 

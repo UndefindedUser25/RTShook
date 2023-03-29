@@ -1,7 +1,7 @@
 #include "common.hpp"
 #include "DetourHook.hpp"
 
-namespace hacks::tf2::animfix
+namespace hacks::animfix
 {
 static settings::Boolean enabled("misc.animfix.enabled", "false");
 DetourHook frameadvance_detour{};
@@ -18,7 +18,7 @@ float FrameAdvance_hook(IClientEntity *self, float flInterval)
     float newInterval = flInterval;
 
     // Check if the entity is valid
-    if (enabled && self && IDX_GOOD(self->entindex()) && self->entindex() > 0 && self->entindex() <= (int) previous_simtimes.size())
+    if (self && IDX_GOOD(self->entindex()) && self->entindex() > 0 && self->entindex() <= (int) previous_simtimes.size())
     {
         // Check if they are an alive player
         CachedEntity *ent = ENTITY(self->entindex());
@@ -71,9 +71,7 @@ void CheckForSequenceChange_hook(int *_this, int *studiohdr, int sequence, bool 
     bInterpolate       = false;
     auto new_studiohdr = studiohdr;
     if (enabled)
-    {
         new_studiohdr = nullptr;
-    }
 
     std::lock_guard<std::mutex> checkforsequencechance_mutex(threadsafe_mutex);
     CheckForSequenceChange_t original = (CheckForSequenceChange_t) checkforsequencechange_detour.GetOriginalFunc();
@@ -90,7 +88,7 @@ void LevelInit()
 static InitRoutine init(
     []()
     {
-        static auto ShouldInterpolate_signature = CSignature::GetClientSignature("55 89 E5 56 53 83 EC 10 A1 ? ? ? ? 8B 5D ? 8B 10 89 04 24 FF 52 ? 8B 53");
+        static auto ShouldInterpolate_signature = gSignatures.GetClientSignature("55 89 E5 56 53 83 EC 10 A1 ? ? ? ? 8B 5D ? 8B 10 89 04 24 FF 52 ? 8B 53");
         shouldinterpolate_detour.Init(ShouldInterpolate_signature, (void *) ShouldInterpolate_hook);
 
         /*static auto CheckForSequenceChange_signature = gSignatures.GetClientSignature("55 89 E5 57 56 53 83 EC 1C 8B 45 ? 8B 75 ? 8B 4D ? 8B 7D");

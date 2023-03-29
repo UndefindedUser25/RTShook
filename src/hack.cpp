@@ -53,7 +53,7 @@ const std::string &hack::GetVersion()
     if (version_set)
         return version;
 #if defined(GIT_COMMIT_HASH) && defined(GIT_COMMITTER_DATE)
-    version = "Version: #" GIT_COMMIT_HASH " " GIT_COMMITTER_DATE;
+    version = "Build : #" GIT_COMMIT_HASH " " GIT_COMMITTER_DATE;
 #endif
     version_set = true;
     return version;

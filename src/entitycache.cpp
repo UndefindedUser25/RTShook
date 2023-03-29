@@ -63,16 +63,16 @@ void CachedEntity::Update()
 
 bool CachedEntity::IsVisible()
 {
-    PROF_SECTION(CE_IsVisible);
+    PROF_SECTION(CE_IsVisible)
     if (m_bVisCheckComplete)
         return m_bAnyHitboxVisible;
+
     auto hitbox = hitboxes.GetHitbox(std::max(0, (hitboxes.GetNumHitboxes() >> 1) - 1));
     Vector result;
     if (!hitbox)
         result = m_vecOrigin();
     else
         result = hitbox->center;
-
     // Just check a centered hitbox. This is mostly used for ESP anyway
     if (IsEntityVectorVisible(this, result, true, MASK_SHOT_HULL, nullptr))
     {
@@ -99,9 +99,9 @@ std::optional<Vector> CachedEntity::m_vecDormantOrigin()
 
 namespace entity_cache
 {
+
 CachedEntity array[MAX_ENTITIES]{};
 std::vector<CachedEntity *> valid_ents;
-std::vector<std::tuple<Vector, CachedEntity *>> proj_map;
 
 void Update()
 {
@@ -121,51 +121,6 @@ void Update()
             array[i].hitboxes.UpdateBones();
             valid_ents.push_back(&array[i]);
         }
-    }
-}
-
-void dodgeProj(CachedEntity *proj_ptr)
-{
-
-    Vector eav;
-
-    velocity::EstimateAbsVelocity(RAW_ENT(proj_ptr), eav);
-    // Sometimes EstimateAbsVelocity returns completely BS values (as in 0 for everything on say a rocket)
-    // The ent could also be an in-place sticky which we don't care about - we want to catch it while it's in the air
-    if (1 < eav.Length())
-    {
-        Vector proj_pos   = RAW_ENT(proj_ptr)->GetAbsOrigin();
-        Vector player_pos = RAW_ENT(LOCAL_E)->GetAbsOrigin();
-
-        float displacement      = proj_pos.DistToSqr(player_pos);
-        float displacement_temp = displacement - 1;
-        float min_displacement  = displacement_temp - 1;
-        float multipler         = 0.01f;
-        bool add_grav           = false;
-        float curr_grav         = g_ICvar->FindVar("sv_gravity")->GetFloat();
-        if (proj_ptr->m_Type() == ENTITY_PROJECTILE)
-            add_grav = true;
-        // Couldn't find a cleaner way to get the projectiles gravity based on just having a pointer to the projectile itself
-        curr_grav = curr_grav * ProjGravMult(proj_ptr->m_iClassID(), eav.Length());
-        // Optimization loop. Just checks if the projectile can possibly hit within ~141HU
-        while (displacement_temp < displacement)
-        {
-
-            Vector temp_pos = (eav * multipler) + proj_pos;
-            if (add_grav)
-                temp_pos.z = temp_pos.z - 0.5 * curr_grav * multipler * multipler;
-            displacement_temp = temp_pos.DistToSqr(player_pos);
-            if (displacement_temp < min_displacement)
-                min_displacement = displacement_temp;
-            else
-                break;
-
-            multipler += 0.01f;
-        }
-        if (min_displacement < 20000)
-            proj_map.emplace_back((std::make_tuple(eav, proj_ptr)));
-        else
-            proj_map.emplace_back((std::make_tuple(Vector{ 0, 0, 0 }, proj_ptr)));
     }
 }
 

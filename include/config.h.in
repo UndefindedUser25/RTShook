@@ -16,6 +16,7 @@
 #define ENABLE_NULLNEXUS @EnableNullNexus@
 #define ENABLE_LOGGING @EnableLogging@
 #define ENABLE_CLIP @EnableClip@
+#define ENABLE_NULLGRAPHIC @NullGraphic@
 
 #define ENABLE_VISUALS @EnableVisuals@
 #define ENABLE_GLEZ_DRAWING @EnableGlezDrawing@

@@ -7,7 +7,7 @@
 
 #include "common.hpp"
 
-#if !ENABLE_NULLGRAPHIC
+#if !ENABLE_TEXTMODE
 static settings::Boolean null_graphics("hack.nullgraphics", "false");
 #else
 static settings::Boolean null_graphics("hack.nullgraphics", "true");
@@ -273,7 +273,7 @@ static void UnHookFs()
         g_IBaseClient->InvalidateMdlCache();
 }
 
-#if ENABLE_NULLGRAPHIC
+#if ENABLE_TEXTMODE
 static InitRoutineEarly nullify_textmode(
     []()
     {
@@ -324,7 +324,7 @@ static InitRoutine nullifiy_textmode2(
                 else
                     UnHookFs();
             });
-#if ENABLE_NULLGRAPHIC
+#if ENABLE_TEXTMODE
         // Catbots still hit properly, this just makes it easier to Stub stuff not needed in textmode
         uintptr_t g_bTextMode_ptrptr = gSignatures.GetEngineSignature("A2 ? ? ? ? 8B 43 04") + 0x1;
 

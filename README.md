@@ -9,9 +9,12 @@ Even if you try to use, fix or try to hosting, in the end your account will be b
 
 ## The Serious FAQ
 Q : Why u hosting on 2020-2022 and try to said there is no updates?
+
 A : because i WANT to pay attention for valve to fix this my favorite games 
 
+
 Q : if im gonna try this repo, i can fix that, blah blah blah
+
 A : im strongest said **NO** im retired for hosting, cheating and exploiting because i have no idea to pay attention anymore until another hoster become.
 
 ## DISCLAIMER FOR WHO NOT GIVE A FUCK
